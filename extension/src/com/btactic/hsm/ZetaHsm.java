@@ -24,7 +24,24 @@ import java.io.IOException;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
+
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.volume.Volume;
+
+import com.zimbra.soap.admin.message.GetAllVolumesRequest;
+import com.zimbra.soap.admin.message.GetAllVolumesResponse;
+
+import com.zimbra.soap.admin.type.VolumeInfo;
+
+import com.zimbra.soap.JaxbUtil;
+
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class ZetaHsm {
 
@@ -74,6 +91,63 @@ public class ZetaHsm {
 
     private class ZetaHsmThread extends Thread {
 
+        private boolean isValidHsmPolicySyntaxList(String[] zimbraHsmPolicyList) {
+            boolean validHsmPolicySyntaxList = true;
+            for (String nZimbraHsmPolicy: zimbraHsmPolicyList) {
+                Pattern hsmPolicyPattern = Pattern.compile("^(message|document|task|appointment|contact)(,(message|document|task|appointment|contact))*:(?<hsmSearch>.+)$");
+                Matcher hsmPolicyMatcher = hsmPolicyPattern.matcher(nZimbraHsmPolicy);
+                boolean validHsmPolicySyntax = hsmPolicyMatcher.matches();
+                if (!(validHsmPolicySyntax)) {
+                    validHsmPolicySyntaxList = false;
+                    ZimbraLog.misc.error("zimbraHsmPolicy: '" + nZimbraHsmPolicy + "' syntax is not valid!");
+                }
+                // TODO: Check also if the search is valid or not at this point
+                // TODO: Seems quite difficult to implement because you usually need an actual mailbox for testing it
+            }
+            return validHsmPolicySyntaxList;
+        }
+
+        private String getHsmTypesStringFromHsmPolicy (String zimbraHsmPolicy){
+            String hsmTypesString = null;
+            Pattern hsmPolicySplitPattern = Pattern.compile("^(?<hsmTypes>.*?):(?<hsmSearchQuery>.*)$");
+            Matcher hsmPolicySplitMatcher = hsmPolicySplitPattern.matcher(zimbraHsmPolicy);
+            if (hsmPolicySplitMatcher.find()) {
+                hsmTypesString = hsmPolicySplitMatcher.group("hsmTypes");
+            }
+            return hsmTypesString;
+        }
+
+        private String getHsmSearchQueryStringFromHsmPolicy (String zimbraHsmPolicy){
+            String hsmSearchQueryString = null;
+            Pattern hsmPolicySplitPattern = Pattern.compile("^(?<hsmTypes>.*?):(?<hsmSearchQuery>.*)$");
+            Matcher hsmPolicySplitMatcher = hsmPolicySplitPattern.matcher(zimbraHsmPolicy);
+            if (hsmPolicySplitMatcher.find()) {
+                hsmSearchQueryString = hsmPolicySplitMatcher.group("hsmSearchQuery");
+            }
+            return hsmSearchQueryString;
+        }
+
+        private short getDestinationLocator(SoapProvisioning prov) throws ServiceException {
+            short destinationLocator = -1;
+
+            GetAllVolumesRequest request = new GetAllVolumesRequest();
+            Element requestElement = JaxbUtil.jaxbToElement(request);
+            Element respElem = prov.invoke(requestElement);
+            GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
+            for (VolumeInfo volumeInfo : response.getVolumes()) {
+                if (
+                       (volumeInfo.isCurrent()) &&
+                       (volumeInfo.getType() == Volume.TYPE_MESSAGE_SECONDARY) &&
+                       (Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) &&
+                       (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))
+                   ) {
+                       destinationLocator = volumeInfo.getId();
+                }
+            }
+
+            return destinationLocator;
+        }
+
         public ZetaHsmThread() {
         }
 
@@ -81,6 +155,50 @@ public class ZetaHsm {
             // TODO: Sleep 1 minute as a proof of concept
             resetProgress();
             ZimbraLog.misc.info("DEBUG: ZetaHsm RUN function was run.");
+            try {
+                String[] zimbraHsmPolicyList = Provisioning.getInstance().getLocalServer().getMultiAttr("zimbraHsmPolicy");
+
+                if (zimbraHsmPolicyList.length == 0) {
+                    ZimbraLog.misc.info("'zimbraHsmPolicy' attribute is empty. Nothing to do. Aborting.");
+                    return;
+                }
+
+                if (!(isValidHsmPolicySyntaxList(zimbraHsmPolicyList))) {
+                    ZimbraLog.misc.error("One or more of the 'zimbraHsmPolicy' values does not have a valid syntax. Aborting.");
+                    return;
+                }
+
+                SoapProvisioning prov = SoapProvisioning.getAdminInstance();
+                prov.soapZimbraAdminAuthenticate();
+
+                short destinationLocator = getDestinationLocator(prov);
+                if (destinationLocator == -1) {
+                    ZimbraLog.misc.error("We did not find an expected (Secondary, internal, current and FileBlobStore class) destination volume. Aborting.");
+                    return;
+                }
+
+                ZimbraLog.misc.info("DEBUG: destinationLocator: " + destinationLocator);
+
+                int zimbraHsmPolicyCounter = 0;
+                for (String nZimbraHsmPolicy: zimbraHsmPolicyList) {
+                    zimbraHsmPolicyCounter = zimbraHsmPolicyCounter + 1 ;
+
+                    String hsmTypesString = getHsmTypesStringFromHsmPolicy(nZimbraHsmPolicy);
+                    String hsmSearchQueryString = getHsmSearchQueryStringFromHsmPolicy(nZimbraHsmPolicy);
+                    // No need to check if the values are null because of prior isValidHsmPolicySyntaxList check
+
+                    ZimbraLog.misc.info("DEBUG: hsmTypesString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmTypesString + "'");
+                    ZimbraLog.misc.info("DEBUG: hsmSearchQueryString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmSearchQueryString + "'");
+
+                    BlobMover blobMover = new BlobMover();
+                    blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator);
+                }
+                ZimbraLog.misc.info("DEBUG: ZetaHsm RUN function ended successfully.");
+            }
+            catch (ServiceException e) {
+                ZimbraLog.misc.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
+                return;
+            }
         }
     }
 }
