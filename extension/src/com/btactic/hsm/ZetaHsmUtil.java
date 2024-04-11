@@ -115,7 +115,7 @@ public class ZetaHsmUtil {
         // Make sure your custom Response class is inside the com.zimbra.soap.admin.message package
         ZetaHsmResponse response = JaxbUtil.elementToJaxb(respElem, ZetaHsmResponse.class);
         if (action == ZetaHsmRequest.HsmAction.start) {
-            System.out.println("ZetaHSM scheduled. Run \"zetahsmm status\" to check the status.");
+            System.out.println("ZetaHSM scheduled. Run \"zetahsm status\" to check the status.");
         } else {
             System.out.println("Status = " + response.getStatus().name());
         }
