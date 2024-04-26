@@ -136,15 +136,10 @@ public class ZetaHsm {
             GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
             for (VolumeInfo volumeInfo : response.getVolumes()) {
                 if (
-                       // TODO: Make sure to use this in ZCS 10 and ?ZCS9?
-                       // Not sure it's worth using reflection here
-                       // in order to have an unique codebase.
-                       // Related commit on zm-mailbox: 6e01a80383a9c8a3a1f94831c48c8309c177bbb0
-                       //
-                       // (volumeInfo.getStoreType() == Volume.StoreType.INTERNAL) &&
-                       // volumeInfo.getStoreManagerClass() == 'WhateverMakesSense'
                        (volumeInfo.isCurrent()) &&
-                       (volumeInfo.getType() == Volume.TYPE_MESSAGE_SECONDARY)
+                       (volumeInfo.getType() == Volume.TYPE_MESSAGE_SECONDARY) &&
+                       (Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) &&
+                       (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))
                    ) {
                        destinationVolumeId = volumeInfo.getId();
                 }
@@ -178,7 +173,7 @@ public class ZetaHsm {
 
                 short destinationVolumeId = getDestinationVolumeId(prov);
                 if (destinationVolumeId == -1) {
-                    ZimbraLog.misc.error("We did not find an expected (Secondary, internal and current) destination volume. Aborting.");
+                    ZimbraLog.misc.error("We did not find an expected (Secondary, internal, current and FileBlobStore class) destination volume. Aborting.");
                     return;
                 }
 
