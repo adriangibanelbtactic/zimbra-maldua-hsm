@@ -35,8 +35,13 @@ import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxMaintenance;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
+
+import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StoreManager;
 
 import com.zimbra.cs.util.IOUtil;
 
@@ -52,12 +57,20 @@ import com.zimbra.soap.admin.type.VolumeInfo;
 
 import com.zimbra.soap.JaxbUtil;
 
+import java.io.IOException;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
 public class BlobMover {
+
+    private Map<String, MailboxBlob> mAllNewBlobs = null;
+    private FileBlobStore mStore = (FileBlobStore) StoreManager.getInstance();
 
     private List<Integer> getAllMailboxIds(SoapProvisioning prov)
     throws ServiceException {
@@ -107,73 +120,165 @@ public class BlobMover {
     }
 
     public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId) throws ServiceException {
-        DbConnection conn = null;
-        try {
+        List<Short> validOriginVolumeIds = getValidOriginVolumeIds(prov, destinationVolumeId);
 
-            List<Short> validOriginVolumeIds = getValidOriginVolumeIds(prov, destinationVolumeId);
+        if (validOriginVolumeIds.isEmpty()) {
+            ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
+            return;
+        }
 
-            if (validOriginVolumeIds.isEmpty()) {
-                ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
-                return;
+        String validOriginVolumeIdsString = StringUtils.join(validOriginVolumeIds, ",");
+        ZimbraLog.misc.info("DEBUG: validOriginVolumeIdsString: '" + validOriginVolumeIdsString + "'" + ".");
+
+        List<Integer> mailboxIds = getAllMailboxIds(prov);
+        for (int mboxId : mailboxIds) {
+            ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationVolumeId: " + destinationVolumeId + ".");
+
+            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+
+            SearchParams params = new SearchParams();
+            params.setQueryString(hsmSearchQueryString);
+            params.setSortBy(SortBy.NONE);
+            params.setTypes(hsmTypesString);
+            params.setFetchMode(SearchParams.Fetch.IDS);
+
+            ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+            ZimbraQueryResults result = query.execute();
+
+            List<Integer> zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
+            List<MovedItemInfo> zimbraQueryPostFilterItemsInfos = new ArrayList<MovedItemInfo>();
+            int zimbraQueryPreFilterChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
+            int zimbraQueryPreFilterCounter = 0;
+
+            while (result.hasNext()) {
+                zimbraQueryPreFilterCounter = zimbraQueryPreFilterCounter + 1;
+                int itemId = result.getNext().getItemId();
+                zimbraQueryPreFilterItemsChunk.add(itemId);
+                if (zimbraQueryPreFilterCounter == zimbraQueryPreFilterChunkSize) {
+                    filterAndAddToFilteredItemIds (prov, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
+                    zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
+                    zimbraQueryPreFilterCounter = 0;
+                }
+                // ZimbraLog.misc.info("DEBUG: mailboxId (Pre Filter): " + mboxId + " ItemId: '" + itemId + "'" + ".");
+            }
+            filterAndAddToFilteredItemIds (prov, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
+            zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
+            zimbraQueryPreFilterCounter = 0;
+
+            IOUtil.closeQuietly(result);
+
+
+            for (MovedItemInfo zimbraQueryPostFilterItemsInfo : zimbraQueryPostFilterItemsInfos) {
+                ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
             }
 
-            String validOriginVolumeIdsString = StringUtils.join(validOriginVolumeIds, ",");
-            ZimbraLog.misc.info("DEBUG: validOriginVolumeIdsString: '" + validOriginVolumeIdsString + "'" + ".");
+            moveItems(mbox, destinationVolumeId, zimbraQueryPostFilterItemsInfos);
 
-            conn = DbPool.getConnection();
-
-            List<Integer> mailboxIds = getAllMailboxIds(prov);
-            for (int mboxId : mailboxIds) {
-                ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationVolumeId: " + destinationVolumeId + ".");
-
-                Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-
-                SearchParams params = new SearchParams();
-                params.setQueryString(hsmSearchQueryString);
-                params.setSortBy(SortBy.NONE);
-                params.setTypes(hsmTypesString);
-                params.setFetchMode(SearchParams.Fetch.IDS);
-
-                ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
-                ZimbraQueryResults result = query.execute();
-
-                List<Integer> zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
-                List<MovedItemInfo> zimbraQueryPostFilterItemsInfos = new ArrayList<MovedItemInfo>();
-                int zimbraQueryPreFilterChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
-                int zimbraQueryPreFilterCounter = 0;
-
-                while (result.hasNext()) {
-                    zimbraQueryPreFilterCounter = zimbraQueryPreFilterCounter + 1;
-                    int itemId = result.getNext().getItemId();
-                    zimbraQueryPreFilterItemsChunk.add(itemId);
-                    if (zimbraQueryPreFilterCounter == zimbraQueryPreFilterChunkSize) {
-                        filterAndAddToFilteredItemIds (prov, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
-                        zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
-                        zimbraQueryPreFilterCounter = 0;
-                    }
-                    // ZimbraLog.misc.info("DEBUG: mailboxId (Pre Filter): " + mboxId + " ItemId: '" + itemId + "'" + ".");
-                }
-                filterAndAddToFilteredItemIds (prov, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
-                zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
-                zimbraQueryPreFilterCounter = 0;
-
-                IOUtil.closeQuietly(result);
-
-
-                for (MovedItemInfo zimbraQueryPostFilterItemsInfo : zimbraQueryPostFilterItemsInfos) {
-                    ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
-                }
-
-                moveItems(conn, mbox, destinationVolumeId, zimbraQueryPostFilterItemsInfos);
-
-            }
-        } finally {
-            DbPool.quietClose(conn);
         }
     }
 
-    private void moveItems(DbConnection conn, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
-        List movedBlobs = new ArrayList();
+    private void moveItems(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+        Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
+        List<MovedItemInfo> itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
+        int movedItemInfoChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
+        int movedItemInfoCounter = 0;
+
+        while (itemsToMigrateInfosIter.hasNext()) {
+            movedItemInfoCounter = movedItemInfoCounter + 1;
+            MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
+            itemsInfosToMigrateChunk.add(info);
+            if (movedItemInfoCounter == movedItemInfoChunkSize) {
+                moveChunkItems(mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+                itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
+                movedItemInfoCounter = 0;
+            }
+        }
+        moveChunkItems(mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+        itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
+        movedItemInfoCounter = 0;
+    }
+
+    private void moveChunkItems(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+
+        List oldBlobs = new ArrayList();
+        ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
+        MailboxBlob oldBlob = null;
+
+        Map newBlobMap = new HashMap(); // Fast lookup by digest
+        List newBlobList = new ArrayList(); // Deletion in case of error
+        MailboxMaintenance maintenance = null;
+
+        try {
+            maintenance = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
+
+            Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
+            while (itemsToMigrateInfosIter.hasNext()) {
+                MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
+
+                // Copy blob to new volume
+                oldBlob = mStore.getMailboxBlob(mbox, info.getId(), info.getModContent(), String.valueOf(info.getLocator()));
+                if (oldBlob != null) {
+                    MailboxBlob newBlob = null;
+
+                    try {
+                        // If we've already copied this blob, link to the copy,
+                        // rather than copying the original
+                        MailboxBlob linkSource = (MailboxBlob) mAllNewBlobs.get(info.getBlobDigest());
+                        if (linkSource == null) {
+                            linkSource = (MailboxBlob) newBlobMap.get(info.getBlobDigest());
+                            if (linkSource == null) {
+                                linkSource = oldBlob;
+                            }
+                        }
+
+                        // Create the link
+                        newBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationVolumeId);
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE(
+                            "Unable to copy " + oldBlob + " to volume " + destinationVolumeId, e);
+                    }
+
+                    oldBlobs.add(oldBlob);
+                    newBlobMap.put(info.getBlobDigest(), newBlob);
+                    newBlobList.add(newBlob);
+                } else {
+                    ZimbraLog.misc.warn("Could not find blob for message " + info.getId() + ", revision " + info.getModContent());
+                }
+            }
+
+            // Update messages in the database
+            DbBlobMover.alterVolume(mbox, destinationVolumeId, itemsToMigrateInfos);
+
+            // Update global map, now that we know that all ops have succeeded
+            mAllNewBlobs.putAll(newBlobMap);
+
+            // Delete old blobs
+            Iterator oldBlobsIter = oldBlobs.iterator();
+            while (oldBlobsIter.hasNext()) {
+                MailboxBlob oldMboxBlob = (MailboxBlob) oldBlobsIter.next();
+                try {
+                    mStore.delete(oldMboxBlob);
+                } catch (IOException e) {
+                    ZimbraLog.misc.error("Unable to delete " + oldMboxBlob + ": " + e);
+                }
+            }
+        } catch (ServiceException e) {
+            // Delete new blobs on failure.  It's safe to do this, since we know
+            // the database changes were not committed.
+            Iterator newBlobListIter = newBlobList.iterator();
+            while (newBlobListIter.hasNext()) {
+                MailboxBlob newBlob = (MailboxBlob) newBlobListIter.next();
+                try {
+                    mStore.delete(newBlob);
+                } catch (IOException ioe) {
+                    ZimbraLog.misc.error("Unable to delete " + newBlob + ": " + ioe);
+                }
+            }
+        } finally {
+            if (maintenance != null) {
+                MailboxManager.getInstance().endMaintenance(maintenance, true, true);
+            }
+        }
     }
 
 }

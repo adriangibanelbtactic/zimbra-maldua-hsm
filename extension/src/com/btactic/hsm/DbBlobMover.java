@@ -1,0 +1,87 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra OSE HSM Extension
+ * Copyright (C) 2024 BTACTIC, S.C.C.L.
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software Foundation,
+ * version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.btactic.hsm;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import com.zimbra.common.service.ServiceException;
+
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
+
+import com.zimbra.cs.mailbox.Mailbox;
+
+import org.apache.commons.lang.StringUtils;
+
+public class DbBlobMover {
+
+    private static void alterVolume(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
+
+        List<Integer> itemsToMigrateInfosIds = new ArrayList<Integer>();
+        for (MovedItemInfo itemsToMigrateInfo : itemsToMigrateInfos) {
+            itemsToMigrateInfosIds.add(itemsToMigrateInfo.getId());
+        }
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE ");
+        sql.append(DbMailItem.getMailItemTableName(mbox, dumpster));
+        sql.append(" SET locator = ");
+        sql.append(destinationVolumeId);
+        sql.append(" WHERE ");
+        sql.append(" id IN ");
+        sql.append("(");
+        sql.append(StringUtils.join(itemsToMigrateInfosIds, ","));
+        sql.append(")");
+
+        Connection conn = null;
+        DbConnection dbConnection = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            dbConnection = DbPool.getConnection(mbox);
+            conn = dbConnection.getConnection();
+            stmt = conn.prepareStatement(sql.toString());
+            rs = stmt.executeQuery();
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Failed to update blobs in DB", e);
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Failed to update blobs in DB", e);
+        } finally {
+            dbConnection.closeQuietly(rs);
+            dbConnection.closeQuietly(stmt);
+            DbPool.quietClose(dbConnection);
+        }
+
+    }
+
+    public static void alterVolume(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+
+        alterVolume(mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
+        alterVolume(mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
+
+    }
+
+}

@@ -35,7 +35,7 @@ public class MovedItemInfo {
         return id;
     }
     
-    public short getVolumeId() {
+    public short getLocator() {
         return locator;
     }
     
