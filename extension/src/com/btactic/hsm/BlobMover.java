@@ -140,7 +140,7 @@ public class BlobMover {
 
                 List<Integer> zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
                 List<Integer> zimbraQueryPostFilterItems = new ArrayList<Integer>();
-                int zimbraQueryPreFilterChunkSize = 100;
+                int zimbraQueryPreFilterChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
                 int zimbraQueryPreFilterCounter = 0;
 
                 while (result.hasNext()) {
