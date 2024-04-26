@@ -112,6 +112,12 @@ public class BlobMover {
         try {
 
             List<Short> validOriginVolumeIds = getValidOriginVolumeIds(prov, destinationVolumeId);
+
+            if (validOriginVolumeIds.isEmpty()) {
+                ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
+                return;
+            }
+
             String validOriginVolumeIdsString = StringUtils.join(validOriginVolumeIds, ",");
             ZimbraLog.misc.info("DEBUG: validOriginVolumeIdsString: '" + validOriginVolumeIdsString + "'" + ".");
 
