@@ -47,13 +47,17 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobFilter {
 
-    public List<Integer> filterItemsByVolume (SoapProvisioning prov, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
-        List<Integer> filteredItems = new ArrayList<Integer>();
+    public List<MovedItemInfo> filterItemsByVolume (SoapProvisioning prov, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
+        List<MovedItemInfo> filteredItemInfos = new ArrayList<MovedItemInfo>();
+
+        // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
+        // TODO: Check if that takes less time to execute than current algorithm based on UNION query
 
         // non-dumpster items and dumpster items UNION query
+        // Also extra data to avoid querying so much the database
         StringBuilder sql = new StringBuilder();
         sql.append("(");
-            sql.append("SELECT mi.id FROM ");
+            sql.append("SELECT mi.id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
             sql.append(DbMailItem.getMailItemTableName(mailbox, "mi", false));
             sql.append(" WHERE ");
                 sql.append(" mi.locator IN ");
@@ -68,7 +72,7 @@ public class DbBlobFilter {
         sql.append(")");
         sql.append(" UNION ");
         sql.append("(");
-            sql.append("SELECT mi.id FROM ");
+            sql.append("SELECT mi.id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
             sql.append(DbMailItem.getMailItemTableName(mailbox, "mi", true));
             sql.append(" WHERE ");
                 sql.append(" mi.locator IN ");
@@ -92,7 +96,12 @@ public class DbBlobFilter {
             stmt = conn.prepareStatement(sql.toString());
             rs = stmt.executeQuery();
             while (rs.next()) {
-                filteredItems.add(rs.getInt(1));
+                int id = rs.getInt(1);
+                short locator = rs.getShort(2);
+                int modContent = rs.getInt(3);
+                String blobDigest = rs.getString(4);
+                MovedItemInfo info = new MovedItemInfo(id, locator, modContent, blobDigest);
+                filteredItemInfos.add(info);
             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to filter blobs", e);
@@ -104,7 +113,7 @@ public class DbBlobFilter {
             DbPool.quietClose(dbConnection);
         }
 
-        return filteredItems;
+        return filteredItemInfos;
 
     }
 
