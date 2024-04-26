@@ -104,7 +104,6 @@ public class BlobMover {
             List<Integer> filteredItems = dbBlobFilter.filterItemsByVolume(prov, mbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString);
             zimbraQueryPostFilterItems.addAll(filteredItems);
         }
-        // TODO: Do the actual filter
     }
 
     public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId) throws ServiceException {
