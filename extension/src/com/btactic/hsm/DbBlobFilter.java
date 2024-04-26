@@ -50,6 +50,7 @@ public class DbBlobFilter {
     public List<Integer> filterItemsByVolume (SoapProvisioning prov, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
         List<Integer> filteredItems = new ArrayList<Integer>();
 
+        // non-dumpster items and dumpster items UNION query
         StringBuilder sql = new StringBuilder();
         sql.append("(");
             sql.append("SELECT mi.id FROM ");
