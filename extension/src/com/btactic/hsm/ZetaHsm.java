@@ -193,6 +193,7 @@ public class ZetaHsm {
                     BlobMover blobMover = new BlobMover();
                     blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationVolumeId);
                 }
+                ZimbraLog.misc.info("DEBUG: ZetaHsm RUN function ended successfully.");
             }
             catch (ServiceException e) {
                 ZimbraLog.misc.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
