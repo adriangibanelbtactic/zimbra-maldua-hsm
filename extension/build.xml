@@ -29,6 +29,7 @@
                debuglevel="lines,vars,source"
                target="17"
                source="17">
+            <compilerarg value="-Xlint:unchecked" />
             <classpath>
                 <path refid="libraries" />
             </classpath>
