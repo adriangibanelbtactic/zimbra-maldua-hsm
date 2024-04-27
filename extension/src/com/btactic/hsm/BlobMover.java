@@ -218,7 +218,9 @@ public class BlobMover {
                     movedItemInfoCounter = 0;
                 }
             }
-            moveChunkItems(dbConnection, mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+            if (itemsInfosToMigrateChunk.size() >= 1) {
+                moveChunkItems(dbConnection, mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+            }
             itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
             movedItemInfoCounter = 0;
         } catch (ServiceException e) {
