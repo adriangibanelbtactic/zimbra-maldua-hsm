@@ -70,8 +70,10 @@ public class DbBlobMover {
         } catch (SQLException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to update blobs in DB", e);
         } finally {
-            dbConnection.closeQuietly(rs);
-            dbConnection.closeQuietly(stmt);
+            if (dbConnection != null) {
+                dbConnection.closeQuietly(rs);
+                dbConnection.closeQuietly(stmt);
+            }
             DbPool.quietClose(dbConnection);
         }
 

@@ -108,8 +108,10 @@ public class DbBlobFilter {
         } catch (SQLException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to filter blobs", e);
         } finally {
-            dbConnection.closeQuietly(rs);
-            dbConnection.closeQuietly(stmt);
+            if (dbConnection != null) {
+                dbConnection.closeQuietly(rs);
+                dbConnection.closeQuietly(stmt);
+            }
             DbPool.quietClose(dbConnection);
         }
 
