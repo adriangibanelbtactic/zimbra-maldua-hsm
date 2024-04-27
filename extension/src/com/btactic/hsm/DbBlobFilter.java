@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobFilter {
 
-    public List<MovedItemInfo> filterItemsByVolume (SoapProvisioning prov, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
+    public List<MovedItemInfo> filterItemsByVolume (Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
         List<MovedItemInfo> filteredItemInfos = new ArrayList<MovedItemInfo>();
 
         // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
