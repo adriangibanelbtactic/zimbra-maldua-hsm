@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobFilter {
 
-    public List<MovedItemInfo> filterItemsByVolume (Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
+    public List<MovedItemInfo> filterItemsByVolume (DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
         List<MovedItemInfo> filteredItemInfos = new ArrayList<MovedItemInfo>();
 
         // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
@@ -87,11 +87,9 @@ public class DbBlobFilter {
         sql.append(")");
 
         Connection conn = null;
-        DbConnection dbConnection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            dbConnection = DbPool.getConnection(mailbox);
             conn = dbConnection.getConnection();
             stmt = conn.prepareStatement(sql.toString());
             rs = stmt.executeQuery();
@@ -103,8 +101,6 @@ public class DbBlobFilter {
                 MovedItemInfo info = new MovedItemInfo(id, locator, modContent, blobDigest);
                 filteredItemInfos.add(info);
             }
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("ZetaHsm: Failed to filter blobs", e);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to filter blobs", e);
         } finally {
@@ -112,7 +108,6 @@ public class DbBlobFilter {
                 dbConnection.closeQuietly(rs);
                 dbConnection.closeQuietly(stmt);
             }
-            DbPool.quietClose(dbConnection);
         }
 
         return filteredItemInfos;

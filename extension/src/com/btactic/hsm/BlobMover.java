@@ -111,12 +111,66 @@ public class BlobMover {
         return validOriginVolumeIds;
     }
 
-    private void filterAndAddToFilteredItemIds(Mailbox mbox, List<Integer> zimbraQueryPreFilterItemsChunk, List<MovedItemInfo> zimbraQueryPostFilterItemsInfos, String validOriginVolumeIdsString) throws ServiceException {
+    private void filterAndAddToFilteredItemIds(DbConnection dbConnection, Mailbox mbox, List<Integer> zimbraQueryPreFilterItemsChunk, List<MovedItemInfo> zimbraQueryPostFilterItemsInfos, String validOriginVolumeIdsString) throws ServiceException {
         if (!(zimbraQueryPreFilterItemsChunk.isEmpty())) {
             DbBlobFilter dbBlobFilter = new DbBlobFilter ();
-            List<MovedItemInfo> filteredItemsInfos = dbBlobFilter.filterItemsByVolume(mbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString);
+            List<MovedItemInfo> filteredItemsInfos = dbBlobFilter.filterItemsByVolume(dbConnection, mbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString);
             zimbraQueryPostFilterItemsInfos.addAll(filteredItemsInfos);
         }
+    }
+
+    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId, String validOriginVolumeIdsString) throws ServiceException {
+        DbConnection dbConnection = null;
+
+        SearchParams params = new SearchParams();
+        params.setQueryString(hsmSearchQueryString);
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(hsmTypesString);
+        params.setFetchMode(SearchParams.Fetch.IDS);
+
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults result = query.execute();
+
+        List<Integer> zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
+        List<MovedItemInfo> zimbraQueryPostFilterItemsInfos = new ArrayList<MovedItemInfo>();
+        int zimbraQueryPreFilterChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
+        int zimbraQueryPreFilterCounter = 0;
+
+        try {
+            dbConnection = DbPool.getConnection(mbox);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Failed to get a dbConnection (filter)", e);
+        }
+
+        try {
+            while (result.hasNext()) {
+                zimbraQueryPreFilterCounter = zimbraQueryPreFilterCounter + 1;
+                int itemId = result.getNext().getItemId();
+                zimbraQueryPreFilterItemsChunk.add(itemId);
+                if (zimbraQueryPreFilterCounter == zimbraQueryPreFilterChunkSize) {
+                    filterAndAddToFilteredItemIds (dbConnection, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
+                    zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
+                    zimbraQueryPreFilterCounter = 0;
+                }
+                // ZimbraLog.misc.info("DEBUG: mailboxId (Pre Filter): " + mboxId + " ItemId: '" + itemId + "'" + ".");
+            }
+            filterAndAddToFilteredItemIds (dbConnection, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
+            zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
+            zimbraQueryPreFilterCounter = 0;
+
+            IOUtil.closeQuietly(result);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Unknown DB problem (filter)", e);
+        } finally {
+            DbPool.quietClose(dbConnection);
+        }
+
+        for (MovedItemInfo zimbraQueryPostFilterItemsInfo : zimbraQueryPostFilterItemsInfos) {
+            ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
+        }
+
+        moveItems(mbox, destinationVolumeId, zimbraQueryPostFilterItemsInfos);
+
     }
 
     public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId) throws ServiceException {
@@ -136,45 +190,7 @@ public class BlobMover {
             ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationVolumeId: " + destinationVolumeId + ".");
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-
-            SearchParams params = new SearchParams();
-            params.setQueryString(hsmSearchQueryString);
-            params.setSortBy(SortBy.NONE);
-            params.setTypes(hsmTypesString);
-            params.setFetchMode(SearchParams.Fetch.IDS);
-
-            ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
-            ZimbraQueryResults result = query.execute();
-
-            List<Integer> zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
-            List<MovedItemInfo> zimbraQueryPostFilterItemsInfos = new ArrayList<MovedItemInfo>();
-            int zimbraQueryPreFilterChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
-            int zimbraQueryPreFilterCounter = 0;
-
-            while (result.hasNext()) {
-                zimbraQueryPreFilterCounter = zimbraQueryPreFilterCounter + 1;
-                int itemId = result.getNext().getItemId();
-                zimbraQueryPreFilterItemsChunk.add(itemId);
-                if (zimbraQueryPreFilterCounter == zimbraQueryPreFilterChunkSize) {
-                    filterAndAddToFilteredItemIds (mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
-                    zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
-                    zimbraQueryPreFilterCounter = 0;
-                }
-                // ZimbraLog.misc.info("DEBUG: mailboxId (Pre Filter): " + mboxId + " ItemId: '" + itemId + "'" + ".");
-            }
-            filterAndAddToFilteredItemIds (mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
-            zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
-            zimbraQueryPreFilterCounter = 0;
-
-            IOUtil.closeQuietly(result);
-
-
-            for (MovedItemInfo zimbraQueryPostFilterItemsInfo : zimbraQueryPostFilterItemsInfos) {
-                ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
-            }
-
-            moveItems(mbox, destinationVolumeId, zimbraQueryPostFilterItemsInfos);
-
+            moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationVolumeId, validOriginVolumeIdsString);
         }
     }
 
@@ -188,7 +204,7 @@ public class BlobMover {
         try {
             dbConnection = DbPool.getConnection(mbox);
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("ZetaHsm: Failed to get a dbConnection", e);
+            throw ServiceException.FAILURE("ZetaHsm: Failed to get a dbConnection (move)", e);
         }
 
         try {
@@ -206,7 +222,7 @@ public class BlobMover {
             itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
             movedItemInfoCounter = 0;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("ZetaHsm: Unknown DB problem", e);
+            throw ServiceException.FAILURE("ZetaHsm: Unknown DB problem (move)", e);
         } finally {
             DbPool.quietClose(dbConnection);
         }
