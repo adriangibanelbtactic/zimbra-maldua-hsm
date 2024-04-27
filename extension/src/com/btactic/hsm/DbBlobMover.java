@@ -38,7 +38,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobMover {
 
-    private static void alterVolume(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
+    private static void alterVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
 
         List<Integer> itemsToMigrateInfosIds = new ArrayList<Integer>();
         for (MovedItemInfo itemsToMigrateInfo : itemsToMigrateInfos) {
@@ -57,16 +57,12 @@ public class DbBlobMover {
         sql.append(")");
 
         Connection conn = null;
-        DbConnection dbConnection = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            dbConnection = DbPool.getConnection(mbox);
             conn = dbConnection.getConnection();
             stmt = conn.prepareStatement(sql.toString());
             rs = stmt.executeQuery();
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("ZetaHsm: Failed to update blobs in DB", e);
         } catch (SQLException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to update blobs in DB", e);
         } finally {
@@ -74,15 +70,14 @@ public class DbBlobMover {
                 dbConnection.closeQuietly(rs);
                 dbConnection.closeQuietly(stmt);
             }
-            DbPool.quietClose(dbConnection);
         }
 
     }
 
-    public static void alterVolume(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    public static void alterVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
 
-        alterVolume(mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
-        alterVolume(mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
+        alterVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
+        alterVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
 
     }
 

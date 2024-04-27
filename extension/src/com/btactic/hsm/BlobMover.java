@@ -179,27 +179,36 @@ public class BlobMover {
     }
 
     private void moveItems(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+        DbConnection dbConnection = null;
         Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
         List<MovedItemInfo> itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
         int movedItemInfoChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
         int movedItemInfoCounter = 0;
 
-        while (itemsToMigrateInfosIter.hasNext()) {
-            movedItemInfoCounter = movedItemInfoCounter + 1;
-            MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
-            itemsInfosToMigrateChunk.add(info);
-            if (movedItemInfoCounter == movedItemInfoChunkSize) {
-                moveChunkItems(mbox, destinationVolumeId, itemsInfosToMigrateChunk);
-                itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
-                movedItemInfoCounter = 0;
+        dbConnection = DbPool.getConnection(mbox);
+
+        try {
+            while (itemsToMigrateInfosIter.hasNext()) {
+                movedItemInfoCounter = movedItemInfoCounter + 1;
+                MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
+                itemsInfosToMigrateChunk.add(info);
+                if (movedItemInfoCounter == movedItemInfoChunkSize) {
+                    moveChunkItems(dbConnection, mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+                    itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
+                    movedItemInfoCounter = 0;
+                }
             }
+            moveChunkItems(dbConnection, mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+            itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
+            movedItemInfoCounter = 0;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Failed to get a dbConnection", e);
+        } finally {
+            DbPool.quietClose(dbConnection);
         }
-        moveChunkItems(mbox, destinationVolumeId, itemsInfosToMigrateChunk);
-        itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
-        movedItemInfoCounter = 0;
     }
 
-    private void moveChunkItems(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
 
         List<MailboxBlob> oldBlobs = new ArrayList<MailboxBlob>();
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
@@ -248,7 +257,7 @@ public class BlobMover {
             }
 
             // Update messages in the database
-            DbBlobMover.alterVolume(mbox, destinationVolumeId, itemsToMigrateInfos);
+            DbBlobMover.alterVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos);
 
             // Update global map, now that we know that all ops have succeeded
             mAllNewBlobs.putAll(newBlobMap);
