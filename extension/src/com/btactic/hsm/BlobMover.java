@@ -185,7 +185,11 @@ public class BlobMover {
         int movedItemInfoChunkSize = 100; // TODO: Optional parametre that you can set to speed up queries
         int movedItemInfoCounter = 0;
 
-        dbConnection = DbPool.getConnection(mbox);
+        try {
+            dbConnection = DbPool.getConnection(mbox);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Failed to get a dbConnection", e);
+        }
 
         try {
             while (itemsToMigrateInfosIter.hasNext()) {
@@ -202,7 +206,7 @@ public class BlobMover {
             itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
             movedItemInfoCounter = 0;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("ZetaHsm: Failed to get a dbConnection", e);
+            throw ServiceException.FAILURE("ZetaHsm: Unknown DB problem", e);
         } finally {
             DbPool.quietClose(dbConnection);
         }
