@@ -200,12 +200,12 @@ public class BlobMover {
 
     private void moveChunkItems(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
 
-        List oldBlobs = new ArrayList();
+        List<MailboxBlob> oldBlobs = new ArrayList<MailboxBlob>();
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
         MailboxBlob oldBlob = null;
 
-        Map newBlobMap = new HashMap(); // Fast lookup by digest
-        List newBlobList = new ArrayList(); // Deletion in case of error
+        Map<String, MailboxBlob> newBlobMap = new HashMap<String, MailboxBlob>(); // Fast lookup by digest
+        List<MailboxBlob> newBlobList = new ArrayList<MailboxBlob>(); // Deletion in case of error
         MailboxMaintenance maintenance = null;
 
         try {
