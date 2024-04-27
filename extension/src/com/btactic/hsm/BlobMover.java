@@ -69,7 +69,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class BlobMover {
 
-    private Map<String, MailboxBlob> mAllNewBlobs = null;
+    private HashMap<String, MailboxBlob> mAllNewBlobs = null;
     private FileBlobStore mStore = (FileBlobStore) StoreManager.getInstance();
 
     private List<Integer> getAllMailboxIds(SoapProvisioning prov)
@@ -120,6 +120,7 @@ public class BlobMover {
     }
 
     public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId) throws ServiceException {
+        mAllNewBlobs = new HashMap<String, MailboxBlob>();
         List<Short> validOriginVolumeIds = getValidOriginVolumeIds(prov, destinationVolumeId);
 
         if (validOriginVolumeIds.isEmpty()) {
