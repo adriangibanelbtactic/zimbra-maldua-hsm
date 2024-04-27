@@ -19,7 +19,6 @@ package com.btactic.hsm;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.util.ArrayList;
@@ -61,16 +60,15 @@ public class DbBlobMover {
 
         Connection conn = null;
         PreparedStatement stmt = null;
-        ResultSet rs = null;
         try {
             conn = dbConnection.getConnection();
             stmt = conn.prepareStatement(sql.toString());
-            rs = stmt.executeQuery();
+            stmt.executeUpdate();
+            conn.commit();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to update blobs in DB", e);
         } finally {
             if (dbConnection != null) {
-                dbConnection.closeQuietly(rs);
                 dbConnection.closeQuietly(stmt);
             }
         }
