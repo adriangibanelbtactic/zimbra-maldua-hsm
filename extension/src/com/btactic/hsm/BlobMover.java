@@ -275,6 +275,7 @@ public class BlobMover {
                     newBlobList.add(newBlob);
                 } else {
                     ZimbraLog.misc.warn("Could not find blob for message " + info.getId() + ", revision " + info.getModContent());
+                    itemsToMigrateInfosIter.remove(); // We do not want to change original locator if we don't find a file
                 }
             }
 
