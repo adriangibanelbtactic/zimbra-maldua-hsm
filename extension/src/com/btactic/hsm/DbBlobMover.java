@@ -38,7 +38,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobMover {
 
-    private static void alterVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
+    private static void alterMailItemVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
 
         List<Integer> itemsToMigrateInfosIds = new ArrayList<Integer>();
         for (MovedItemInfo itemsToMigrateInfo : itemsToMigrateInfos) {
@@ -75,10 +75,49 @@ public class DbBlobMover {
 
     }
 
+    private static void alterRevisionVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
+
+        List<Integer> itemsToMigrateInfosIds = new ArrayList<Integer>();
+        for (MovedItemInfo itemsToMigrateInfo : itemsToMigrateInfos) {
+            itemsToMigrateInfosIds.add(itemsToMigrateInfo.getId());
+        }
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE ");
+        sql.append(DbMailItem.getRevisionTableName(mbox, dumpster));
+        sql.append(" SET locator = ");
+        sql.append(destinationVolumeId);
+        sql.append(" WHERE ");
+        sql.append(" item_id IN ");
+        sql.append("(");
+        sql.append(StringUtils.join(itemsToMigrateInfosIds, ","));
+        sql.append(")");
+
+        ZimbraLog.misc.info("DEBUG: MoveQuery: '" + sql.toString() + "'" + ".");
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        try {
+            conn = dbConnection.getConnection();
+            stmt = conn.prepareStatement(sql.toString());
+            stmt.executeUpdate();
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Failed to update blobs in DB", e);
+        } finally {
+            if (dbConnection != null) {
+                dbConnection.closeQuietly(stmt);
+            }
+        }
+
+    }
+
     public static void alterVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
 
-        alterVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
-        alterVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
+        alterMailItemVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
+        alterMailItemVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
+        alterRevisionVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
+        alterRevisionVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
 
     }
 
