@@ -47,8 +47,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobFilter {
 
-    public List<MovedItemInfo> filterItemsByVolume (DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
-        List<MovedItemInfo> filteredItemInfos = new ArrayList<MovedItemInfo>();
+    public void addMailItemItemsByVolume (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString, boolean dumpster) throws ServiceException {
 
         // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
         // TODO: Check if that takes less time to execute than current algorithm based on UNION query
@@ -56,35 +55,18 @@ public class DbBlobFilter {
         // non-dumpster items and dumpster items UNION query
         // Also extra data to avoid querying so much the database
         StringBuilder sql = new StringBuilder();
-        sql.append("(");
-            sql.append("SELECT mi.id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
-            sql.append(DbMailItem.getMailItemTableName(mailbox, "mi", false));
-            sql.append(" WHERE ");
-                sql.append(" mi.locator IN ");
-                sql.append("(");
-                sql.append(validOriginVolumeIdsString);
-                sql.append(")");
-            sql.append(" AND ");
-                sql.append(" mi.id IN ");
-                sql.append("(");
-                sql.append(StringUtils.join(zimbraQueryPreFilterItemsChunk, ","));
-                sql.append(")");
-        sql.append(")");
-        sql.append(" UNION ");
-        sql.append("(");
-            sql.append("SELECT mi.id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
-            sql.append(DbMailItem.getMailItemTableName(mailbox, "mi", true));
-            sql.append(" WHERE ");
-                sql.append(" mi.locator IN ");
-                sql.append("(");
-                sql.append(validOriginVolumeIdsString);
-                sql.append(")");
-            sql.append(" AND ");
-                sql.append(" mi.id IN ");
-                sql.append("(");
-                sql.append(StringUtils.join(zimbraQueryPreFilterItemsChunk, ","));
-                sql.append(")");
-        sql.append(")");
+        sql.append("SELECT mi.id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
+        sql.append(DbMailItem.getMailItemTableName(mailbox, "mi", dumpster));
+        sql.append(" WHERE ");
+            sql.append(" mi.locator IN ");
+            sql.append("(");
+            sql.append(validOriginVolumeIdsString);
+            sql.append(")");
+        sql.append(" AND ");
+            sql.append(" mi.id IN ");
+            sql.append("(");
+            sql.append(StringUtils.join(zimbraQueryPreFilterItemsChunk, ","));
+            sql.append(")");
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -109,6 +91,63 @@ public class DbBlobFilter {
                 dbConnection.closeQuietly(stmt);
             }
         }
+
+    }
+
+    public void addRevisionItemsByVolume (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString, boolean dumpster) throws ServiceException {
+
+        // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
+        // TODO: Check if that takes less time to execute than current algorithm based on UNION query
+
+        // non-dumpster items and dumpster items UNION query
+        // Also extra data to avoid querying so much the database
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT mi.item_id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
+        sql.append(DbMailItem.getRevisionTableName(mailbox, "mi", dumpster));
+        sql.append(" WHERE ");
+            sql.append(" mi.locator IN ");
+            sql.append("(");
+            sql.append(validOriginVolumeIdsString);
+            sql.append(")");
+        sql.append(" AND ");
+            sql.append(" mi.item_id IN ");
+            sql.append("(");
+            sql.append(StringUtils.join(zimbraQueryPreFilterItemsChunk, ","));
+            sql.append(")");
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = dbConnection.getConnection();
+            stmt = conn.prepareStatement(sql.toString());
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt(1);
+                short locator = rs.getShort(2);
+                int modContent = rs.getInt(3);
+                String blobDigest = rs.getString(4);
+                MovedItemInfo info = new MovedItemInfo(id, locator, modContent, blobDigest);
+                filteredItemInfos.add(info);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("ZetaHsm: Failed to filter blobs", e);
+        } finally {
+            if (dbConnection != null) {
+                dbConnection.closeQuietly(rs);
+                dbConnection.closeQuietly(stmt);
+            }
+        }
+
+    }
+
+    public List<MovedItemInfo> filterItemsByVolume (DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
+        List<MovedItemInfo> filteredItemInfos = new ArrayList<MovedItemInfo>();
+
+        addMailItemItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, false); // Default table
+        addMailItemItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, true); // Dumpster table
+        addRevisionItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, false); // Default table
+        addRevisionItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, true); // Dumpster table
 
         return filteredItemInfos;
 
