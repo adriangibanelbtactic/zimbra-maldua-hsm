@@ -77,8 +77,8 @@ public class DbBlobFilter {
                 short locator = rs.getShort(2);
                 int modContent = rs.getInt(3);
                 String blobDigest = rs.getString(4);
-                MovedItemInfo info = new MovedItemInfo(id, locator, modContent, blobDigest);
-                filteredItemInfos.add(info);
+                MovedItemInfo movedItemInfo = new MovedItemInfo(id, locator, modContent, blobDigest);
+                filteredItemInfos.add(movedItemInfo);
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to filter blobs", e);
@@ -121,8 +121,8 @@ public class DbBlobFilter {
                 short locator = rs.getShort(2);
                 int modContent = rs.getInt(3);
                 String blobDigest = rs.getString(4);
-                MovedItemInfo info = new MovedItemInfo(id, locator, modContent, blobDigest);
-                filteredItemInfos.add(info);
+                MovedItemInfo movedItemInfo = new MovedItemInfo(id, locator, modContent, blobDigest);
+                filteredItemInfos.add(movedItemInfo);
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("ZetaHsm: Failed to filter blobs", e);
