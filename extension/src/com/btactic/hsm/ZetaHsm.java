@@ -127,8 +127,8 @@ public class ZetaHsm {
             return hsmSearchQueryString;
         }
 
-        private short getDestinationVolumeId(SoapProvisioning prov) throws ServiceException {
-            short destinationVolumeId = -1;
+        private short getDestinationLocator(SoapProvisioning prov) throws ServiceException {
+            short destinationLocator = -1;
 
             GetAllVolumesRequest request = new GetAllVolumesRequest();
             Element requestElement = JaxbUtil.jaxbToElement(request);
@@ -141,11 +141,11 @@ public class ZetaHsm {
                        (Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) &&
                        (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))
                    ) {
-                       destinationVolumeId = volumeInfo.getId();
+                       destinationLocator = volumeInfo.getId();
                 }
             }
 
-            return destinationVolumeId;
+            return destinationLocator;
         }
 
         public ZetaHsmThread() {
@@ -171,13 +171,13 @@ public class ZetaHsm {
                 SoapProvisioning prov = SoapProvisioning.getAdminInstance();
                 prov.soapZimbraAdminAuthenticate();
 
-                short destinationVolumeId = getDestinationVolumeId(prov);
-                if (destinationVolumeId == -1) {
+                short destinationLocator = getDestinationLocator(prov);
+                if (destinationLocator == -1) {
                     ZimbraLog.misc.error("We did not find an expected (Secondary, internal, current and FileBlobStore class) destination volume. Aborting.");
                     return;
                 }
 
-                ZimbraLog.misc.info("DEBUG: destinationVolumeId: " + destinationVolumeId);
+                ZimbraLog.misc.info("DEBUG: destinationLocator: " + destinationLocator);
 
                 int zimbraHsmPolicyCounter = 0;
                 for (String nZimbraHsmPolicy: zimbraHsmPolicyList) {
@@ -191,7 +191,7 @@ public class ZetaHsm {
                     ZimbraLog.misc.info("DEBUG: hsmSearchQueryString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmSearchQueryString + "'");
 
                     BlobMover blobMover = new BlobMover();
-                    blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationVolumeId);
+                    blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator);
                 }
                 ZimbraLog.misc.info("DEBUG: ZetaHsm RUN function ended successfully.");
             }
