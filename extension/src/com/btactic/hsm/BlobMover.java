@@ -69,7 +69,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class BlobMover {
 
-    private HashMap<String, MailboxBlob> mAllNewBlobs = null;
+    private HashMap<String, MailboxBlob> mAllDestinationBlobs = null;
     private FileBlobStore mStore = (FileBlobStore) StoreManager.getInstance();
 
     private List<Integer> getAllMailboxIds(SoapProvisioning prov)
@@ -174,7 +174,7 @@ public class BlobMover {
     }
 
     public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId) throws ServiceException {
-        mAllNewBlobs = new HashMap<String, MailboxBlob>();
+        mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
         List<Short> validOriginVolumeIds = getValidOriginVolumeIds(prov, destinationVolumeId);
 
         if (validOriginVolumeIds.isEmpty()) {
@@ -236,8 +236,8 @@ public class BlobMover {
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
         MailboxBlob originBlob = null;
 
-        Map<String, MailboxBlob> newBlobMap = new HashMap<String, MailboxBlob>(); // Fast lookup by digest
-        List<MailboxBlob> newBlobList = new ArrayList<MailboxBlob>(); // Deletion in case of error
+        Map<String, MailboxBlob> destinationBlobMap = new HashMap<String, MailboxBlob>(); // Fast lookup by digest
+        List<MailboxBlob> destinationBlobList = new ArrayList<MailboxBlob>(); // Deletion in case of error
         MailboxMaintenance maintenance = null;
 
         try {
@@ -250,28 +250,28 @@ public class BlobMover {
                 // Copy blob to new location
                 originBlob = mStore.getMailboxBlob(mbox, info.getId(), info.getModContent(), String.valueOf(info.getLocator()));
                 if (originBlob != null) {
-                    MailboxBlob newBlob = null;
+                    MailboxBlob destinationBlob = null;
 
                     try {
                         // Link to the copy if the original is already there
-                        MailboxBlob linkSource = (MailboxBlob) mAllNewBlobs.get(info.getBlobDigest());
+                        MailboxBlob linkSource = (MailboxBlob) mAllDestinationBlobs.get(info.getBlobDigest());
                         if (linkSource == null) {
-                            linkSource = (MailboxBlob) newBlobMap.get(info.getBlobDigest());
+                            linkSource = (MailboxBlob) destinationBlobMap.get(info.getBlobDigest());
                             if (linkSource == null) {
                                 linkSource = originBlob;
                             }
                         }
 
                         // Blob link is created
-                        newBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationVolumeId);
+                        destinationBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationVolumeId);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE(
                             "Unable to copy " + originBlob + " to location: " + destinationVolumeId, e);
                     }
 
                     originBlobs.add(originBlob);
-                    newBlobMap.put(info.getBlobDigest(), newBlob);
-                    newBlobList.add(newBlob);
+                    destinationBlobMap.put(info.getBlobDigest(), destinationBlob);
+                    destinationBlobList.add(destinationBlob);
                 } else {
                     ZimbraLog.misc.warn("Could not find blob for message " + info.getId() + ", revision " + info.getModContent());
                     itemsToMigrateInfosIter.remove(); // We do not want to change original locator if we don't find a file
@@ -282,7 +282,7 @@ public class BlobMover {
             DbBlobMover.alterVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos);
 
             // Update global map, now that we know that all ops have succeeded
-            mAllNewBlobs.putAll(newBlobMap);
+            mAllDestinationBlobs.putAll(destinationBlobMap);
 
             // Delete origin blobs
             Iterator originBlobsIter = originBlobs.iterator();
@@ -297,13 +297,13 @@ public class BlobMover {
         } catch (ServiceException e) {
             // Delete new blobs on failure.
             // As the database changes were not committed this is safe to do.
-            Iterator newBlobListIter = newBlobList.iterator();
-            while (newBlobListIter.hasNext()) {
-                MailboxBlob newBlob = (MailboxBlob) newBlobListIter.next();
+            Iterator destinationBlobListIter = destinationBlobList.iterator();
+            while (destinationBlobListIter.hasNext()) {
+                MailboxBlob destinationBlob = (MailboxBlob) destinationBlobListIter.next();
                 try {
-                    mStore.delete(newBlob);
+                    mStore.delete(destinationBlob);
                 } catch (IOException ioe) {
-                    ZimbraLog.misc.error("Unable to delete " + newBlob + ": " + ioe);
+                    ZimbraLog.misc.error("Unable to delete " + destinationBlob + ": " + ioe);
                 }
             }
         } finally {
