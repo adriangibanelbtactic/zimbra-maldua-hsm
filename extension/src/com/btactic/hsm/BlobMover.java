@@ -210,8 +210,8 @@ public class BlobMover {
         try {
             while (itemsToMigrateInfosIter.hasNext()) {
                 movedItemInfoCounter = movedItemInfoCounter + 1;
-                MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
-                itemsInfosToMigrateChunk.add(info);
+                MovedItemInfo movedItemInfo = (MovedItemInfo) itemsToMigrateInfosIter.next();
+                itemsInfosToMigrateChunk.add(movedItemInfo);
                 if (movedItemInfoCounter == movedItemInfoChunkSize) {
                     moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
                     itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
@@ -245,35 +245,35 @@ public class BlobMover {
 
             Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
             while (itemsToMigrateInfosIter.hasNext()) {
-                MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
+                MovedItemInfo movedItemInfo = (MovedItemInfo) itemsToMigrateInfosIter.next();
 
                 // Copy blob to destination
-                originBlob = mStore.getMailboxBlob(mbox, info.getId(), info.getModContent(), String.valueOf(info.getLocator()));
+                originBlob = mStore.getMailboxBlob(mbox, movedItemInfo.getId(), movedItemInfo.getModContent(), String.valueOf(movedItemInfo.getLocator()));
                 if (originBlob != null) {
                     MailboxBlob destinationBlob = null;
 
                     try {
                         // Link to the copy if the original is already there
-                        MailboxBlob linkSource = (MailboxBlob) mAllDestinationBlobs.get(info.getBlobDigest());
+                        MailboxBlob linkSource = (MailboxBlob) mAllDestinationBlobs.get(movedItemInfo.getBlobDigest());
                         if (linkSource == null) {
-                            linkSource = (MailboxBlob) destinationBlobMap.get(info.getBlobDigest());
+                            linkSource = (MailboxBlob) destinationBlobMap.get(movedItemInfo.getBlobDigest());
                             if (linkSource == null) {
                                 linkSource = originBlob;
                             }
                         }
 
                         // Blob link is created
-                        destinationBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationLocator);
+                        destinationBlob = mStore.link(linkSource.getLocalBlob(), mbox, movedItemInfo.getId(), movedItemInfo.getModContent(), destinationLocator);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE(
                             "Unable to copy " + originBlob + " to location: " + destinationLocator, e);
                     }
 
                     originBlobs.add(originBlob);
-                    destinationBlobMap.put(info.getBlobDigest(), destinationBlob);
+                    destinationBlobMap.put(movedItemInfo.getBlobDigest(), destinationBlob);
                     destinationBlobList.add(destinationBlob);
                 } else {
-                    ZimbraLog.misc.warn("Could not find blob for message " + info.getId() + ", revision " + info.getModContent());
+                    ZimbraLog.misc.warn("Could not find blob for message " + movedItemInfo.getId() + ", revision " + movedItemInfo.getModContent());
                     itemsToMigrateInfosIter.remove(); // We do not want to change original locator if we don't find a file
                 }
             }
