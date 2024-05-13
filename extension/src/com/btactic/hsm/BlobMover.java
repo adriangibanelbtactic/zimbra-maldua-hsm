@@ -114,7 +114,7 @@ public class BlobMover {
     private void filterAndAddToFilteredItemIds(DbConnection dbConnection, Mailbox mbox, List<Integer> zimbraQueryPreFilterItemsChunk, List<MovedItemInfo> zimbraQueryPostFilterItemsInfos, String validOriginLocatorsString) throws ServiceException {
         if (!(zimbraQueryPreFilterItemsChunk.isEmpty())) {
             DbBlobFilter dbBlobFilter = new DbBlobFilter ();
-            List<MovedItemInfo> filteredItemsInfos = dbBlobFilter.filterItemsByVolume(dbConnection, mbox, zimbraQueryPreFilterItemsChunk, validOriginLocatorsString);
+            List<MovedItemInfo> filteredItemsInfos = dbBlobFilter.filterItemsByLocation(dbConnection, mbox, zimbraQueryPreFilterItemsChunk, validOriginLocatorsString);
             zimbraQueryPostFilterItemsInfos.addAll(filteredItemsInfos);
         }
     }
