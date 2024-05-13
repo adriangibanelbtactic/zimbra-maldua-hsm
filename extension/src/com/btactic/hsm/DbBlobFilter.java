@@ -47,7 +47,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobFilter {
 
-    public void addMailItemItemsByVolume (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString, boolean dumpster) throws ServiceException {
+    public void addMailItemItemsByVolume (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginLocatorsString, boolean dumpster) throws ServiceException {
 
         // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
         // TODO: Check if that takes less time to execute than current algorithm based on UNION query
@@ -60,7 +60,7 @@ public class DbBlobFilter {
         sql.append(" WHERE ");
             sql.append(" mi.locator IN ");
             sql.append("(");
-            sql.append(validOriginVolumeIdsString);
+            sql.append(validOriginLocatorsString);
             sql.append(")");
         sql.append(" AND ");
             sql.append(" mi.id IN ");
@@ -94,7 +94,7 @@ public class DbBlobFilter {
 
     }
 
-    public void addRevisionItemsByVolume (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString, boolean dumpster) throws ServiceException {
+    public void addRevisionItemsByVolume (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginLocatorsString, boolean dumpster) throws ServiceException {
 
         // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
         // TODO: Check if that takes less time to execute than current algorithm based on UNION query
@@ -107,7 +107,7 @@ public class DbBlobFilter {
         sql.append(" WHERE ");
             sql.append(" mi.locator IN ");
             sql.append("(");
-            sql.append(validOriginVolumeIdsString);
+            sql.append(validOriginLocatorsString);
             sql.append(")");
         sql.append(" AND ");
             sql.append(" mi.item_id IN ");
@@ -141,13 +141,13 @@ public class DbBlobFilter {
 
     }
 
-    public List<MovedItemInfo> filterItemsByVolume (DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginVolumeIdsString) throws ServiceException {
+    public List<MovedItemInfo> filterItemsByVolume (DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginLocatorsString) throws ServiceException {
         List<MovedItemInfo> filteredItemInfos = new ArrayList<MovedItemInfo>();
 
-        addMailItemItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, false); // Default table
-        addMailItemItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, true); // Dumpster table
-        addRevisionItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, false); // Default table
-        addRevisionItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString, true); // Dumpster table
+        addMailItemItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginLocatorsString, false); // Default table
+        addMailItemItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginLocatorsString, true); // Dumpster table
+        addRevisionItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginLocatorsString, false); // Default table
+        addRevisionItemsByVolume(filteredItemInfos, dbConnection, mailbox, zimbraQueryPreFilterItemsChunk, validOriginLocatorsString, true); // Dumpster table
 
         return filteredItemInfos;
 
