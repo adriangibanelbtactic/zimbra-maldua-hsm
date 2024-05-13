@@ -247,14 +247,13 @@ public class BlobMover {
             while (itemsToMigrateInfosIter.hasNext()) {
                 MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
 
-                // Copy blob to new volume
+                // Copy blob to new location
                 oldBlob = mStore.getMailboxBlob(mbox, info.getId(), info.getModContent(), String.valueOf(info.getLocator()));
                 if (oldBlob != null) {
                     MailboxBlob newBlob = null;
 
                     try {
-                        // If we've already copied this blob, link to the copy,
-                        // rather than copying the original
+                        // Link to the copy if the original is already there
                         MailboxBlob linkSource = (MailboxBlob) mAllNewBlobs.get(info.getBlobDigest());
                         if (linkSource == null) {
                             linkSource = (MailboxBlob) newBlobMap.get(info.getBlobDigest());
@@ -263,11 +262,11 @@ public class BlobMover {
                             }
                         }
 
-                        // Create the link
+                        // Blob link is created
                         newBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationVolumeId);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE(
-                            "Unable to copy " + oldBlob + " to volume " + destinationVolumeId, e);
+                            "Unable to copy " + oldBlob + " to location: " + destinationVolumeId, e);
                     }
 
                     oldBlobs.add(oldBlob);
@@ -296,8 +295,8 @@ public class BlobMover {
                 }
             }
         } catch (ServiceException e) {
-            // Delete new blobs on failure.  It's safe to do this, since we know
-            // the database changes were not committed.
+            // Delete new blobs on failure.
+            // As the database changes were not committed this is safe to do.
             Iterator newBlobListIter = newBlobList.iterator();
             while (newBlobListIter.hasNext()) {
                 MailboxBlob newBlob = (MailboxBlob) newBlobListIter.next();
