@@ -85,8 +85,8 @@ public class BlobMover {
         return ids;
     }
 
-    private List<Short> getValidOriginVolumeIds(SoapProvisioning prov, int destinationVolumeId) throws ServiceException {
-        List<Short> validOriginVolumeIds = new ArrayList<Short>();
+    private List<Short> getValidOriginLocators(SoapProvisioning prov, int destinationLocator) throws ServiceException {
+        List<Short> validOriginLocators = new ArrayList<Short>();
 
         GetAllVolumesRequest request = new GetAllVolumesRequest();
         Element requestElement = JaxbUtil.jaxbToElement(request);
@@ -95,7 +95,7 @@ public class BlobMover {
 
         for (VolumeInfo volumeInfo : response.getVolumes()) {
 
-            if (volumeInfo.getId() == destinationVolumeId) {
+            if (volumeInfo.getId() == destinationLocator) {
                 break;
             }
 
@@ -104,22 +104,22 @@ public class BlobMover {
             }
 
             if ((Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) && (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))) {
-                validOriginVolumeIds.add(volumeInfo.getId());
+                validOriginLocators.add(volumeInfo.getId());
             }
         }
 
-        return validOriginVolumeIds;
+        return validOriginLocators;
     }
 
-    private void filterAndAddToFilteredItemIds(DbConnection dbConnection, Mailbox mbox, List<Integer> zimbraQueryPreFilterItemsChunk, List<MovedItemInfo> zimbraQueryPostFilterItemsInfos, String validOriginVolumeIdsString) throws ServiceException {
+    private void filterAndAddToFilteredItemIds(DbConnection dbConnection, Mailbox mbox, List<Integer> zimbraQueryPreFilterItemsChunk, List<MovedItemInfo> zimbraQueryPostFilterItemsInfos, String validOriginLocatorsString) throws ServiceException {
         if (!(zimbraQueryPreFilterItemsChunk.isEmpty())) {
             DbBlobFilter dbBlobFilter = new DbBlobFilter ();
-            List<MovedItemInfo> filteredItemsInfos = dbBlobFilter.filterItemsByVolume(dbConnection, mbox, zimbraQueryPreFilterItemsChunk, validOriginVolumeIdsString);
+            List<MovedItemInfo> filteredItemsInfos = dbBlobFilter.filterItemsByVolume(dbConnection, mbox, zimbraQueryPreFilterItemsChunk, validOriginLocatorsString);
             zimbraQueryPostFilterItemsInfos.addAll(filteredItemsInfos);
         }
     }
 
-    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId, String validOriginVolumeIdsString) throws ServiceException {
+    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString) throws ServiceException {
         DbConnection dbConnection = null;
 
         SearchParams params = new SearchParams();
@@ -148,13 +148,13 @@ public class BlobMover {
                 int itemId = result.getNext().getItemId();
                 zimbraQueryPreFilterItemsChunk.add(itemId);
                 if (zimbraQueryPreFilterCounter == zimbraQueryPreFilterChunkSize) {
-                    filterAndAddToFilteredItemIds (dbConnection, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
+                    filterAndAddToFilteredItemIds (dbConnection, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginLocatorsString);
                     zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
                     zimbraQueryPreFilterCounter = 0;
                 }
                 // ZimbraLog.misc.info("DEBUG: mailboxId (Pre Filter): " + mboxId + " ItemId: '" + itemId + "'" + ".");
             }
-            filterAndAddToFilteredItemIds (dbConnection, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginVolumeIdsString);
+            filterAndAddToFilteredItemIds (dbConnection, mbox, zimbraQueryPreFilterItemsChunk, zimbraQueryPostFilterItemsInfos, validOriginLocatorsString);
             zimbraQueryPreFilterItemsChunk = new ArrayList<Integer>();
             zimbraQueryPreFilterCounter = 0;
 
@@ -169,32 +169,32 @@ public class BlobMover {
             ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
         }
 
-        moveItems(mbox, destinationVolumeId, zimbraQueryPostFilterItemsInfos);
+        moveItems(mbox, destinationLocator, zimbraQueryPostFilterItemsInfos);
 
     }
 
-    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationVolumeId) throws ServiceException {
+    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator) throws ServiceException {
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
-        List<Short> validOriginVolumeIds = getValidOriginVolumeIds(prov, destinationVolumeId);
+        List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
 
-        if (validOriginVolumeIds.isEmpty()) {
+        if (validOriginLocators.isEmpty()) {
             ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
             return;
         }
 
-        String validOriginVolumeIdsString = StringUtils.join(validOriginVolumeIds, ",");
-        ZimbraLog.misc.info("DEBUG: validOriginVolumeIdsString: '" + validOriginVolumeIdsString + "'" + ".");
+        String validOriginLocatorsString = StringUtils.join(validOriginLocators, ",");
+        ZimbraLog.misc.info("DEBUG: validOriginLocatorsString: '" + validOriginLocatorsString + "'" + ".");
 
         List<Integer> mailboxIds = getAllMailboxIds(prov);
         for (int mboxId : mailboxIds) {
-            ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationVolumeId: " + destinationVolumeId + ".");
+            ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-            moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationVolumeId, validOriginVolumeIdsString);
+            moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString);
         }
     }
 
-    private void moveItems(Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
         DbConnection dbConnection = null;
         Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
         List<MovedItemInfo> itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
@@ -213,13 +213,13 @@ public class BlobMover {
                 MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
                 itemsInfosToMigrateChunk.add(info);
                 if (movedItemInfoCounter == movedItemInfoChunkSize) {
-                    moveChunkItems(dbConnection, mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+                    moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
                     itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
                     movedItemInfoCounter = 0;
                 }
             }
             if (itemsInfosToMigrateChunk.size() >= 1) {
-                moveChunkItems(dbConnection, mbox, destinationVolumeId, itemsInfosToMigrateChunk);
+                moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
             }
             itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
             movedItemInfoCounter = 0;
@@ -230,7 +230,7 @@ public class BlobMover {
         }
     }
 
-    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
 
         List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
@@ -263,10 +263,10 @@ public class BlobMover {
                         }
 
                         // Blob link is created
-                        destinationBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationVolumeId);
+                        destinationBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationLocator);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE(
-                            "Unable to copy " + originBlob + " to location: " + destinationVolumeId, e);
+                            "Unable to copy " + originBlob + " to location: " + destinationLocator, e);
                     }
 
                     originBlobs.add(originBlob);
@@ -279,7 +279,7 @@ public class BlobMover {
             }
 
             // Update messages in the database
-            DbBlobMover.alterVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos);
+            DbBlobMover.alterVolume(dbConnection, mbox, destinationLocator, itemsToMigrateInfos);
 
             // Update global map, now that we know that all ops have succeeded
             mAllDestinationBlobs.putAll(destinationBlobMap);
