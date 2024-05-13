@@ -247,7 +247,7 @@ public class BlobMover {
             while (itemsToMigrateInfosIter.hasNext()) {
                 MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
 
-                // Copy blob to new location
+                // Copy blob to destination
                 originBlob = mStore.getMailboxBlob(mbox, info.getId(), info.getModContent(), String.valueOf(info.getLocator()));
                 if (originBlob != null) {
                     MailboxBlob destinationBlob = null;
@@ -295,7 +295,7 @@ public class BlobMover {
                 }
             }
         } catch (ServiceException e) {
-            // Delete new blobs on failure.
+            // Delete destination blobs on failure.
             // As the database changes were not committed this is safe to do.
             Iterator destinationBlobListIter = destinationBlobList.iterator();
             while (destinationBlobListIter.hasNext()) {
