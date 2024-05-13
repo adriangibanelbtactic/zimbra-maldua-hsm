@@ -49,10 +49,7 @@ public class DbBlobFilter {
 
     public void addMailItemItemsByLocation (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginLocatorsString, boolean dumpster) throws ServiceException {
 
-        // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
-        // TODO: Check if that takes less time to execute than current algorithm based on UNION query
-
-        // non-dumpster items and dumpster items UNION query
+        // Items matching our origin locators
         // Also extra data to avoid querying so much the database
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT mi.id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
@@ -96,10 +93,7 @@ public class DbBlobFilter {
 
     public void addRevisionItemsByLocation (List<MovedItemInfo> filteredItemInfos, DbConnection dbConnection, Mailbox mailbox, List<Integer> zimbraQueryPreFilterItemsChunk, String validOriginLocatorsString, boolean dumpster) throws ServiceException {
 
-        // TODO: Do one query for non-dumpster table and another one for dumpster table and add them together
-        // TODO: Check if that takes less time to execute than current algorithm based on UNION query
-
-        // non-dumpster items and dumpster items UNION query
+        // Revisions matching our origin locators
         // Also extra data to avoid querying so much the database
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT mi.item_id, mi.locator, mi.mod_content, mi.blob_digest FROM ");
