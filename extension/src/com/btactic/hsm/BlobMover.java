@@ -232,9 +232,9 @@ public class BlobMover {
 
     private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
 
-        List<MailboxBlob> oldBlobs = new ArrayList<MailboxBlob>();
+        List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
-        MailboxBlob oldBlob = null;
+        MailboxBlob originBlob = null;
 
         Map<String, MailboxBlob> newBlobMap = new HashMap<String, MailboxBlob>(); // Fast lookup by digest
         List<MailboxBlob> newBlobList = new ArrayList<MailboxBlob>(); // Deletion in case of error
@@ -248,8 +248,8 @@ public class BlobMover {
                 MovedItemInfo info = (MovedItemInfo) itemsToMigrateInfosIter.next();
 
                 // Copy blob to new location
-                oldBlob = mStore.getMailboxBlob(mbox, info.getId(), info.getModContent(), String.valueOf(info.getLocator()));
-                if (oldBlob != null) {
+                originBlob = mStore.getMailboxBlob(mbox, info.getId(), info.getModContent(), String.valueOf(info.getLocator()));
+                if (originBlob != null) {
                     MailboxBlob newBlob = null;
 
                     try {
@@ -258,7 +258,7 @@ public class BlobMover {
                         if (linkSource == null) {
                             linkSource = (MailboxBlob) newBlobMap.get(info.getBlobDigest());
                             if (linkSource == null) {
-                                linkSource = oldBlob;
+                                linkSource = originBlob;
                             }
                         }
 
@@ -266,10 +266,10 @@ public class BlobMover {
                         newBlob = mStore.link(linkSource.getLocalBlob(), mbox, info.getId(), info.getModContent(), destinationVolumeId);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE(
-                            "Unable to copy " + oldBlob + " to location: " + destinationVolumeId, e);
+                            "Unable to copy " + originBlob + " to location: " + destinationVolumeId, e);
                     }
 
-                    oldBlobs.add(oldBlob);
+                    originBlobs.add(originBlob);
                     newBlobMap.put(info.getBlobDigest(), newBlob);
                     newBlobList.add(newBlob);
                 } else {
@@ -284,14 +284,14 @@ public class BlobMover {
             // Update global map, now that we know that all ops have succeeded
             mAllNewBlobs.putAll(newBlobMap);
 
-            // Delete old blobs
-            Iterator oldBlobsIter = oldBlobs.iterator();
-            while (oldBlobsIter.hasNext()) {
-                MailboxBlob oldMboxBlob = (MailboxBlob) oldBlobsIter.next();
+            // Delete origin blobs
+            Iterator originBlobsIter = originBlobs.iterator();
+            while (originBlobsIter.hasNext()) {
+                MailboxBlob originMboxBlob = (MailboxBlob) originBlobsIter.next();
                 try {
-                    mStore.delete(oldMboxBlob);
+                    mStore.delete(originMboxBlob);
                 } catch (IOException e) {
-                    ZimbraLog.misc.error("Unable to delete " + oldMboxBlob + ": " + e);
+                    ZimbraLog.misc.error("Unable to delete " + originMboxBlob + ": " + e);
                 }
             }
         } catch (ServiceException e) {
