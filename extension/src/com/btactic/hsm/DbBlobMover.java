@@ -38,7 +38,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class DbBlobMover {
 
-    private static void alterMailItemVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
+    private static void alterMailItemVolume(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
 
         List<Integer> itemsToMigrateInfosIds = new ArrayList<Integer>();
         for (MovedItemInfo itemsToMigrateInfo : itemsToMigrateInfos) {
@@ -49,7 +49,7 @@ public class DbBlobMover {
         sql.append("UPDATE ");
         sql.append(DbMailItem.getMailItemTableName(mbox, dumpster));
         sql.append(" SET locator = ");
-        sql.append(destinationVolumeId);
+        sql.append(destinationLocator);
         sql.append(" WHERE ");
         sql.append(" id IN ");
         sql.append("(");
@@ -75,7 +75,7 @@ public class DbBlobMover {
 
     }
 
-    private static void alterRevisionVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
+    private static void alterRevisionVolume(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, boolean dumpster) throws ServiceException {
 
         List<Integer> itemsToMigrateInfosIds = new ArrayList<Integer>();
         for (MovedItemInfo itemsToMigrateInfo : itemsToMigrateInfos) {
@@ -86,7 +86,7 @@ public class DbBlobMover {
         sql.append("UPDATE ");
         sql.append(DbMailItem.getRevisionTableName(mbox, dumpster));
         sql.append(" SET locator = ");
-        sql.append(destinationVolumeId);
+        sql.append(destinationLocator);
         sql.append(" WHERE ");
         sql.append(" item_id IN ");
         sql.append("(");
@@ -112,12 +112,12 @@ public class DbBlobMover {
 
     }
 
-    public static void alterVolume(DbConnection dbConnection, Mailbox mbox, short destinationVolumeId, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    public static void alterVolume(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
 
-        alterMailItemVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
-        alterMailItemVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
-        alterRevisionVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, false); // Default table
-        alterRevisionVolume(dbConnection, mbox, destinationVolumeId, itemsToMigrateInfos, true); // Dumpster table
+        alterMailItemVolume(dbConnection, mbox, destinationLocator, itemsToMigrateInfos, false); // Default table
+        alterMailItemVolume(dbConnection, mbox, destinationLocator, itemsToMigrateInfos, true); // Dumpster table
+        alterRevisionVolume(dbConnection, mbox, destinationLocator, itemsToMigrateInfos, false); // Default table
+        alterRevisionVolume(dbConnection, mbox, destinationLocator, itemsToMigrateInfos, true); // Dumpster table
 
     }
 
