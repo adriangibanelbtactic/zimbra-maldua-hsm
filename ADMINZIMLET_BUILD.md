@@ -18,7 +18,7 @@ apt install zip git
 
 ```
 cd /tmp
-git clone 'https://github.com/btactic/zimbra-maldua-hsm.git'
+git clone 'https://github.com/maldua-suite/zimbra-maldua-hsm.git'
 ```
 
 ## Build
