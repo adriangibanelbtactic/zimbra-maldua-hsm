@@ -23,7 +23,7 @@ apt install ant git make zip
 sudo su - zimbra
 mkdir -p /opt/zimbra/conf/scripts
 cd /opt/zimbra/conf/scripts
-git clone 'https://github.com/btactic/zimbra-maldua-hsm.git'
+git clone 'https://github.com/maldua-suite/zimbra-maldua-hsm.git'
 
 cd zimbra-maldua-hsm/extension
 ln -s /opt/zimbra/lib/jars lib
