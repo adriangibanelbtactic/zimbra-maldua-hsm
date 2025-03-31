@@ -1,8 +1,8 @@
-# Zimbra OSE HSM
+# Maldua's Zimbra HSM
 
 ## About
 
-**MALDUA'S Zimbra OSE HSM Extension & Administration Zimlet** brought to you by [BTACTIC, open source & cloud solutions](https://www.btactic.com).
+**MALDUA'S Zimbra HSM Extension & Administration Zimlet** brought to you by [BTACTIC, open source & cloud solutions](https://www.btactic.com).
 
 Hierarchical Storage Management technique is a data storage technique that moves data between different stores according to a defined policy.
 Usually it is used to move older data to slower-but-cheapear storages.
@@ -38,7 +38,7 @@ This documentation is aimed at developers, not at admins.
 ### License (Extension)
 
 ```
-Zimbra OSE HSM Extension
+Maldua Zimbra HSM Extension
 Copyright (C) 2023 BTACTIC, S.C.C.L.
 
 This program is free software: you can redistribute it and/or modify
@@ -58,7 +58,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 ### License (Administration zimlet)
 
 ```
-Zimbra OSE HSM Administration zimlet
+Maldua Zimbra HSM Administration zimlet
 Copyright (C) 2023 BTACTIC, S.C.C.L.
 
 This program is free software: you can redistribute it and/or modify

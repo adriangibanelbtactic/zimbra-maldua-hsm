@@ -1,4 +1,4 @@
-# Install Zimbra OSE HSM Extension
+# Install Maldua Zimbra HSM Extension
 
 ## Warning
 

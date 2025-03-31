@@ -1,4 +1,4 @@
-# Install Zimbra OSE HSM Admin Zimlet
+# Install Maldua Zimbra HSM Admin Zimlet
 
 ## Warning
 

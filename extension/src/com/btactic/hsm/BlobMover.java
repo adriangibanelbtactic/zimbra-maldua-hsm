@@ -1,6 +1,6 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
- * Zimbra OSE HSM Extension
+ * Maldua Zimbra HSM Extension
  * Copyright (C) 2023 BTACTIC, S.C.C.L.
  *
  * This program is free software: you can redistribute it and/or modify it under

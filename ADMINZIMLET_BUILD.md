@@ -1,4 +1,4 @@
-# Build Zimbra OSE HSM Admin Zimlet
+# Build Maldua Zimbra HSM Admin Zimlet
 
 ## Introduction
 
