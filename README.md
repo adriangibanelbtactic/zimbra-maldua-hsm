@@ -1,5 +1,7 @@
 # Maldua's Zimbra HSM
 
+![Zimbra HSM Splash](images/zimbra-maldua-hsm-splash.png)
+
 ## About
 
 **MALDUA'S Zimbra HSM Extension & Administration Zimlet** brought to you by [BTACTIC, open source & cloud solutions](https://www.btactic.com).
