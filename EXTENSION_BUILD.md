@@ -23,9 +23,9 @@ apt install ant git make zip
 sudo su - zimbra
 mkdir -p /opt/zimbra/conf/scripts
 cd /opt/zimbra/conf/scripts
-git clone 'https://github.com/btactic/zimbra-ose-hsm.git'
+git clone 'https://github.com/btactic/zimbra-maldua-hsm.git'
 
-cd zimbra-ose-hsm/extension
+cd zimbra-maldua-hsm/extension
 ln -s /opt/zimbra/lib/jars lib
 ```
 
@@ -34,24 +34,24 @@ ln -s /opt/zimbra/lib/jars lib
 ```
 sudo su - zimbra
 
-cd /opt/zimbra/conf/scripts/zimbra-ose-hsm/extension
+cd /opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension
 ant jar
 ```
 
 Sample build output:
 ```
-Buildfile: /opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/build.xml
+Buildfile: /opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/build.xml
 
 clean:
-   [delete] Deleting directory /opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/build
-   [delete] Deleting: /opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/zetahsm.jar
-    [mkdir] Created dir: /opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/build
+   [delete] Deleting directory /opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/build
+   [delete] Deleting: /opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/zetahsm.jar
+    [mkdir] Created dir: /opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/build
 
 compile:
-    [javac] Compiling 48 source files to /opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/build
+    [javac] Compiling 48 source files to /opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/build
 
 jar:
-      [jar] Building jar: /opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/zetahsm.jar
+      [jar] Building jar: /opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/zetahsm.jar
 
 BUILD SUCCESSFUL
 Total time: 2 seconds
@@ -62,6 +62,6 @@ Total time: 2 seconds
 
 A new jar file should be found at:
 ```
-/opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/zetahsm.jar
+/opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/zetahsm.jar
 ```
 .

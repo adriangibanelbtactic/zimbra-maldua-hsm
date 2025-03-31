@@ -8,11 +8,11 @@ For Admin installation instructions please check [README.md](README.md) instead.
 
 ## Requisites
 
-You have succesfully built zimbra-ose-hsm using [EXTENSION_BUILD.md](EXTENSION_BUILD.md) instructions.
+You have succesfully built zimbra-maldua-hsm using [EXTENSION_BUILD.md](EXTENSION_BUILD.md) instructions.
 
 ## Installation
 
-Get `/opt/zimbra/conf/scripts/zimbra-ose-hsm/extension/zetahsm.jar` from your build machine and copy it to your production machine on `/tmp/zetahsm.jar` .
+Get `/opt/zimbra/conf/scripts/zimbra-maldua-hsm/extension/zetahsm.jar` from your build machine and copy it to your production machine on `/tmp/zetahsm.jar` .
 
 This needs to be run as the root user:
 
