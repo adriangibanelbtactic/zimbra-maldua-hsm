@@ -18,13 +18,13 @@ apt install zip git
 
 ```
 cd /tmp
-git clone 'https://github.com/btactic/zimbra-ose-hsm.git'
+git clone 'https://github.com/btactic/zimbra-maldua-hsm.git'
 ```
 
 ## Build
 
 ```
-cd /tmp/zimbra-ose-hsm/adminZimlet/com_btactic_hsm_admin/
+cd /tmp/zimbra-maldua-hsm/adminZimlet/com_btactic_hsm_admin/
 zip --quiet -r ../com_btactic_hsm_admin.zip *
 ```
 
@@ -32,6 +32,6 @@ zip --quiet -r ../com_btactic_hsm_admin.zip *
 
 A new zip file should be found at:
 ```
-/tmp/zimbra-ose-hsm/adminZimlet/com_btactic_hsm_admin.zip
+/tmp/zimbra-maldua-hsm/adminZimlet/com_btactic_hsm_admin.zip
 ```
 .
