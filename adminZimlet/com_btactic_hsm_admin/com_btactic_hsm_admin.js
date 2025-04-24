@@ -79,15 +79,35 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             removeButtonLabel : com_btactic_hsm_admin.Remove_zimbraHsmPolicy,
                             removeButtonCSSStyle : "margin-left: 50px",
                             visibilityChecks : [ ZaItem.hasReadPermission ],
-                              items : [ {
-                                ref : ".",
-                                type : _TEXTFIELD_,
-                                label : null,
-                                labelLocation : _NONE_,
-                                toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
-                                visibilityChecks : [ ZaItem.hasReadPermission ],
-                                width : "80em"
-                              } ]
+                              items : [
+                                {
+                                  type: _GROUP_,
+                                  numCols: 2,
+                                  colSizes: ["80%", "20%"],
+                                  items: [
+                                    {
+                                      ref: ".",
+                                      type: _TEXTFIELD_,
+                                      label: null,
+                                      labelLocation: _NONE_,
+                                      toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
+                                      width: "60em",
+                                      visibilityChecks: [ ZaItem.hasReadPermission ]
+                                    },
+                                    {
+                                      type: _DWT_BUTTON_,
+                                      label: com_btactic_hsm_admin.EditButtonLabel,
+                                      width: "10em",
+                                      onActivate: function () {
+                                        let form = this.getForm();
+                                        let item = this.getParentItem(); // gets the XFormItem
+                                        let currentValue = item.getInstanceValue();
+                                        com_btactic_hsm_ext.launchEditWizard(currentValue, item);
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
                             }
 
                         ]
@@ -161,15 +181,35 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             removeButtonLabel : com_btactic_hsm_admin.Remove_zimbraHsmPolicy,
                             removeButtonCSSStyle : "margin-left: 50px",
                             visibilityChecks : [ ZaItem.hasReadPermission ],
-                              items : [ {
-                                ref : ".",
-                                type : _TEXTFIELD_,
-                                label : null,
-                                labelLocation : _NONE_,
-                                toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
-                                visibilityChecks : [ ZaItem.hasReadPermission ],
-                                width : "80em"
-                              } ]
+                              items : [
+                                {
+                                  type: _GROUP_,
+                                  numCols: 2,
+                                  colSizes: ["80%", "20%"],
+                                  items: [
+                                    {
+                                      ref: ".",
+                                      type: _TEXTFIELD_,
+                                      label: null,
+                                      labelLocation: _NONE_,
+                                      toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
+                                      width: "60em",
+                                      visibilityChecks: [ ZaItem.hasReadPermission ]
+                                    },
+                                    {
+                                      type: _DWT_BUTTON_,
+                                      label: com_btactic_hsm_admin.EditButtonLabel,
+                                      width: "10em",
+                                      onActivate: function () {
+                                        let form = this.getForm();
+                                        let item = this.getParentItem(); // gets the XFormItem
+                                        let currentValue = item.getInstanceValue();
+                                        com_btactic_hsm_ext.launchEditWizard(currentValue, item);
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
                             }
 
                         ]
@@ -192,5 +232,176 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
         ZaItem.loadMethods["ZaServer"].push(ZaServer.loadHsmMethod);
     }
+
+    // Define additional UI labels
+    com_btactic_hsm_admin.EditButtonLabel = "Edit...";
+
+    // Helper to launch the HSM Policy Edit Wizard
+    com_btactic_hsm_ext.CustomZaXFormDialog = function (params) {
+        shell = params.parent;
+        title = params.title;
+        if (!shell) {
+            throw new Error("Shell must be provided to CustomZaXFormDialog");
+        }
+
+        if (!(shell instanceof DwtShell)) {
+          throw new Error("shell must be a DwtShell (CustomZaXFormDialog)");
+        }
+
+        // Call the parent constructor (ZaXDialog)
+        ZaXDialog.call(this, shell, null, title, params.w, params.h, params.iKeyName, params.contextId);
+
+        // Store the shell reference
+        this.shell = shell;
+    };
+
+    // Inherit from ZaXDialog
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype = new ZaXDialog();
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype.constructor = com_btactic_hsm_ext.CustomZaXFormDialog;
+
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype._initializeShell = function () {
+        if (!this.shell) {
+            this.shell = this.parent.shell || this.parent;
+        }
+        if (!this.shell) {
+            throw new Error("Shell is required for CustomZaXFormDialog.");
+        }
+    };
+
+    // Override setObject to set the object to be edited
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setObject = function (obj) {
+        this._object = obj;  // Store the object
+        // this._initializeForm();  // Initialize the form when the object is set
+    };
+
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setContent = function (content) {
+        this._xformDef = {
+            type: _GROUP_,
+            numCols: 1,
+            items: [
+                { type: _CHECKBOX_, ref: "message", label: "E-mails" },
+                { type: _CHECKBOX_, ref: "document", label: "Documents" },
+                { type: _CHECKBOX_, ref: "task", label: "Tasks" },
+                { type: _CHECKBOX_, ref: "appointment", label: "Appointments" },
+                { type: _CHECKBOX_, ref: "contact", label: "Contacts" },
+                { type: _TEXTFIELD_, ref: "query", label: "Query", width: "50em" }
+            ]
+        };
+
+        // Ensure the shell is set before creating the form
+        this._initializeShell();  // Make sure shell is properly initialized
+    };
+
+    // Method to create the form manually
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype._createForm = function () {
+        this._initializeShell();
+
+        if (!this._xformDef) {
+            throw new Error("Form definition not set. Call setContent() first.");
+        }
+
+        // Define the XModel metadata (structure)
+        const xModel = [
+            { id: "message", type: _CHECKBOX_ },
+            { id: "document", type: _CHECKBOX_ },
+            { id: "task", type: _CHECKBOX_ },
+            { id: "appointment", type: _CHECKBOX_ },
+            { id: "contact", type: _CHECKBOX_ },
+            { id: "query", type: _STRING_ }
+        ];
+
+        // Actually create the form using ZaXDialog's supported method
+        this.initForm(xModel, this._xformDef, this._object);
+    };
+
+    // OK button callback function
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype._okCallback = function () {
+        var selectedTypes = [];
+        // Collect selected types based on the object values
+        for (let key of ["message", "document", "task", "appointment", "contact"]) {
+            if (this._object[key]) selectedTypes.push(key);
+        }
+
+        // Check if any types are selected and if the query is not empty
+        if (selectedTypes.length === 0 || !this._object.query.trim()) {
+            alert("Please select at least one type and enter a query.");
+            return;
+        }
+
+        // Format the result and set the value to the form item
+        let result = selectedTypes.join(",") + ":" + this._object.query.trim();
+        this._formItem.setInstanceValue(result); // Set the result to the form item
+        this.popdown();  // Close the dialog
+    };
+
+    // Cancel button callback function
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype._cancelCallback = function () {
+        this.popdown();  // Close the dialog
+    };
+
+    // Method to launch the edit wizard dialog
+    com_btactic_hsm_ext.launchEditWizard = function (currentValue, formItem) {
+
+        let colonIndex = currentValue.indexOf(":");
+
+        let typesPart = colonIndex !== -1 ? currentValue.slice(0, colonIndex) : currentValue;
+        let queryPart = colonIndex !== -1 ? currentValue.slice(colonIndex + 1) : "";
+
+        let selectedTypes = typesPart ? typesPart.split(",") : [];
+        let query = queryPart;
+
+        // Retrieve the existing DwtShell instance
+        let shell = DwtShell.getShell(window);  // window refers to the current browser window
+
+        if (!(shell instanceof DwtShell)) {
+          throw new Error("shell must be a DwtShell (launchEditWizard)");
+        }
+
+        // Create the dialog instance and pass the shell
+        let dlg = new com_btactic_hsm_ext.CustomZaXFormDialog({
+            parent: shell,      // Pass the DwtShell as the parent
+            className: "DwtDialog",   // You can customize the class name if needed
+            title: "Edit HSM Policy",  // Set the title of the dialog
+            w: "500px",              // Width (can be adjusted)
+            h: "350px",              // Height (can be adjusted)
+            iKeyName: "HSM_POLICY_EDIT",   // Internal key name
+            contextId: Dwt.getNextId(ZaId.DLG_UNDEF),   // Context ID
+            standardButtons: [DwtDialog.OK_BUTTON, DwtDialog.CANCEL_BUTTON]  // Specify standard buttons
+        });
+        // Set the object to be edited
+        dlg.setObject({
+            message: selectedTypes.includes("message"),
+            document: selectedTypes.includes("document"),
+            task: selectedTypes.includes("task"),
+            appointment: selectedTypes.includes("appointment"),
+            contact: selectedTypes.includes("contact"),
+            query: query
+        });
+
+        // Define the form content structure
+        dlg.setContent({
+            type: _GROUP_,
+            numCols: 1,
+            items: [
+                { type: _CHECKBOX_, ref: "message", label: "E-mails" },
+                { type: _CHECKBOX_, ref: "document", label: "Documents" },
+                { type: _CHECKBOX_, ref: "task", label: "Tasks" },
+                { type: _CHECKBOX_, ref: "appointment", label: "Appointments" },
+                { type: _CHECKBOX_, ref: "contact", label: "Contacts" },
+                { type: _TEXTFIELD_, ref: "query", label: "Query", width: "50em" }
+            ]
+        });
+
+        dlg._createForm();
+
+        // Register the callback functions for OK and Cancel
+        dlg.registerCallback(DwtDialog.OK_BUTTON, dlg._okCallback.bind(dlg));
+        // dlg.registerCallback(DwtDialog.CANCEL_BUTTON, dlg._cancelCallback.bind(dlg));
+
+        // Open the dialog
+        dlg._formItem = formItem;
+        dlg.popup();
+    };
+
 
 }
