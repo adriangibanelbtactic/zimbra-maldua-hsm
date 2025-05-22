@@ -331,6 +331,13 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // Format the result and set the value to the form item
         let result = selectedTypes.join(",") + ":" + this._object.query.trim();
         this._formItem.setInstanceValue(result); // Set the result to the form item
+
+        // Manually mark the controller as dirty
+        let controller = ZaApp.getInstance().getCurrentController();
+        if (controller && typeof controller.setDirty === "function") {
+            controller.setDirty(true);
+        }
+
         this.popdown();  // Close the dialog
     };
 
