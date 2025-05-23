@@ -335,11 +335,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         if (result !== originalValue) {
             this._HsmPolicyEditContainer.setInstanceValue(result); // Set the result to the form item
             // simulate the onchange logic: call elementChangedMethod
-            const elementChangedMethod = this._HsmPolicyEditTextField.getElementChangedMethod();
-            if (typeof elementChangedMethod === "function") {
-                // Call it with: newValue, oldValue, event
-                elementChangedMethod.call(this._HsmPolicyEditTextField, result, originalValue, event||window.event);
-            }
+            const hsmPolicyEditTextFieldChangedMethod = this._HsmPolicyEditTextField.getElementChangedMethod();
+            hsmPolicyEditTextFieldChangedMethod.call(this._HsmPolicyEditTextField, result, originalValue, event||window.event);
         }
 
         this.popdown();  // Close the dialog
