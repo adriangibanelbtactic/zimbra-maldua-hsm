@@ -316,7 +316,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     // OK button callback function
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype._okCallback = function () {
-        let originalValue = this._formParentItem.getInstanceValue();
+        let originalValue = this._HsmPolicyEditContainer.getInstanceValue();
         var selectedTypes = [];
         // Collect selected types based on the object values
         for (let key of ["message", "document", "task", "appointment", "contact"]) {
@@ -333,12 +333,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         let result = selectedTypes.join(",") + ":" + this._object.query.trim();
 
         if (result !== originalValue) {
-            this._formParentItem.setInstanceValue(result); // Set the result to the form item
+            this._HsmPolicyEditContainer.setInstanceValue(result); // Set the result to the form item
             // simulate the onchange logic: call elementChangedMethod
-            const elementChangedMethod = this._formItem.getElementChangedMethod();
+            const elementChangedMethod = this._HsmPolicyEditTextField.getElementChangedMethod();
             if (typeof elementChangedMethod === "function") {
                 // Call it with: newValue, oldValue, event
-                elementChangedMethod.call(this._formItem, result, originalValue, event||window.event);
+                elementChangedMethod.call(this._HsmPolicyEditTextField, result, originalValue, event||window.event);
             }
         }
 
@@ -351,7 +351,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     // Method to launch the edit wizard dialog
-    com_btactic_hsm_ext.launchEditWizard = function (currentValue, formParentItem, formItem) {
+    com_btactic_hsm_ext.launchEditWizard = function (currentValue, HsmPolicyEditContainer, HsmPolicyEditTextField) {
 
         let colonIndex = currentValue.indexOf(":");
 
@@ -410,8 +410,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // dlg.registerCallback(DwtDialog.CANCEL_BUTTON, dlg._cancelCallback.bind(dlg));
 
         // Open the dialog
-        dlg._formParentItem = formParentItem;
-        dlg._formItem = formItem;
+        dlg._HsmPolicyEditContainer = HsmPolicyEditContainer;
+        dlg._HsmPolicyEditTextField = HsmPolicyEditTextField;
         dlg.popup();
     };
 
