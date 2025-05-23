@@ -100,9 +100,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                       width: "10em",
                                       onActivate: function () {
                                         let form = this.getForm();
-                                        let item = this.getParentItem(); // gets the XFormItem
-                                        let currentValue = item.getInstanceValue();
-                                        com_btactic_hsm_ext.launchEditWizard(currentValue, item);
+                                        let parentItem = this.getParentItem(); // gets the XFormItem
+                                        let currentValue = parentItem.getInstanceValue();
+                                        com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
                                       }
                                     }
                                   ]
@@ -202,9 +202,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                       width: "10em",
                                       onActivate: function () {
                                         let form = this.getForm();
-                                        let item = this.getParentItem(); // gets the XFormItem
-                                        let currentValue = item.getInstanceValue();
-                                        com_btactic_hsm_ext.launchEditWizard(currentValue, item);
+                                        let parentItem = this.getParentItem(); // gets the XFormItem
+                                        let currentValue = parentItem.getInstanceValue();
+                                        com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
                                       }
                                     }
                                   ]
@@ -316,7 +316,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     // OK button callback function
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype._okCallback = function () {
-        let originalValue = this._formItem.getInstanceValue();
+        let originalValue = this._formParentItem.getInstanceValue();
         var selectedTypes = [];
         // Collect selected types based on the object values
         for (let key of ["message", "document", "task", "appointment", "contact"]) {
@@ -333,12 +333,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         let result = selectedTypes.join(",") + ":" + this._object.query.trim();
 
         if (result !== originalValue) {
-            this._formItem.setInstanceValue(result); // Set the result to the form item
-
-            // Manually mark the controller as dirty
-            let controller = ZaApp.getInstance().getCurrentController();
-            if (controller && typeof controller.setDirty === "function") {
-                controller.setDirty(true);
+            this._formParentItem.setInstanceValue(result); // Set the result to the form item
+            // simulate the onchange logic: call elementChangedMethod
+            const elementChangedMethod = this._formItem.getElementChangedMethod();
+            if (typeof elementChangedMethod === "function") {
+                // Call it with: newValue, oldValue, event
+                elementChangedMethod.call(this._formItem, result, originalValue, event||window.event);
             }
         }
 
@@ -351,7 +351,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     // Method to launch the edit wizard dialog
-    com_btactic_hsm_ext.launchEditWizard = function (currentValue, formItem) {
+    com_btactic_hsm_ext.launchEditWizard = function (currentValue, formParentItem, formItem) {
 
         let colonIndex = currentValue.indexOf(":");
 
@@ -410,6 +410,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // dlg.registerCallback(DwtDialog.CANCEL_BUTTON, dlg._cancelCallback.bind(dlg));
 
         // Open the dialog
+        dlg._formParentItem = formParentItem;
         dlg._formItem = formItem;
         dlg.popup();
     };
