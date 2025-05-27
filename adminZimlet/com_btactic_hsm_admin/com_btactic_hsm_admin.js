@@ -248,6 +248,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
           throw new Error("shell must be a DwtShell (CustomZaXFormDialog)");
         }
 
+        this._standardButtons = params.standardButtons;
+
         // Call the parent constructor (ZaXDialog)
         ZaXDialog.call(this, shell, null, title, params.w, params.h, params.iKeyName, params.contextId);
 
@@ -388,7 +390,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             contact: selectedTypes.includes("contact"),
             query: query
         });
-
         // Define the form content structure
         dlg.setContent({
             type: _GROUP_,
@@ -402,12 +403,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 { type: _TEXTFIELD_, ref: "query", label: "Query", width: "50em" }
             ]
         });
-
         dlg._createForm();
-
         // Register the callback functions for OK and Cancel
         dlg.registerCallback(DwtDialog.OK_BUTTON, dlg._okCallback.bind(dlg));
-        // dlg.registerCallback(DwtDialog.CANCEL_BUTTON, dlg._cancelCallback.bind(dlg));
+        dlg.registerCallback(DwtDialog.CANCEL_BUTTON, dlg._cancelCallback.bind(dlg));
 
         // Open the dialog
         dlg._HsmPolicyEditContainer = HsmPolicyEditContainer;
