@@ -349,6 +349,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     // Method to launch the edit wizard dialog
     com_btactic_hsm_ext.launchEditWizard = function (currentValue, HsmPolicyEditContainer, HsmPolicyEditTextField) {
+        if (typeof currentValue === 'undefined') {
+            currentValue = "";
+        }
 
         let colonIndex = currentValue.indexOf(":");
 
