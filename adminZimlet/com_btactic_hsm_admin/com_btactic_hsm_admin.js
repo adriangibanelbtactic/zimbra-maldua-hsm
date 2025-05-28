@@ -79,35 +79,28 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             removeButtonLabel : com_btactic_hsm_admin.Remove_zimbraHsmPolicy,
                             removeButtonCSSStyle : "margin-left: 50px",
                             visibilityChecks : [ ZaItem.hasReadPermission ],
-                              items : [
+                            items: [
                                 {
-                                  type: _GROUP_,
-                                  numCols: 2,
-                                  colSizes: ["80%", "20%"],
-                                  items: [
-                                    {
-                                      ref: ".",
-                                      type: _TEXTFIELD_,
-                                      label: null,
-                                      labelLocation: _NONE_,
-                                      toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
-                                      width: "60em",
-                                      visibilityChecks: [ ZaItem.hasReadPermission ]
-                                    },
-                                    {
-                                      type: _DWT_BUTTON_,
-                                      label: com_btactic_hsm_admin.EditButtonLabel,
-                                      width: "10em",
-                                      onActivate: function () {
-                                        let form = this.getForm();
-                                        let parentItem = this.getParentItem(); // gets the XFormItem
-                                        let currentValue = parentItem.getInstanceValue();
-                                        com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
-                                      }
+                                    ref: ".",
+                                    type: _TEXTFIELD_,
+                                    label: null,
+                                    labelLocation: _NONE_,
+                                    toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
+                                    width: "60em",
+                                    visibilityChecks: [ ZaItem.hasReadPermission ]
+                                },
+                                {
+                                    type: _DWT_BUTTON_,
+                                    label: com_btactic_hsm_admin.EditButtonLabel,
+                                    width: "10em",
+                                    onActivate: function () {
+                                      let form = this.getForm();
+                                      let parentItem = this.getParentItem(); // gets the XFormItem
+                                      let currentValue = parentItem.getInstanceValue();
+                                      com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
                                     }
-                                  ]
                                 }
-                              ]
+                            ]
                             }
 
                         ]
@@ -181,35 +174,28 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             removeButtonLabel : com_btactic_hsm_admin.Remove_zimbraHsmPolicy,
                             removeButtonCSSStyle : "margin-left: 50px",
                             visibilityChecks : [ ZaItem.hasReadPermission ],
-                              items : [
+                            items: [
                                 {
-                                  type: _GROUP_,
-                                  numCols: 2,
-                                  colSizes: ["80%", "20%"],
-                                  items: [
-                                    {
-                                      ref: ".",
-                                      type: _TEXTFIELD_,
-                                      label: null,
-                                      labelLocation: _NONE_,
-                                      toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
-                                      width: "60em",
-                                      visibilityChecks: [ ZaItem.hasReadPermission ]
-                                    },
-                                    {
-                                      type: _DWT_BUTTON_,
-                                      label: com_btactic_hsm_admin.EditButtonLabel,
-                                      width: "10em",
-                                      onActivate: function () {
-                                        let form = this.getForm();
-                                        let parentItem = this.getParentItem(); // gets the XFormItem
-                                        let currentValue = parentItem.getInstanceValue();
-                                        com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
-                                      }
+                                    ref: ".",
+                                    type: _TEXTFIELD_,
+                                    label: null,
+                                    labelLocation: _NONE_,
+                                    toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
+                                    width: "60em",
+                                    visibilityChecks: [ ZaItem.hasReadPermission ]
+                                },
+                                {
+                                    type: _DWT_BUTTON_,
+                                    label: com_btactic_hsm_admin.EditButtonLabel,
+                                    width: "10em",
+                                    onActivate: function () {
+                                      let form = this.getForm();
+                                      let parentItem = this.getParentItem(); // gets the XFormItem
+                                      let currentValue = parentItem.getInstanceValue();
+                                      com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
                                     }
-                                  ]
                                 }
-                              ]
+                            ]
                             }
 
                         ]
