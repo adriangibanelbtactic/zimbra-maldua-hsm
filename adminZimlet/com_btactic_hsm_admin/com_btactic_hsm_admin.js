@@ -271,9 +271,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 { type: _TEXTFIELD_, ref: "query", label: "Query", width: "50em" }
             ]
         };
-
-        // Ensure the shell is set before creating the form
-        this._initializeShell();  // Make sure shell is properly initialized
     };
 
     // Method to create the form manually
