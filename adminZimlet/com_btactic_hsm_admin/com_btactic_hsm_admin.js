@@ -96,8 +96,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     onActivate: function () {
                                       let form = this.getForm();
                                       let parentItem = this.getParentItem(); // gets the XFormItem
-                                      let currentValue = parentItem.getInstanceValue();
-                                      com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
+                                      let currentHSMValue = parentItem.getInstanceValue();
+                                      com_btactic_hsm_ext.launchEditWizard(currentHSMValue, parentItem, this);
                                     }
                                 }
                             ]
@@ -191,8 +191,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     onActivate: function () {
                                       let form = this.getForm();
                                       let parentItem = this.getParentItem(); // gets the XFormItem
-                                      let currentValue = parentItem.getInstanceValue();
-                                      com_btactic_hsm_ext.launchEditWizard(currentValue, parentItem, this);
+                                      let currentHSMValue = parentItem.getInstanceValue();
+                                      com_btactic_hsm_ext.launchEditWizard(currentHSMValue, parentItem, this);
                                     }
                                 }
                             ]
@@ -335,15 +335,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     // Method to launch the edit wizard dialog
-    com_btactic_hsm_ext.launchEditWizard = function (currentValue, HsmPolicyEditContainer, HsmPolicyEditTextField) {
-        if (typeof currentValue === 'undefined') {
-            currentValue = "";
+    com_btactic_hsm_ext.launchEditWizard = function (currentHSMValue, HsmPolicyEditContainer, HsmPolicyEditTextField) {
+        if (typeof currentHSMValue === 'undefined') {
+            currentHSMValue = "";
         }
 
-        let colonIndex = currentValue.indexOf(":");
+        let colonIndex = currentHSMValue.indexOf(":");
 
-        let typesPart = colonIndex !== -1 ? currentValue.slice(0, colonIndex) : currentValue;
-        let queryPart = colonIndex !== -1 ? currentValue.slice(colonIndex + 1) : "";
+        let typesPart = colonIndex !== -1 ? currentHSMValue.slice(0, colonIndex) : currentHSMValue;
+        let queryPart = colonIndex !== -1 ? currentHSMValue.slice(colonIndex + 1) : "";
 
         let selectedTypes = typesPart ? typesPart.split(",") : [];
         let query = queryPart;
