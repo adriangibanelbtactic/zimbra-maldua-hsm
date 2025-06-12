@@ -292,7 +292,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
         // Check if any types are selected and if the query is not empty
         if (selectedTypes.length === 0 || !this._HSMEditObject.query.trim()) {
-            alert("Please select at least one type and enter a query.");
+            alert(com_btactic_hsm_admin.MinimumHSMValues);
             return;
         }
 
