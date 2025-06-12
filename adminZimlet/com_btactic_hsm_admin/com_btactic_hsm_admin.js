@@ -251,9 +251,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         if (!this.shell) {
             this.shell = this.parent.shell || this.parent;
         }
-        if (!this.shell) {
-            throw new Error("Shell is required for CustomZaXFormDialog.");
-        }
     };
 
     // Override setHSMEditObject to set the object to be edited
