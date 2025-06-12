@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Maldua Zimbra HSM Extension
- * Copyright (C) 2023 BTACTIC, S.C.C.L.
+ * Copyright (C) 2025 BTACTIC, S.C.C.L.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
