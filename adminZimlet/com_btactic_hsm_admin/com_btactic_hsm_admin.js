@@ -247,12 +247,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype = new ZaXDialog();
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype.constructor = com_btactic_hsm_ext.CustomZaXFormDialog;
 
-    com_btactic_hsm_ext.CustomZaXFormDialog.prototype._initializeShell = function () {
-        if (!this.shell) {
-            this.shell = this.parent.shell || this.parent;
-        }
-    };
-
     // Override setHSMEditObject to set the object to be edited
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setHSMEditObject = function (obj) {
         this._HSMEditObject = obj;  // Store the object
@@ -275,7 +269,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     // Method to create the form manually
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype._createForm = function () {
-        this._initializeShell();
 
         // Define the XModel metadata (structure)
         const xModel = [
