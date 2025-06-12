@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Maldua Zimbra HSM Extension
- * Copyright (C) 2023 BTACTIC, S.C.C.L.
+ * Copyright (C) 2025 BTACTIC, S.C.C.L.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -275,12 +275,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             type: _GROUP_,
             numCols: 1,
             items: [
-                { type: _CHECKBOX_, ref: "message", label: "E-mails" },
-                { type: _CHECKBOX_, ref: "document", label: "Documents" },
-                { type: _CHECKBOX_, ref: "task", label: "Tasks" },
-                { type: _CHECKBOX_, ref: "appointment", label: "Appointments" },
-                { type: _CHECKBOX_, ref: "contact", label: "Contacts" },
-                { type: _TEXTFIELD_, ref: "query", label: "Query", width: "50em" }
+                { type: _CHECKBOX_, ref: "message", label: com_btactic_hsm_admin.EmailsType },
+                { type: _CHECKBOX_, ref: "document", label: com_btactic_hsm_admin.DocumentsType },
+                { type: _CHECKBOX_, ref: "task", label: com_btactic_hsm_admin.TasksType },
+                { type: _CHECKBOX_, ref: "appointment", label: com_btactic_hsm_admin.AppointmentsType },
+                { type: _CHECKBOX_, ref: "contact", label: com_btactic_hsm_admin.ContactsType },
+                { type: _TEXTFIELD_, ref: "query", label: com_btactic_hsm_admin.Query, width: "50em" }
             ]
         };
     };
@@ -360,7 +360,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         let dlg = new com_btactic_hsm_ext.CustomZaXFormDialog({
             parent: shell,      // Pass the DwtShell as the parent
             className: "DwtDialog",   // You can customize the class name if needed
-            title: "Edit HSM Policy",  // Set the title of the dialog
+            title: com_btactic_hsm_admin.EditHSMPolicy,  // Set the title of the dialog
             w: "500px",              // Width (can be adjusted)
             h: "350px",              // Height (can be adjusted)
             iKeyName: "HSM_POLICY_EDIT",   // Internal key name
