@@ -29,6 +29,27 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         console.log("Start loading com_btactic_hsm_admin.js");
     }
 
+    // Using getResource from a ZmZimletBase object does not seem to work in admin
+    com_btactic_hsm_admin.zimletImagesPath = "/service/zimlet/com_btactic_hsm_admin/images"
+
+
+    com_btactic_hsm_admin.malduaHeader =
+      '<a target="_blank" href="https://github.com/maldua-suite/maldua-suite">' +
+      '<img align="right" alt="Maldua Suite for Zimbra Collaboration Server" src="' +
+      com_btactic_hsm_admin.zimletImagesPath + "/" + "maldua_logo.png" +
+      '">' +
+      '</a>'
+
+    com_btactic_hsm_admin.zetaPromoWithImage =
+      '<img src="' +
+      com_btactic_hsm_admin.zimletImagesPath + "/" + "btactic_logo.png" +
+      '">' +
+      " " +
+      com_btactic_hsm_admin.zetaPromo +
+      com_btactic_hsm_admin.malduaHeader;
+
+    com_btactic_hsm_admin.zetaPromoCss = "font-size:16pt; font-weight: bold;";
+
     // Show additional HSM attributes for GlobalConfig
     if (ZaGlobalConfig && ZaGlobalConfig.myXModel && ZaGlobalConfig.myXModel.items) {
         ZaGlobalConfig.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
@@ -56,7 +77,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 numCols : 1,
                 id : "global_zeta_hsm",
                 items: [
-                    {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromo, colSpan:"*", cssStyle:"font-size:20pt; font-weight: bold;"},
+                    {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromoWithImage, colSpan:"*", cssStyle:com_btactic_hsm_admin.zetaPromoCss},
                     {type:_SPACER_, colSpan:"*"},
                     {type:_ZA_TOP_GROUPER_,
                         label:com_btactic_hsm_admin.zetaHSMTab,
@@ -151,7 +172,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 numCols : 1,
                 id : "server_zeta_hsm",
                 items: [
-                    {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromo, colSpan:"*", cssStyle:"font-size:20pt; font-weight: bold;"},
+                    {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromoWithImage, colSpan:"*", cssStyle:com_btactic_hsm_admin.zetaPromoCss},
                     {type:_SPACER_, colSpan:"*"},
                     {type:_ZA_TOP_GROUPER_,
                         label:com_btactic_hsm_admin.zetaHSMTab,
