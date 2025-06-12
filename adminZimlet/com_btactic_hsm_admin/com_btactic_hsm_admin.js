@@ -303,7 +303,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     // OK button callback function
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype._okCallback = function () {
-        let originalValue = this._HsmPolicyEditContainer.getInstanceValue();
+        let oldHSMValue = this._HsmPolicyEditContainer.getInstanceValue();
         var selectedTypes = [];
         // Collect selected types based on the object values
         for (let key of ["message", "document", "task", "appointment", "contact"]) {
@@ -316,14 +316,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             return;
         }
 
-        // Format the result and set the value to the form item
-        let result = selectedTypes.join(",") + ":" + this._HSMEditObject.query.trim();
+        // Format the newHSMValue and set the value to the form item
+        let newHSMValue = selectedTypes.join(",") + ":" + this._HSMEditObject.query.trim();
 
-        if (result !== originalValue) {
-            this._HsmPolicyEditContainer.setInstanceValue(result); // Set the result to the form item
+        if (newHSMValue !== oldHSMValue) {
+            this._HsmPolicyEditContainer.setInstanceValue(newHSMValue); // Set the newHSMValue to the form item
             // simulate the onchange logic: call elementChangedMethod
             const hsmPolicyEditTextFieldChangedMethod = this._HsmPolicyEditTextField.getElementChangedMethod();
-            hsmPolicyEditTextFieldChangedMethod.call(this._HsmPolicyEditTextField, result, originalValue, event||window.event);
+            hsmPolicyEditTextFieldChangedMethod.call(this._HsmPolicyEditTextField, newHSMValue, oldHSMValue, event||window.event);
         }
 
         this.popdown();  // Close the dialog
