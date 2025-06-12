@@ -258,7 +258,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     // Override setObject to set the object to be edited
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setObject = function (obj) {
-        this._object = obj;  // Store the object
+        this._HSMEditObject = obj;  // Store the object
     };
 
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setContent = function (content) {
@@ -298,7 +298,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         ];
 
         // Actually create the form using ZaXDialog's supported method
-        this.initForm(xModel, this._xformDef, this._object);
+        this.initForm(xModel, this._xformDef, this._HSMEditObject);
     };
 
     // OK button callback function
@@ -307,17 +307,17 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         var selectedTypes = [];
         // Collect selected types based on the object values
         for (let key of ["message", "document", "task", "appointment", "contact"]) {
-            if (this._object[key]) selectedTypes.push(key);
+            if (this._HSMEditObject[key]) selectedTypes.push(key);
         }
 
         // Check if any types are selected and if the query is not empty
-        if (selectedTypes.length === 0 || !this._object.query.trim()) {
+        if (selectedTypes.length === 0 || !this._HSMEditObject.query.trim()) {
             alert("Please select at least one type and enter a query.");
             return;
         }
 
         // Format the result and set the value to the form item
-        let result = selectedTypes.join(",") + ":" + this._object.query.trim();
+        let result = selectedTypes.join(",") + ":" + this._HSMEditObject.query.trim();
 
         if (result !== originalValue) {
             this._HsmPolicyEditContainer.setInstanceValue(result); // Set the result to the form item
