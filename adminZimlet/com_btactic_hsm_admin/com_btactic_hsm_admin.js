@@ -259,7 +259,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     // Override setObject to set the object to be edited
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setObject = function (obj) {
         this._object = obj;  // Store the object
-        // this._initializeForm();  // Initialize the form when the object is set
     };
 
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setContent = function (content) {
