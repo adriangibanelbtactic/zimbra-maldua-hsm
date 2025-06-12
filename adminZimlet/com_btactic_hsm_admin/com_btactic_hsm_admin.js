@@ -283,10 +283,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     com_btactic_hsm_ext.CustomZaXFormDialog.prototype._createForm = function () {
         this._initializeShell();
 
-        if (!this._xformDef) {
-            throw new Error("Form definition not set. Call setContent() first.");
-        }
-
         // Define the XModel metadata (structure)
         const xModel = [
             { id: "message", type: _CHECKBOX_ },
