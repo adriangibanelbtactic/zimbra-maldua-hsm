@@ -256,8 +256,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
     };
 
-    // Override setObject to set the object to be edited
-    com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setObject = function (obj) {
+    // Override setHSMEditObject to set the object to be edited
+    com_btactic_hsm_ext.CustomZaXFormDialog.prototype.setHSMEditObject = function (obj) {
         this._HSMEditObject = obj;  // Store the object
     };
 
@@ -367,7 +367,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             standardButtons: [DwtDialog.OK_BUTTON, DwtDialog.CANCEL_BUTTON]  // Specify standard buttons
         });
         // Set the object to be edited
-        dlg.setObject({
+        dlg.setHSMEditObject({
             message: selectedTypes.includes("message"),
             document: selectedTypes.includes("document"),
             task: selectedTypes.includes("task"),
