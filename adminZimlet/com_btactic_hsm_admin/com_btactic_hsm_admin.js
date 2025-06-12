@@ -219,9 +219,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         ZaItem.loadMethods["ZaServer"].push(ZaServer.loadHsmMethod);
     }
 
-    // Define additional UI labels
-    com_btactic_hsm_admin.EditButtonLabel = "Edit...";
-
     // Helper to launch the HSM Policy Edit Wizard
     com_btactic_hsm_ext.CustomZaXFormDialog = function (params) {
         shell = params.parent;
