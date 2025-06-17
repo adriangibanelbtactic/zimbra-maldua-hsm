@@ -275,12 +275,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             type: _GROUP_,
             numCols: 1,
             items: [
-                { type: _CHECKBOX_, ref: "message", label: "E-mails" },
-                { type: _CHECKBOX_, ref: "document", label: "Documents" },
-                { type: _CHECKBOX_, ref: "task", label: "Tasks" },
-                { type: _CHECKBOX_, ref: "appointment", label: "Appointments" },
-                { type: _CHECKBOX_, ref: "contact", label: "Contacts" },
-                { type: _TEXTFIELD_, ref: "query", label: "Query", width: "50em" }
+                { type: _CHECKBOX_, ref: "message", label: com_btactic_hsm_admin.EmailsType },
+                { type: _CHECKBOX_, ref: "document", label: com_btactic_hsm_admin.DocumentsType },
+                { type: _CHECKBOX_, ref: "task", label: com_btactic_hsm_admin.TasksType },
+                { type: _CHECKBOX_, ref: "appointment", label: com_btactic_hsm_admin.AppointmentsType },
+                { type: _CHECKBOX_, ref: "contact", label: com_btactic_hsm_admin.ContactsType },
+                { type: _TEXTFIELD_, ref: "query", label: com_btactic_hsm_admin.Query, width: "50em" }
             ]
         };
     };
