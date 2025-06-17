@@ -360,7 +360,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         let dlg = new com_btactic_hsm_ext.CustomZaXFormDialog({
             parent: shell,      // Pass the DwtShell as the parent
             className: "DwtDialog",   // You can customize the class name if needed
-            title: "Edit HSM Policy",  // Set the title of the dialog
+            title: com_btactic_hsm_admin.EditHSMPolicy,  // Set the title of the dialog
             w: "500px",              // Width (can be adjusted)
             h: "350px",              // Height (can be adjusted)
             iKeyName: "HSM_POLICY_EDIT",   // Internal key name
