@@ -63,46 +63,44 @@ public class MoveBlobs extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+
+        String defaultMoveBlobsQuery = "is:anywhere";
+
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         MoveBlobsRequest req = JaxbUtil.elementToJaxb(request);
         MoveBlobsResponse resp = new MoveBlobsResponse();
-        AccountSelector acctSelector = req.getAccount();
-        CosSelector cosSelector = req.getCos();
-        Boolean lazy = req.getLazyDelete() != null ? ZmBoolean.toBool(req.getLazyDelete()) : true;
-        if (acctSelector == null && cosSelector == null) {
-            throw ServiceException.INVALID_REQUEST("must specify an account or COS", null);
+
+        String types = req.getTypes();
+        String sourceVolumeIds = req.getSourceVolumeIds();
+        Short destVolumeId = req.getDestVolumeId();
+        Long maxBytes = req.getMaxBytes();
+        String query = req.getQuery();
+
+        if (types == null) {
+            throw ServiceException.INVALID_REQUEST("must specify types", null);
         }
-        if (acctSelector != null && cosSelector != null) {
-            throw ServiceException.INVALID_REQUEST("cannot specify both account and COS", null);
+        if (sourceVolumeIds == null) {
+            throw ServiceException.INVALID_REQUEST("must specify sourceVolumeIds", null);
         }
-        if (acctSelector != null) {
-            Account account = prov.get(acctSelector);
-            if (account == null) {
-                throw AccountServiceException.NO_SUCH_ACCOUNT(acctSelector.getKey());
-            } else {
-                ClearTwoFactorAuthDataTask clearDataTask = ClearTwoFactorAuthDataTask.getInstance();
-                clearDataTask.clearAccount(account);
-            }
-        } else {
-            Cos cos;
-            if (cosSelector.getBy() == CosBy.id) {
-                cos = prov.get(com.zimbra.common.account.Key.CosBy.id, cosSelector.getKey());
-            } else {
-                cos = prov.get(com.zimbra.common.account.Key.CosBy.name, cosSelector.getKey());
-            }
-            if (cos == null) {
-                throw AccountServiceException.NO_SUCH_COS(cosSelector.getKey());
-            } else {
-                if (lazy) {
-                    cos.setTwoFactorAuthLastReset(new Date());
-                } else {
-                    ClearTwoFactorAuthDataTask clearDataTask = ClearTwoFactorAuthDataTask.getInstance();
-                    ClearTwoFactorAuthDataTask.TaskStatus status = clearDataTask.clearCosAsync(cos);
-                    resp.setStatus(status.toString());
-                }
-            }
+        if (destVolumeId == null) {
+            throw ServiceException.INVALID_REQUEST("must specify destVolumeId", null);
         }
+
+        if (query == null) {
+            query = defaultMoveBlobsQuery;
+        }
+
+        // TODO: Manage loops based on maxBytes being null (no maximum value) or not (with maximum value)
+        // TODO: Move some blobs
+
+        Integer numBlobsMovedMockup = Integer.valueOf(1);
+        resp.setNumBlobsMoved(numBlobsMovedMockup);
+        Long numBytesMovedMockup = Long.valueOf(2);
+        resp.setNumBytesMoved(numBytesMovedMockup);
+        Integer totalMailboxesMockup = Integer.valueOf(3);
+        resp.setTotalMailboxes(totalMailboxesMockup);
+
         return zsc.jaxbToElement(resp);
     }
 }
