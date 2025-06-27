@@ -20,15 +20,25 @@
 
 package com.btactic.hsm.soap;
 
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.Provisioning;
 
+import com.zimbra.cs.volume.Volume;
+
+import com.zimbra.soap.admin.message.GetAllVolumesRequest;
+import com.zimbra.soap.admin.message.GetAllVolumesResponse;
 import com.zimbra.soap.admin.message.MoveBlobsRequest;
 import com.zimbra.soap.admin.message.MoveBlobsResponse;
+
+import com.zimbra.soap.admin.type.VolumeInfo;
 
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -38,6 +48,55 @@ import com.zimbra.cs.service.admin.AdminDocumentHandler;
 
 
 public class MoveBlobs extends AdminDocumentHandler {
+
+    private List<Short> getValidLocators(SoapProvisioning prov) throws ServiceException {
+        List<Short> validLocators = new ArrayList<Short>();
+
+        GetAllVolumesRequest request = new GetAllVolumesRequest();
+        Element requestElement = JaxbUtil.jaxbToElement(request);
+        Element respElem = prov.invoke(requestElement);
+        GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
+
+        for (VolumeInfo volumeInfo : response.getVolumes()) {
+
+            if (volumeInfo.getType() == Volume.TYPE_INDEX) {
+                break;
+            }
+
+            if ((Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) && (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))) {
+                validLocators.add(volumeInfo.getId());
+            }
+        }
+
+        return validLocators;
+    }
+
+    // TODO: Add util library so this code can be reused here and also in BlobMover.java file
+    private List<Short> getValidOriginLocators(SoapProvisioning prov, int destinationLocator) throws ServiceException {
+        List<Short> validOriginLocators = new ArrayList<Short>();
+
+        GetAllVolumesRequest request = new GetAllVolumesRequest();
+        Element requestElement = JaxbUtil.jaxbToElement(request);
+        Element respElem = prov.invoke(requestElement);
+        GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
+
+        for (VolumeInfo volumeInfo : response.getVolumes()) {
+
+            if (volumeInfo.getId() == destinationLocator) {
+                break;
+            }
+
+            if (volumeInfo.getType() == Volume.TYPE_INDEX) {
+                break;
+            }
+
+            if ((Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) && (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))) {
+                validOriginLocators.add(volumeInfo.getId());
+            }
+        }
+
+        return validOriginLocators;
+    }
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -50,7 +109,7 @@ public class MoveBlobs extends AdminDocumentHandler {
         MoveBlobsResponse resp = new MoveBlobsResponse();
 
         String types = req.getTypes();
-        String sourceVolumeIds = req.getSourceVolumeIds();
+        String sourceVolumeIdsString = req.getSourceVolumeIds();
         Short destVolumeId = req.getDestVolumeId();
         Long maxBytes = req.getMaxBytes();
         String query = req.getQuery();
@@ -59,7 +118,7 @@ public class MoveBlobs extends AdminDocumentHandler {
         if (types == null) {
             throw ServiceException.INVALID_REQUEST("must specify types", null);
         }
-        if (sourceVolumeIds == null) {
+        if (sourceVolumeIdsString == null) {
             throw ServiceException.INVALID_REQUEST("must specify sourceVolumeIds", null);
         }
         if (destVolumeId == null) {
@@ -68,6 +127,27 @@ public class MoveBlobs extends AdminDocumentHandler {
 
         if (query == null) {
             query = defaultMoveBlobsQuery;
+        }
+
+        // ADVANCED CHECKS
+        // types: No need to check if they are valid types. If they don't exist the search will not give results for them
+        // maxbytes: No need to check. If maxbytes is not a number execution fails long before.
+        // query: No need to check. Either no results (for being empty) or an error for its syntax not being correct
+
+        // destVolumeId
+        List<Short> validLocators = getValidLocators(prov);
+        if (!(validLocators.contains(destVolumeId))) {
+            throw ServiceException.INVALID_REQUEST("destVolumeId: '" + destVolumeId + "' is not a valid destination Volume ID", null);
+        }
+
+        // sourceVolumeIds
+        String[] sourceVolumeIdsStringArray = sourceVolumeIdsString.split(",");
+        ArrayList<String> sourceVolumeIds = new ArrayList<>(Arrays.asList(sourceVolumeIdsStringArray));
+        List<Short> validOriginLocators = getValidOriginLocators(prov, destVolumeId);
+        for (String sourceVolumeId : sourceVolumeIds) {
+            if (!(validOriginLocators.contains(sourceVolumeId))) {
+                throw ServiceException.INVALID_REQUEST("sourceVolumeId: '" + sourceVolumeId + "' is not a valid source Volume ID", null);
+            }
         }
 
         // TODO: Manage loops based on maxBytes being null (no maximum value) or not (with maximum value)
