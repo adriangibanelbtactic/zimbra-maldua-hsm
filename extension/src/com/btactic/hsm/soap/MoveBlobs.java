@@ -55,6 +55,7 @@ public class MoveBlobs extends AdminDocumentHandler {
         Long maxBytes = req.getMaxBytes();
         String query = req.getQuery();
 
+        // Basic checks
         if (types == null) {
             throw ServiceException.INVALID_REQUEST("must specify types", null);
         }
