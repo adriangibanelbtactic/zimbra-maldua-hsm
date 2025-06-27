@@ -29,7 +29,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.Provisioning;
 
 import com.zimbra.cs.volume.Volume;
 
@@ -104,7 +103,10 @@ public class MoveBlobs extends AdminDocumentHandler {
         String defaultMoveBlobsQuery = "is:anywhere";
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Provisioning prov = Provisioning.getInstance();
+
+        SoapProvisioning prov = SoapProvisioning.getAdminInstance();
+        prov.soapZimbraAdminAuthenticate();
+
         MoveBlobsRequest req = JaxbUtil.elementToJaxb(request);
         MoveBlobsResponse resp = new MoveBlobsResponse();
 
