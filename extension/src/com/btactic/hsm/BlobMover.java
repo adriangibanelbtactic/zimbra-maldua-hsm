@@ -119,7 +119,7 @@ public class BlobMover {
         }
     }
 
-    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString) throws ServiceException {
+    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString, long maximumBytes) throws ServiceException {
         DbConnection dbConnection = null;
 
         SearchParams params = new SearchParams();
@@ -169,8 +169,12 @@ public class BlobMover {
             ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
         }
 
-        moveItems(mbox, destinationLocator, zimbraQueryPostFilterItemsInfos);
+        moveItems(mbox, destinationLocator, zimbraQueryPostFilterItemsInfos, maximumBytes);
 
+    }
+
+    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString) throws ServiceException {
+        moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString, 0L);
     }
 
     public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes) throws ServiceException {
