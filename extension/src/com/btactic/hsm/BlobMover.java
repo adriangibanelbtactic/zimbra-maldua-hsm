@@ -221,8 +221,6 @@ public class BlobMover {
             if (itemsInfosToMigrateChunk.size() >= 1) {
                 moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
             }
-            itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
-            movedItemInfoCounter = 0;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("ZetaHsm: Unknown DB problem (move)", e);
         } finally {
