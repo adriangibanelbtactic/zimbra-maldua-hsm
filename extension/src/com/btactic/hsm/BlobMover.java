@@ -202,7 +202,7 @@ public class BlobMover {
         moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator, 0L);
     }
 
-    private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes) throws ServiceException {
         DbConnection dbConnection = null;
         Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
         List<MovedItemInfo> itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
@@ -221,13 +221,13 @@ public class BlobMover {
                 MovedItemInfo movedItemInfo = (MovedItemInfo) itemsToMigrateInfosIter.next();
                 itemsInfosToMigrateChunk.add(movedItemInfo);
                 if (movedItemInfoCounter == movedItemInfoChunkSize) {
-                    moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
+                    moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes);
                     itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
                     movedItemInfoCounter = 0;
                 }
             }
             if (itemsInfosToMigrateChunk.size() >= 1) {
-                moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
+                moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes);
             }
             itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
             movedItemInfoCounter = 0;
@@ -236,6 +236,10 @@ public class BlobMover {
         } finally {
             DbPool.quietClose(dbConnection);
         }
+    }
+
+    private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+        moveItems(mbox, destinationLocator, itemsToMigrateInfos, 0L);
     }
 
     private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
