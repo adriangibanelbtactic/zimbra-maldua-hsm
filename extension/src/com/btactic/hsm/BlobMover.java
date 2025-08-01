@@ -325,4 +325,8 @@ public class BlobMover {
         }
     }
 
+    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+        moveChunkItems(dbConnection, mbox, destinationLocator, itemsToMigrateInfos, 0L);
+    }
+
 }
