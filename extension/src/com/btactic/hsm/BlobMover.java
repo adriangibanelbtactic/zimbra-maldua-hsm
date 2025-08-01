@@ -344,6 +344,7 @@ public class BlobMover {
                     ZimbraLog.misc.error("Unable to delete " + destinationBlob + ": " + ioe);
                 }
             }
+            throw e;
         } finally {
             if (maintenance != null) {
                 MailboxManager.getInstance().endMaintenance(maintenance, true, true);
