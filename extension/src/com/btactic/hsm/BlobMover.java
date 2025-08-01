@@ -242,7 +242,7 @@ public class BlobMover {
         moveItems(mbox, destinationLocator, itemsToMigrateInfos, 0L);
     }
 
-    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes) throws ServiceException {
 
         List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
@@ -251,6 +251,8 @@ public class BlobMover {
         Map<String, MailboxBlob> destinationBlobMap = new HashMap<String, MailboxBlob>(); // Fast lookup by digest
         List<MailboxBlob> destinationBlobList = new ArrayList<MailboxBlob>(); // Deletion in case of error
         MailboxMaintenance maintenance = null;
+
+        long currentTotalBytes = 0L;
 
         try {
             maintenance = MailboxManager.getInstance().beginMaintenance(mbox.getAccountId(), mbox.getId());
@@ -262,6 +264,13 @@ public class BlobMover {
                 // Copy blob to destination
                 originBlob = mStore.getMailboxBlob(mbox, movedItemInfo.getId(), movedItemInfo.getModContent(), String.valueOf(movedItemInfo.getLocator()));
                 if (originBlob != null) {
+
+                    long blobSize = originBlob.getSize();
+                    if (maximumBytes > 0 && currentTotalBytes + blobSize > maximumBytes) {
+                        ZimbraLog.misc.info("HSM limit reached in moveChunkItems: stopping migration at item " + movedItemInfo.getId());
+                        return false; // Signal to stop higher-level migration
+                    }
+
                     MailboxBlob destinationBlob = null;
 
                     try {
@@ -284,6 +293,8 @@ public class BlobMover {
                     originBlobs.add(originBlob);
                     destinationBlobMap.put(movedItemInfo.getBlobDigest(), destinationBlob);
                     destinationBlobList.add(destinationBlob);
+                    currentTotalBytes += blobSize;
+
                 } else {
                     ZimbraLog.misc.warn("Could not find blob for message " + movedItemInfo.getId() + ", revision " + movedItemInfo.getModContent());
                     itemsToMigrateInfosIter.remove(); // We do not want to change original locator if we don't find a file
@@ -323,6 +334,8 @@ public class BlobMover {
                 MailboxManager.getInstance().endMaintenance(maintenance, true, true);
             }
         }
+
+        return true;
     }
 
     private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
