@@ -173,7 +173,7 @@ public class BlobMover {
 
     }
 
-    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator) throws ServiceException {
+    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes) throws ServiceException {
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
         List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
 
@@ -190,8 +190,12 @@ public class BlobMover {
             ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-            moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString);
+            moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString, maximumBytes);
         }
+    }
+
+    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator) throws ServiceException {
+        moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator, 0L);
     }
 
     private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
