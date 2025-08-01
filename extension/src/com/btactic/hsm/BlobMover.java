@@ -119,7 +119,7 @@ public class BlobMover {
         }
     }
 
-    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString) throws ServiceException {
+    public boolean moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString, long maximumBytes, long[] currentTotalBytes) throws ServiceException {
         DbConnection dbConnection = null;
 
         SearchParams params = new SearchParams();
@@ -169,11 +169,16 @@ public class BlobMover {
             ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
         }
 
-        moveItems(mbox, destinationLocator, zimbraQueryPostFilterItemsInfos);
-
+        boolean continueMoving = moveItems(mbox, destinationLocator, zimbraQueryPostFilterItemsInfos, maximumBytes, currentTotalBytes);
+        return continueMoving;
     }
 
-    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator) throws ServiceException {
+    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString) throws ServiceException {
+        moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString, 0L, new long[] { 0L });
+    }
+
+    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes) throws ServiceException {
+        long[] currentTotalBytes = new long[] { 0L }; // Pass-by-reference simulation
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
         List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
 
@@ -190,11 +195,21 @@ public class BlobMover {
             ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-            moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString);
+            boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString, maximumBytes, currentTotalBytes);
+
+            if (!continueMoving) {
+                ZimbraLog.misc.info("HSM migration stopped early after mailbox " + mboxId + " due to maximumBytes limit.");
+                break;
+            }
+
         }
     }
 
-    private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator) throws ServiceException {
+        moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator, 0L);
+    }
+
+    private boolean moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, long[] currentTotalBytes) throws ServiceException {
         DbConnection dbConnection = null;
         Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
         List<MovedItemInfo> itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
@@ -213,22 +228,36 @@ public class BlobMover {
                 MovedItemInfo movedItemInfo = (MovedItemInfo) itemsToMigrateInfosIter.next();
                 itemsInfosToMigrateChunk.add(movedItemInfo);
                 if (movedItemInfoCounter == movedItemInfoChunkSize) {
-                    moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
+                    boolean continueMoving = moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes, currentTotalBytes);
                     itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
                     movedItemInfoCounter = 0;
+
+                    if (!continueMoving) {
+                        ZimbraLog.misc.info("Migration halted due to maximumBytes limit reached during chunk move.");
+                        return false; // Do not continue migrating items
+                    }
                 }
             }
             if (itemsInfosToMigrateChunk.size() >= 1) {
-                moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk);
+                boolean continueMoving = moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes, currentTotalBytes);
+                if (!continueMoving) {
+                    ZimbraLog.misc.info("Migration halted due to maximumBytes limit reached during final chunk move.");
+                    return false;  // Do not continue migrating items
+                }
             }
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("ZetaHsm: Unknown DB problem (move)", e);
         } finally {
             DbPool.quietClose(dbConnection);
         }
+        return true; // Continue migrating items
     }
 
-    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+    private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+        moveItems(mbox, destinationLocator, itemsToMigrateInfos, 0L, new long[] { 0L });
+    }
+
+    private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, long[] currentTotalBytes) throws ServiceException {
 
         List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
@@ -248,6 +277,21 @@ public class BlobMover {
                 // Copy blob to destination
                 originBlob = mStore.getMailboxBlob(mbox, movedItemInfo.getId(), movedItemInfo.getModContent(), String.valueOf(movedItemInfo.getLocator()));
                 if (originBlob != null) {
+
+                    long blobSize;
+                    try {
+                        blobSize = originBlob.getSize();
+                    } catch (IOException e) {
+                        // TODO: Probably count an error here
+                        ZimbraLog.misc.warn("Could not get size of item: '" + movedItemInfo.getId() + "' blob. Skipping its HSM move.");
+                        continue;
+                    }
+
+                    if (maximumBytes > 0 && currentTotalBytes[0] + blobSize > maximumBytes) {
+                        ZimbraLog.misc.info("HSM limit reached in moveChunkItems: stopping migration at item " + movedItemInfo.getId());
+                        return false; // Signal to stop higher-level migration
+                    }
+
                     MailboxBlob destinationBlob = null;
 
                     try {
@@ -270,6 +314,8 @@ public class BlobMover {
                     originBlobs.add(originBlob);
                     destinationBlobMap.put(movedItemInfo.getBlobDigest(), destinationBlob);
                     destinationBlobList.add(destinationBlob);
+                    currentTotalBytes[0] += blobSize;
+
                 } else {
                     ZimbraLog.misc.warn("Could not find blob for message " + movedItemInfo.getId() + ", revision " + movedItemInfo.getModContent());
                     itemsToMigrateInfosIter.remove(); // We do not want to change original locator if we don't find a file
@@ -310,6 +356,12 @@ public class BlobMover {
                 MailboxManager.getInstance().endMaintenance(maintenance, true, true);
             }
         }
+
+        return true;
+    }
+
+    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
+        moveChunkItems(dbConnection, mbox, destinationLocator, itemsToMigrateInfos, 0L, new long[] { 0L });
     }
 
 }
