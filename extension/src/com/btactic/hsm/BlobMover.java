@@ -245,8 +245,6 @@ public class BlobMover {
                     return false;  // Do not continue migrating items
                 }
             }
-            itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
-            movedItemInfoCounter = 0;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("ZetaHsm: Unknown DB problem (move)", e);
         } finally {
