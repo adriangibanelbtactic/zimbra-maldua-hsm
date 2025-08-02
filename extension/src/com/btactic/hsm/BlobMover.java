@@ -173,25 +173,40 @@ public class BlobMover {
         return continueMoving;
     }
 
-    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes) throws ServiceException {
+    /**
+     * @param requestedOriginLocators Comma-separated list of origin volume IDs (e.g., "1,2,3"), or {@code null}.
+     *                                <ul>
+     *                                  <li>If {@code null}, valid origin locators will be auto-detected (default behavior).</li>
+     *                                  <li>If non-null, the caller must provide a valid list of origin locators in 'n,n,n' format. No validation is performed here.</li>
+     *                                  <li>The default behavior is used by regular HSM policy execution.</li>
+     *                                  <li>The custom behavior (non-null) is intended for the MoveBlobsRequest SOAP request.</li>
+     *                                </ul>
+     */
+    public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes, String requestedOriginLocators) throws ServiceException {
         long[] currentTotalBytes = new long[] { 0L }; // Pass-by-reference simulation
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
-        List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
 
-        if (validOriginLocators.isEmpty()) {
-            ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
-            return;
+        String originLocatorsString;
+
+        if (requestedOriginLocators != null) {
+            originLocatorsString = requestedOriginLocators;
+            ZimbraLog.misc.info("DEBUG: Using provided requestedOriginLocators: '" + originLocatorsString + "'.");
+        } else {
+            List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
+            if (validOriginLocators.isEmpty()) {
+                ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
+                return;
+            }
+            originLocatorsString = StringUtils.join(validOriginLocators, ",");
+            ZimbraLog.misc.info("DEBUG: validOriginLocatorsString: '" + originLocatorsString + "'.");
         }
-
-        String validOriginLocatorsString = StringUtils.join(validOriginLocators, ",");
-        ZimbraLog.misc.info("DEBUG: validOriginLocatorsString: '" + validOriginLocatorsString + "'" + ".");
 
         List<Integer> mailboxIds = getAllMailboxIds(prov);
         for (int mboxId : mailboxIds) {
             ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-            boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString, maximumBytes, currentTotalBytes);
+            boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, originLocatorsString, maximumBytes, currentTotalBytes);
 
             if (!continueMoving) {
                 ZimbraLog.misc.info("HSM migration stopped early after mailbox " + mboxId + " due to maximumBytes limit.");
@@ -202,7 +217,7 @@ public class BlobMover {
     }
 
     public void moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator) throws ServiceException {
-        moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator, 0L);
+        moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator, 0L, null);
     }
 
     private boolean moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, long[] currentTotalBytes) throws ServiceException {
