@@ -135,6 +135,9 @@ public class MoveBlobs extends AdminDocumentHandler {
         if (types == "all") {
             types="message,document,task,appointment,contact"; // TODO: Do not hardcode this and get it from somewhere else.
         }
+        if (maxBytes == null) {
+            maxBytes = 0L;
+        }
 
         // ADVANCED CHECKS
         // types: No need to check if they are valid types. If they don't exist the search will not give results for them
