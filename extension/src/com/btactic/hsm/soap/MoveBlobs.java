@@ -44,6 +44,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 
+import com.btactic.hsm.BlobMover;
 
 
 public class MoveBlobs extends AdminDocumentHandler {
@@ -151,6 +152,9 @@ public class MoveBlobs extends AdminDocumentHandler {
                 throw ServiceException.INVALID_REQUEST("sourceVolumeId: '" + sourceVolumeId + "' is not a valid source Volume ID", null);
             }
         }
+
+        BlobMover blobMover = new BlobMover();
+        blobMover.moveItems(prov, types, query, destVolumeId, maxBytes, sourceVolumeIdsString);
 
         Integer numBlobsMovedMockup = Integer.valueOf(1);
         resp.setNumBlobsMoved(numBlobsMovedMockup);
