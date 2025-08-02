@@ -83,11 +83,11 @@ public class MoveBlobs extends AdminDocumentHandler {
         for (VolumeInfo volumeInfo : response.getVolumes()) {
 
             if (volumeInfo.getId() == destinationLocator) {
-                break;
+                continue;
             }
 
             if (volumeInfo.getType() == Volume.TYPE_INDEX) {
-                break;
+                continue;
             }
 
             if ((Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) && (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))) {
