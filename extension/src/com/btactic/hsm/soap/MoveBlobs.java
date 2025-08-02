@@ -28,6 +28,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 
+import com.zimbra.common.util.ZimbraLog;
+
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
 import com.zimbra.cs.volume.Volume;
@@ -81,6 +83,12 @@ public class MoveBlobs extends AdminDocumentHandler {
         GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
 
         for (VolumeInfo volumeInfo : response.getVolumes()) {
+            ZimbraLog.misc.info("DEBUG: Volume data - BEGIN");
+            ZimbraLog.misc.info("                Id: '" + volumeInfo.getId() + "'");
+            ZimbraLog.misc.info("              Type: '" + volumeInfo.getType() + "'");
+            ZimbraLog.misc.info("        StoreType1: '" + volumeInfo.getStoreType() + "'");
+            ZimbraLog.misc.info("        StoreType2: '" + Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()) + "'");
+            ZimbraLog.misc.info(" StoreManagerClass: '" + volumeInfo.getStoreManagerClass() + "'");
 
             if (volumeInfo.getId() == destinationLocator) {
                 continue;
@@ -151,6 +159,7 @@ public class MoveBlobs extends AdminDocumentHandler {
         String[] sourceVolumeIdsStringArray = sourceVolumeIdsString.split(",");
         ArrayList<String> sourceVolumeIds = new ArrayList<>(Arrays.asList(sourceVolumeIdsStringArray));
         List<Short> validOriginLocators = getValidOriginLocators(prov, destVolumeId);
+        ZimbraLog.misc.info("DEBUG - validOriginLocators: " + validOriginLocators);
         for (String sourceVolumeId : sourceVolumeIds) {
             if (!(validOriginLocators.contains(sourceVolumeId))) {
                 throw ServiceException.INVALID_REQUEST("sourceVolumeId: '" + sourceVolumeId + "' is not a valid source Volume ID", null);
