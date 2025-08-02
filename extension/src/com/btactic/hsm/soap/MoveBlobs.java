@@ -161,8 +161,13 @@ public class MoveBlobs extends AdminDocumentHandler {
         List<Short> validOriginLocators = getValidOriginLocators(prov, destVolumeId);
         ZimbraLog.misc.info("DEBUG - validOriginLocators: " + validOriginLocators);
         for (String sourceVolumeId : sourceVolumeIds) {
-            if (!(validOriginLocators.contains(sourceVolumeId))) {
-                throw ServiceException.INVALID_REQUEST("sourceVolumeId: '" + sourceVolumeId + "' is not a valid source Volume ID", null);
+            try {
+                Short sourceVolumeIdShort = Short.parseShort(sourceVolumeId);
+                if (!validOriginLocators.contains(sourceVolumeIdShort)) {
+                    throw ServiceException.INVALID_REQUEST("sourceVolumeId: '" + sourceVolumeId + "' is not a valid source Volume ID", null);
+                }
+            } catch (NumberFormatException e) {
+                throw ServiceException.INVALID_REQUEST("Invalid sourceVolumeId format: '" + sourceVolumeId + "' is not a number", e);
             }
         }
 
