@@ -293,7 +293,15 @@ public class BlobMover {
                 originBlob = mStore.getMailboxBlob(mbox, movedItemInfo.getId(), movedItemInfo.getModContent(), String.valueOf(movedItemInfo.getLocator()));
                 if (originBlob != null) {
 
-                    long blobSize = originBlob.getSize();
+                    long blobSize;
+                    try {
+                        blobSize = originBlob.getSize();
+                    } catch (IOException e) {
+                        // TODO: Probably count an error here
+                        ZimbraLog.misc.warn("Could not get size of item: '" + movedItemInfo.getId() + "' blob. Skipping its HSM move.");
+                        continue;
+                    }
+
                     if (maximumBytes > 0 && currentTotalBytes[0] + blobSize > maximumBytes) {
                         ZimbraLog.misc.info("HSM limit reached in moveChunkItems: stopping migration at item " + movedItemInfo.getId());
                         return false; // Signal to stop higher-level migration
