@@ -128,8 +128,12 @@ public class MoveBlobs extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("must specify destVolumeId", null);
         }
 
+        // Set default values if needed
         if (query == null) {
             query = defaultMoveBlobsQuery;
+        }
+        if (types == "all") {
+            types="message,document,task,appointment,contact"; // TODO: Do not hardcode this and get it from somewhere else.
         }
 
         // ADVANCED CHECKS
