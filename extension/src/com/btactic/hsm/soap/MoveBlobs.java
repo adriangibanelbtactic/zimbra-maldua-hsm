@@ -132,7 +132,7 @@ public class MoveBlobs extends AdminDocumentHandler {
         if (query == null) {
             query = defaultMoveBlobsQuery;
         }
-        if (types == "all") {
+        if ("all".equals(types)) {
             types="message,document,task,appointment,contact"; // TODO: Do not hardcode this and get it from somewhere else.
         }
         if (maxBytes == null) {
