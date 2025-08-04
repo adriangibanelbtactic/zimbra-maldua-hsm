@@ -185,7 +185,6 @@ public class BlobMover {
      *                                </ul>
      */
     public BlobMoveStats moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes, String requestedOriginLocators) throws ServiceException {
-        long[] currentTotalBytes = new long[] { 0L }; // Pass-by-reference simulation
         BlobMoveStats stats = new BlobMoveStats();
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
 
@@ -219,7 +218,7 @@ public class BlobMover {
                     throw e; // rethrow if it's not the specific NO_SUCH_ACCOUNT case
                 }
             }
-            boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, originLocatorsString, maximumBytes, currentTotalBytes, stats);
+            boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, originLocatorsString, maximumBytes, stats);
 
             if (!continueMoving) {
                 ZimbraLog.misc.info("HSM migration stopped early after mailbox " + mboxId + " due to maximumBytes limit.");
@@ -235,7 +234,7 @@ public class BlobMover {
         moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator, 0L, null);
     }
 
-    private boolean moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, long[] currentTotalBytes, BlobMoveStats stats) throws ServiceException {
+    private boolean moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, BlobMoveStats stats) throws ServiceException {
         DbConnection dbConnection = null;
         Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
         List<MovedItemInfo> itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
@@ -254,7 +253,7 @@ public class BlobMover {
                 MovedItemInfo movedItemInfo = (MovedItemInfo) itemsToMigrateInfosIter.next();
                 itemsInfosToMigrateChunk.add(movedItemInfo);
                 if (movedItemInfoCounter == movedItemInfoChunkSize) {
-                    boolean continueMoving = moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes, currentTotalBytes, stats);
+                    boolean continueMoving = moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes, stats);
                     itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
                     movedItemInfoCounter = 0;
 
@@ -265,7 +264,7 @@ public class BlobMover {
                 }
             }
             if (itemsInfosToMigrateChunk.size() >= 1) {
-                boolean continueMoving = moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes, currentTotalBytes, stats);
+                boolean continueMoving = moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes, stats);
                 if (!continueMoving) {
                     ZimbraLog.misc.info("Migration halted due to maximumBytes limit reached during final chunk move.");
                     return false;  // Do not continue migrating items
@@ -279,7 +278,7 @@ public class BlobMover {
         return true; // Continue migrating items
     }
 
-    private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, long[] currentTotalBytes, BlobMoveStats stats) throws ServiceException {
+    private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, BlobMoveStats stats) throws ServiceException {
 
         List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
         ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
@@ -309,7 +308,7 @@ public class BlobMover {
                         continue;
                     }
 
-                    if (maximumBytes > 0 && currentTotalBytes[0] + blobSize > maximumBytes) {
+                    if (maximumBytes > 0 && stats.getNumBytesMoved() + blobSize > maximumBytes) {
                         ZimbraLog.misc.info("HSM limit reached in moveChunkItems: stopping migration at item " + movedItemInfo.getId());
                         return false; // Signal to stop higher-level migration
                     }
@@ -336,7 +335,6 @@ public class BlobMover {
                     originBlobs.add(originBlob);
                     destinationBlobMap.put(movedItemInfo.getBlobDigest(), destinationBlob);
                     destinationBlobList.add(destinationBlob);
-                    currentTotalBytes[0] += blobSize;
                     stats.addBytes(blobSize);
                     stats.incrementBlobs();
 
