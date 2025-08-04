@@ -121,7 +121,7 @@ public class BlobMover {
         }
     }
 
-    public boolean moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString, long maximumBytes, long[] currentTotalBytes) throws ServiceException {
+    public boolean moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString, long maximumBytes, BlobMoveStats stats) throws ServiceException {
         DbConnection dbConnection = null;
 
         SearchParams params = new SearchParams();
@@ -171,7 +171,7 @@ public class BlobMover {
             ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + zimbraQueryPostFilterItemsInfo.getId() + "'" + ".");
         }
 
-        boolean continueMoving = moveItems(mbox, destinationLocator, zimbraQueryPostFilterItemsInfos, maximumBytes, currentTotalBytes);
+        boolean continueMoving = moveItems(mbox, destinationLocator, zimbraQueryPostFilterItemsInfos, maximumBytes, stats);
         return continueMoving;
     }
 
