@@ -47,6 +47,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 
 import com.btactic.hsm.BlobMover;
+import com.btactic.hsm.BlobMoveStats;
 
 
 public class MoveBlobs extends AdminDocumentHandler {
@@ -106,6 +107,12 @@ public class MoveBlobs extends AdminDocumentHandler {
         ZimbraLog.misc.info("sourceVolumeIdsString: '" + sourceVolumeIdsString + "'");
         ZimbraLog.misc.info("         destVolumeId: '" + String.valueOf(destVolumeId) + "'");
         ZimbraLog.misc.info("             maxBytes: '" + String.valueOf(maxBytes) + "'");
+    }
+
+    private void printBlobMoveStatsDetails (BlobMoveStats blobMoveStats) {
+        ZimbraLog.misc.info("    NumberOfBlobsMoved: '" + blobMoveStats.getNumBlobsMoved() + "'");
+        ZimbraLog.misc.info("    NumberOfBytesMoved: '" + blobMoveStats.getNumBytesMoved() + "'");
+        ZimbraLog.misc.info("NumberOfMailboxesMoved: '" + blobMoveStats.getNumMailboxesMoved() + "'");
     }
 
     @Override
@@ -179,17 +186,21 @@ public class MoveBlobs extends AdminDocumentHandler {
         printMoveBlobsRequestDetails (types, query, sourceVolumeIdsString, destVolumeId, maxBytes);
 
         BlobMover blobMover = new BlobMover();
-        blobMover.moveItems(prov, types, query, destVolumeId, maxBytes, sourceVolumeIdsString);
+        BlobMoveStats blobMoveStats = blobMover.moveItems(prov, types, query, destVolumeId, maxBytes, sourceVolumeIdsString);
 
         ZimbraLog.misc.info("MoveBlobsRequest has ended.");
         printMoveBlobsRequestDetails (types, query, sourceVolumeIdsString, destVolumeId, maxBytes);
 
-        Integer numBlobsMovedMockup = Integer.valueOf(1);
-        resp.setNumBlobsMoved(numBlobsMovedMockup);
-        Long numBytesMovedMockup = Long.valueOf(2);
-        resp.setNumBytesMoved(numBytesMovedMockup);
-        Integer totalMailboxesMockup = Integer.valueOf(3);
-        resp.setTotalMailboxes(totalMailboxesMockup);
+        if (blobMoveStats == null) {
+            blobMoveStats = new BlobMoveStats(); // Set all values to 0.
+        }
+
+        ZimbraLog.misc.info("MoveBlobsRequest stats summary:");
+        printBlobMoveStatsDetails (blobMoveStats);
+
+        resp.setNumBlobsMoved(blobMoveStats.getNumBlobsMoved());
+        resp.setNumBytesMoved(blobMoveStats.getNumBytesMoved());
+        resp.setTotalMailboxes(blobMoveStats.getNumMailboxesMoved());
 
         return zsc.jaxbToElement(resp);
     }
