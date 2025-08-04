@@ -197,7 +197,7 @@ public class BlobMover {
             List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
             if (validOriginLocators.isEmpty()) {
                 ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
-                return;
+                return null;
             }
             originLocatorsString = StringUtils.join(validOriginLocators, ",");
             ZimbraLog.misc.info("DEBUG: validOriginLocatorsString: '" + originLocatorsString + "'.");
