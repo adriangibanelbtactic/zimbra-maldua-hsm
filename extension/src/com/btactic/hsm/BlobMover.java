@@ -175,10 +175,6 @@ public class BlobMover {
         return continueMoving;
     }
 
-    public void moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString) throws ServiceException {
-        moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, validOriginLocatorsString, 0L, new long[] { 0L });
-    }
-
     /**
      * @param requestedOriginLocators Comma-separated list of origin volume IDs (e.g., "1,2,3"), or {@code null}.
      *                                <ul>
@@ -281,10 +277,6 @@ public class BlobMover {
             DbPool.quietClose(dbConnection);
         }
         return true; // Continue migrating items
-    }
-
-    private void moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
-        moveItems(mbox, destinationLocator, itemsToMigrateInfos, 0L, new long[] { 0L });
     }
 
     private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, long[] currentTotalBytes, BlobMoveStats stats) throws ServiceException {
@@ -390,10 +382,6 @@ public class BlobMover {
         }
 
         return true;
-    }
-
-    private void moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos) throws ServiceException {
-        moveChunkItems(dbConnection, mbox, destinationLocator, itemsToMigrateInfos, 0L, new long[] { 0L });
     }
 
 }
