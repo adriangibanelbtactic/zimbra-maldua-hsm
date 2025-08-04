@@ -28,6 +28,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 
+import com.zimbra.common.util.ZimbraLog;
+
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
 import com.zimbra.cs.volume.Volume;
@@ -98,6 +100,14 @@ public class MoveBlobs extends AdminDocumentHandler {
         return validOriginLocators;
     }
 
+    private void printMoveBlobsRequestDetails (String types, String query, String sourceVolumeIdsString, Short destVolumeId, Long maxBytes) {
+        ZimbraLog.misc.info("                Types: '" + types + "'");
+        ZimbraLog.misc.info("                Query: '" + query + "'");
+        ZimbraLog.misc.info("sourceVolumeIdsString: '" + sourceVolumeIdsString + "'");
+        ZimbraLog.misc.info("         destVolumeId: '" + String.valueOf(destVolumeId) + "'");
+        ZimbraLog.misc.info("             maxBytes: '" + String.valueOf(maxBytes) + "'");
+    }
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 
@@ -165,8 +175,14 @@ public class MoveBlobs extends AdminDocumentHandler {
             }
         }
 
+        ZimbraLog.misc.info("MoveBlobsRequest has started.");
+        printMoveBlobsRequestDetails (types, query, sourceVolumeIdsString, destVolumeId, maxBytes);
+
         BlobMover blobMover = new BlobMover();
         blobMover.moveItems(prov, types, query, destVolumeId, maxBytes, sourceVolumeIdsString);
+
+        ZimbraLog.misc.info("MoveBlobsRequest has ended.");
+        printMoveBlobsRequestDetails (types, query, sourceVolumeIdsString, destVolumeId, maxBytes);
 
         Integer numBlobsMovedMockup = Integer.valueOf(1);
         resp.setNumBlobsMoved(numBlobsMovedMockup);
