@@ -24,6 +24,8 @@ import com.zimbra.common.soap.SoapProtocol;
 
 import com.zimbra.common.util.ZimbraLog;
 
+import com.zimbra.cs.account.AccountServiceException;
+
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
 import com.zimbra.cs.db.DbPool;
@@ -209,7 +211,17 @@ public class BlobMover {
         for (int mboxId : mailboxIds) {
             ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 
-            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+            Mailbox mbox = null;
+            try {
+                mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+            } catch (AccountServiceException e) {
+                if (AccountServiceException.NO_SUCH_ACCOUNT.equals(e.getCode())) {
+                    ZimbraLog.misc.warn("Skipping mailbox " + mboxId + ": account not found (NO_SUCH_ACCOUNT).");
+                    continue;
+                } else {
+                    throw e; // rethrow if it's not the specific NO_SUCH_ACCOUNT case
+                }
+            }
             boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, originLocatorsString, maximumBytes, currentTotalBytes);
 
             if (!continueMoving) {
