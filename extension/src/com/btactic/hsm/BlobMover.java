@@ -186,9 +186,12 @@ public class BlobMover {
 
         boolean continueMoving = true;
         for (List<MovedItemInfo> chunk : filteredChunks) {
-            // for (MovedItemInfo item : chunk) {
-            //     ZimbraLog.misc.info("DEBUG: mailboxId (Post Filter): " + mboxId + " ItemId: '" + item.getId() + "'.");
-            // }
+            // Extra Debug check because this would waste resources with the usual ZimbraLog.misc.debug() call
+            if (ZimbraLog.misc.isDebugEnabled()) {
+                for (MovedItemInfo item : chunk) {
+                    ZimbraLog.misc.debug("mailboxId (Post Filter): " + mboxId + " ItemId: '" + item.getId() + "'.");
+                }
+            }
             continueMoving = moveItems(mbox, destinationLocator, chunk, maximumBytes, stats);
             if (!continueMoving) {
                 break;
