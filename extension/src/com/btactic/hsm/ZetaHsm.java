@@ -152,9 +152,8 @@ public class ZetaHsm {
         }
 
         public void run() {
-            // TODO: Sleep 1 minute as a proof of concept
+            ZimbraLog.misc.debug("ZetaHsm RUN function - Start");
             resetProgress();
-            ZimbraLog.misc.info("DEBUG: ZetaHsm RUN function was run.");
             try {
                 String[] zimbraHsmPolicyList = Provisioning.getInstance().getLocalServer().getMultiAttr("zimbraHsmPolicy");
 
@@ -177,7 +176,7 @@ public class ZetaHsm {
                     return;
                 }
 
-                ZimbraLog.misc.info("DEBUG: destinationLocator: " + destinationLocator);
+                ZimbraLog.misc.debug("destinationLocator: " + destinationLocator);
 
                 int zimbraHsmPolicyCounter = 0;
                 for (String nZimbraHsmPolicy: zimbraHsmPolicyList) {
@@ -187,13 +186,13 @@ public class ZetaHsm {
                     String hsmSearchQueryString = getHsmSearchQueryStringFromHsmPolicy(nZimbraHsmPolicy);
                     // No need to check if the values are null because of prior isValidHsmPolicySyntaxList check
 
-                    ZimbraLog.misc.info("DEBUG: hsmTypesString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmTypesString + "'");
-                    ZimbraLog.misc.info("DEBUG: hsmSearchQueryString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmSearchQueryString + "'");
+                    ZimbraLog.misc.debug("hsmTypesString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmTypesString + "'");
+                    ZimbraLog.misc.debug("hsmSearchQueryString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmSearchQueryString + "'");
 
                     BlobMover blobMover = new BlobMover();
                     blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator);
                 }
-                ZimbraLog.misc.info("DEBUG: ZetaHsm RUN function ended successfully.");
+                ZimbraLog.misc.debug("ZetaHsm RUN function - End");
             }
             catch (ServiceException e) {
                 ZimbraLog.misc.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);

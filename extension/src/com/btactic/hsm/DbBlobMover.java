@@ -56,7 +56,7 @@ public class DbBlobMover {
         sql.append(StringUtils.join(itemsToMigrateInfosIds, ","));
         sql.append(")");
 
-        ZimbraLog.misc.info("DEBUG: MoveQuery: '" + sql.toString() + "'" + ".");
+        ZimbraLog.misc.debug("MoveQuery: '" + sql.toString() + "'" + ".");
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -93,7 +93,7 @@ public class DbBlobMover {
         sql.append(StringUtils.join(itemsToMigrateInfosIds, ","));
         sql.append(")");
 
-        ZimbraLog.misc.info("DEBUG: MoveQuery: '" + sql.toString() + "'" + ".");
+        ZimbraLog.misc.debug("MoveQuery: '" + sql.toString() + "'" + ".");
 
         Connection conn = null;
         PreparedStatement stmt = null;

@@ -215,7 +215,7 @@ public class BlobMover {
 
         if (requestedOriginLocators != null) {
             originLocatorsString = requestedOriginLocators;
-            ZimbraLog.misc.info("DEBUG: Using provided requestedOriginLocators: '" + originLocatorsString + "'.");
+            ZimbraLog.misc.debug("Using provided requestedOriginLocators: '" + originLocatorsString + "'.");
         } else {
             List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
             if (validOriginLocators.isEmpty()) {
@@ -223,12 +223,12 @@ public class BlobMover {
                 return null;
             }
             originLocatorsString = StringUtils.join(validOriginLocators, ",");
-            ZimbraLog.misc.info("DEBUG: validOriginLocatorsString: '" + originLocatorsString + "'.");
+            ZimbraLog.misc.debug("validOriginLocatorsString: '" + originLocatorsString + "'.");
         }
 
         List<Integer> mailboxIds = getAllMailboxIds(prov);
         for (int mboxId : mailboxIds) {
-            ZimbraLog.misc.info("DEBUG: mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
+            ZimbraLog.misc.debug("mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 
             Mailbox mbox = null;
             try {
@@ -304,7 +304,7 @@ public class BlobMover {
     private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, BlobMoveStats stats) throws ServiceException {
 
         List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
-        ZimbraLog.misc.info("DEBUG: Moving " + itemsToMigrateInfos.size() + " messages.");
+        ZimbraLog.misc.debug("Moving " + itemsToMigrateInfos.size() + " messages. (Attempt)");
         MailboxBlob originBlob = null;
 
         Map<String, MailboxBlob> destinationBlobMap = new HashMap<String, MailboxBlob>(); // Fast lookup by digest
