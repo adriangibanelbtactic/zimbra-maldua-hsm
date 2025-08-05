@@ -22,8 +22,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapProtocol;
 
-import com.zimbra.common.util.ZimbraLog;
-
 import com.zimbra.cs.account.AccountServiceException;
 
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -186,10 +184,10 @@ public class BlobMover {
 
         boolean continueMoving = true;
         for (List<MovedItemInfo> chunk : filteredChunks) {
-            // Extra Debug check because this would waste resources with the usual ZimbraLog.misc.debug() call
-            if (ZimbraLog.misc.isDebugEnabled()) {
+            // Extra Debug check because this would waste resources with the usual ZetaHsmLog.debug() call
+            if (ZetaHsmLog.isDebugEnabled()) {
                 for (MovedItemInfo item : chunk) {
-                    ZimbraLog.misc.debug("mailboxId (Post Filter): " + mboxId + " ItemId: '" + item.getId() + "'.");
+                    ZetaHsmLog.debug("mailboxId (Post Filter): " + mboxId + " ItemId: '" + item.getId() + "'.");
                 }
             }
             continueMoving = moveItems(mbox, destinationLocator, chunk, maximumBytes, stats);
@@ -218,27 +216,27 @@ public class BlobMover {
 
         if (requestedOriginLocators != null) {
             originLocatorsString = requestedOriginLocators;
-            ZimbraLog.misc.debug("Using provided requestedOriginLocators: '" + originLocatorsString + "'.");
+            ZetaHsmLog.debug("Using provided requestedOriginLocators: '" + originLocatorsString + "'.");
         } else {
             List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
             if (validOriginLocators.isEmpty()) {
-                ZimbraLog.misc.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
+                ZetaHsmLog.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
                 return null;
             }
             originLocatorsString = StringUtils.join(validOriginLocators, ",");
-            ZimbraLog.misc.debug("validOriginLocatorsString: '" + originLocatorsString + "'.");
+            ZetaHsmLog.debug("validOriginLocatorsString: '" + originLocatorsString + "'.");
         }
 
         List<Integer> mailboxIds = getAllMailboxIds(prov);
         for (int mboxId : mailboxIds) {
-            ZimbraLog.misc.debug("mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
+            ZetaHsmLog.debug("mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 
             Mailbox mbox = null;
             try {
                 mbox = MailboxManager.getInstance().getMailboxById(mboxId);
             } catch (AccountServiceException e) {
                 if (AccountServiceException.NO_SUCH_ACCOUNT.equals(e.getCode())) {
-                    ZimbraLog.misc.warn("Skipping mailbox " + mboxId + ": account not found (NO_SUCH_ACCOUNT).");
+                    ZetaHsmLog.warn("Skipping mailbox " + mboxId + ": account not found (NO_SUCH_ACCOUNT).");
                     continue;
                 } else {
                     throw e; // rethrow if it's not the specific NO_SUCH_ACCOUNT case
@@ -247,7 +245,7 @@ public class BlobMover {
             boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, originLocatorsString, maximumBytes, stats);
 
             if (!continueMoving) {
-                ZimbraLog.misc.info("HSM migration stopped early after mailbox " + mboxId + " due to maximumBytes limit.");
+                ZetaHsmLog.info("HSM migration stopped early after mailbox " + mboxId + " due to maximumBytes limit.");
                 break;
             }
             stats.incrementMailboxes();
@@ -284,7 +282,7 @@ public class BlobMover {
                     movedItemInfoCounter = 0;
 
                     if (!continueMoving) {
-                        ZimbraLog.misc.info("Migration halted due to maximumBytes limit reached during chunk move.");
+                        ZetaHsmLog.info("Migration halted due to maximumBytes limit reached during chunk move.");
                         return false; // Do not continue migrating items
                     }
                 }
@@ -292,7 +290,7 @@ public class BlobMover {
             if (itemsInfosToMigrateChunk.size() >= 1) {
                 boolean continueMoving = moveChunkItems(dbConnection, mbox, destinationLocator, itemsInfosToMigrateChunk, maximumBytes, stats);
                 if (!continueMoving) {
-                    ZimbraLog.misc.info("Migration halted due to maximumBytes limit reached during final chunk move.");
+                    ZetaHsmLog.info("Migration halted due to maximumBytes limit reached during final chunk move.");
                     return false;  // Do not continue migrating items
                 }
             }
@@ -307,7 +305,7 @@ public class BlobMover {
     private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, BlobMoveStats stats) throws ServiceException {
 
         List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
-        ZimbraLog.misc.debug("Moving " + itemsToMigrateInfos.size() + " messages. (Attempt)");
+        ZetaHsmLog.debug("Moving " + itemsToMigrateInfos.size() + " messages. (Attempt)");
         MailboxBlob originBlob = null;
 
         Map<String, MailboxBlob> destinationBlobMap = new HashMap<String, MailboxBlob>(); // Fast lookup by digest
@@ -330,12 +328,12 @@ public class BlobMover {
                         blobSize = originBlob.getSize();
                     } catch (IOException e) {
                         // TODO: Probably count an error here
-                        ZimbraLog.misc.warn("Could not get size of item: '" + movedItemInfo.getId() + "' blob. Skipping its HSM move.");
+                        ZetaHsmLog.warn("Could not get size of item: '" + movedItemInfo.getId() + "' blob. Skipping its HSM move.");
                         continue;
                     }
 
                     if (maximumBytes > 0 && stats.getNumBytesMoved() + blobSize > maximumBytes) {
-                        ZimbraLog.misc.info("HSM limit reached in moveChunkItems: stopping migration at item " + movedItemInfo.getId());
+                        ZetaHsmLog.info("HSM limit reached in moveChunkItems: stopping migration at item " + movedItemInfo.getId());
                         return false; // Signal to stop higher-level migration
                     }
 
@@ -365,7 +363,7 @@ public class BlobMover {
                     stats.incrementBlobs();
 
                 } else {
-                    ZimbraLog.misc.warn("Could not find blob for message " + movedItemInfo.getId() + ", revision " + movedItemInfo.getModContent());
+                    ZetaHsmLog.warn("Could not find blob for message " + movedItemInfo.getId() + ", revision " + movedItemInfo.getModContent());
                     itemsToMigrateInfosIter.remove(); // We do not want to change original locator if we don't find a file
                 }
             }
@@ -383,7 +381,7 @@ public class BlobMover {
                 try {
                     mStore.delete(originMboxBlob);
                 } catch (IOException e) {
-                    ZimbraLog.misc.error("Unable to delete " + originMboxBlob + ": " + e);
+                    ZetaHsmLog.error("Unable to delete " + originMboxBlob + ": " + e);
                 }
             }
         } catch (ServiceException e) {
@@ -395,7 +393,7 @@ public class BlobMover {
                 try {
                     mStore.delete(destinationBlob);
                 } catch (IOException ioe) {
-                    ZimbraLog.misc.error("Unable to delete " + destinationBlob + ": " + ioe);
+                    ZetaHsmLog.error("Unable to delete " + destinationBlob + ": " + ioe);
                 }
             }
             throw e;

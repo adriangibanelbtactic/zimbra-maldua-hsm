@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
@@ -56,7 +55,7 @@ public class DbBlobMover {
         sql.append(StringUtils.join(itemsToMigrateInfosIds, ","));
         sql.append(")");
 
-        ZimbraLog.misc.debug("MoveQuery: '" + sql.toString() + "'" + ".");
+        ZetaHsmLog.debug("MoveQuery: '" + sql.toString() + "'" + ".");
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -93,7 +92,7 @@ public class DbBlobMover {
         sql.append(StringUtils.join(itemsToMigrateInfosIds, ","));
         sql.append(")");
 
-        ZimbraLog.misc.debug("MoveQuery: '" + sql.toString() + "'" + ".");
+        ZetaHsmLog.debug("MoveQuery: '" + sql.toString() + "'" + ".");
 
         Connection conn = null;
         PreparedStatement stmt = null;

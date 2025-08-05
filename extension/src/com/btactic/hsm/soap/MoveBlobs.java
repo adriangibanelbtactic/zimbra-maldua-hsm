@@ -48,6 +48,7 @@ import com.zimbra.cs.service.admin.AdminDocumentHandler;
 
 import com.btactic.hsm.BlobMover;
 import com.btactic.hsm.BlobMoveStats;
+import com.btactic.hsm.ZetaHsmLog;
 
 
 public class MoveBlobs extends AdminDocumentHandler {
@@ -102,17 +103,17 @@ public class MoveBlobs extends AdminDocumentHandler {
     }
 
     private void printMoveBlobsRequestDetails (String types, String query, String sourceVolumeIdsString, Short destVolumeId, Long maxBytes) {
-        ZimbraLog.misc.info("                Types: '" + types + "'");
-        ZimbraLog.misc.info("                Query: '" + query + "'");
-        ZimbraLog.misc.info("sourceVolumeIdsString: '" + sourceVolumeIdsString + "'");
-        ZimbraLog.misc.info("         destVolumeId: '" + String.valueOf(destVolumeId) + "'");
-        ZimbraLog.misc.info("             maxBytes: '" + String.valueOf(maxBytes) + "'");
+        ZetaHsmLog.info("                Types: '" + types + "'");
+        ZetaHsmLog.info("                Query: '" + query + "'");
+        ZetaHsmLog.info("sourceVolumeIdsString: '" + sourceVolumeIdsString + "'");
+        ZetaHsmLog.info("         destVolumeId: '" + String.valueOf(destVolumeId) + "'");
+        ZetaHsmLog.info("             maxBytes: '" + String.valueOf(maxBytes) + "'");
     }
 
     private void printBlobMoveStatsDetails (BlobMoveStats blobMoveStats) {
-        ZimbraLog.misc.info("    NumberOfBlobsMoved: '" + blobMoveStats.getNumBlobsMoved() + "'");
-        ZimbraLog.misc.info("    NumberOfBytesMoved: '" + blobMoveStats.getNumBytesMoved() + "'");
-        ZimbraLog.misc.info("NumberOfMailboxesMoved: '" + blobMoveStats.getNumMailboxesMoved() + "'");
+        ZetaHsmLog.info("    NumberOfBlobsMoved: '" + blobMoveStats.getNumBlobsMoved() + "'");
+        ZetaHsmLog.info("    NumberOfBytesMoved: '" + blobMoveStats.getNumBytesMoved() + "'");
+        ZetaHsmLog.info("NumberOfMailboxesMoved: '" + blobMoveStats.getNumMailboxesMoved() + "'");
     }
 
     @Override
@@ -182,20 +183,20 @@ public class MoveBlobs extends AdminDocumentHandler {
             }
         }
 
-        ZimbraLog.misc.info("MoveBlobsRequest has started.");
+        ZetaHsmLog.info("MoveBlobsRequest has started.");
         printMoveBlobsRequestDetails (types, query, sourceVolumeIdsString, destVolumeId, maxBytes);
 
         BlobMover blobMover = new BlobMover();
         BlobMoveStats blobMoveStats = blobMover.moveItems(prov, types, query, destVolumeId, maxBytes, sourceVolumeIdsString);
 
-        ZimbraLog.misc.info("MoveBlobsRequest has ended.");
+        ZetaHsmLog.info("MoveBlobsRequest has ended.");
         printMoveBlobsRequestDetails (types, query, sourceVolumeIdsString, destVolumeId, maxBytes);
 
         if (blobMoveStats == null) {
             blobMoveStats = new BlobMoveStats(); // Set all values to 0.
         }
 
-        ZimbraLog.misc.info("MoveBlobsRequest stats summary:");
+        ZetaHsmLog.info("MoveBlobsRequest stats summary:");
         printBlobMoveStatsDetails (blobMoveStats);
 
         resp.setNumBlobsMoved(blobMoveStats.getNumBlobsMoved());
