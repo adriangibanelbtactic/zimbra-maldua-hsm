@@ -49,58 +49,10 @@ import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.btactic.hsm.BlobMover;
 import com.btactic.hsm.BlobMoveStats;
 import com.btactic.hsm.ZetaHsmLog;
+import com.btactic.hsm.storage.VolumeUtil;
 
 
 public class MoveBlobs extends AdminDocumentHandler {
-
-    private List<Short> getValidLocators(SoapProvisioning prov) throws ServiceException {
-        List<Short> validLocators = new ArrayList<Short>();
-
-        GetAllVolumesRequest request = new GetAllVolumesRequest();
-        Element requestElement = JaxbUtil.jaxbToElement(request);
-        Element respElem = prov.invoke(requestElement);
-        GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
-
-        for (VolumeInfo volumeInfo : response.getVolumes()) {
-
-            if (volumeInfo.getType() == Volume.TYPE_INDEX) {
-                continue;
-            }
-
-            if ((Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) && (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))) {
-                validLocators.add(volumeInfo.getId());
-            }
-        }
-
-        return validLocators;
-    }
-
-    // TODO: Add util library so this code can be reused here and also in BlobMover.java file
-    private List<Short> getValidOriginLocators(SoapProvisioning prov, int destinationLocator) throws ServiceException {
-        List<Short> validOriginLocators = new ArrayList<Short>();
-
-        GetAllVolumesRequest request = new GetAllVolumesRequest();
-        Element requestElement = JaxbUtil.jaxbToElement(request);
-        Element respElem = prov.invoke(requestElement);
-        GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
-
-        for (VolumeInfo volumeInfo : response.getVolumes()) {
-
-            if (volumeInfo.getId() == destinationLocator) {
-                continue;
-            }
-
-            if (volumeInfo.getType() == Volume.TYPE_INDEX) {
-                continue;
-            }
-
-            if ((Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) && (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))) {
-                validOriginLocators.add(volumeInfo.getId());
-            }
-        }
-
-        return validOriginLocators;
-    }
 
     private void printMoveBlobsRequestDetails (String types, String query, String sourceVolumeIdsString, Short destVolumeId, Long maxBytes) {
         ZetaHsmLog.info("                Types: '" + types + "'");
@@ -163,15 +115,14 @@ public class MoveBlobs extends AdminDocumentHandler {
         // query: No need to check. Either no results (for being empty) or an error for its syntax not being correct
 
         // destVolumeId
-        List<Short> validLocators = getValidLocators(prov);
-        if (!(validLocators.contains(destVolumeId))) {
+        if (!(VolumeUtil.isValidLocator(prov, destVolumeId))) {
             throw ServiceException.INVALID_REQUEST("destVolumeId: '" + destVolumeId + "' is not a valid destination Volume ID", null);
         }
 
         // sourceVolumeIds
         String[] sourceVolumeIdsStringArray = sourceVolumeIdsString.split(",");
         ArrayList<String> sourceVolumeIds = new ArrayList<>(Arrays.asList(sourceVolumeIdsStringArray));
-        List<Short> validOriginLocators = getValidOriginLocators(prov, destVolumeId);
+        List<Short> validOriginLocators = VolumeUtil.getValidOriginLocators(prov, destVolumeId);
         for (String sourceVolumeId : sourceVolumeIds) {
             try {
                 Short sourceVolumeIdShort = Short.parseShort(sourceVolumeId);
