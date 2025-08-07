@@ -13,7 +13,10 @@ import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.soap.admin.message.MoveBlobsRequest;
+import com.zimbra.soap.admin.message.MoveBlobsResponse;
 
 import com.btactic.hsm.storage.VolumeUtil;
 
@@ -159,9 +162,24 @@ public class ZetaHsmMoveBlobsUtil {
                 System.exit(8);
             }
 
-            // Move blobs
-            BlobMover mover = new BlobMover();
-            mover.moveItems(prov, types, hsmQuery, destVolId, maxByteLimit, sourceVolIds);
+            // Construct MoveBlobsRequest
+            MoveBlobsRequest req = new MoveBlobsRequest();
+            req.setDestVolumeId(destVolId);
+            req.setSourceVolumeIds(sourceVolIds);
+            req.setTypes(types);
+            req.setMaxBytes(maxByteLimit);
+            req.setQuery(hsmQuery);
+
+            Element requestElement = JaxbUtil.jaxbToElement(request);
+            Element respElem = prov.invoke(requestElement);
+            MoveBlobsResponse resp = JaxbUtil.elementToJaxb(respElem);
+
+            // Optional: log or display results
+            System.out.printf(
+                "Moved %d blobs (%d bytes) from %d mailboxes.\n",
+                resp.getNumBlobsMoved(), resp.getNumBytesMoved(), resp.getNumMailboxesMoved()
+            );
+
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
