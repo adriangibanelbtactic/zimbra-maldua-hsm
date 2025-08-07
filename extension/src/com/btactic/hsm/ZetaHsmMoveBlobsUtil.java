@@ -171,9 +171,9 @@ public class ZetaHsmMoveBlobsUtil {
             req.setMaxBytes(maxByteLimit);
             req.setQuery(hsmQuery);
 
-            Element requestElement = JaxbUtil.jaxbToElement(request);
-            Element respElem = prov.invoke(requestElement);
-            MoveBlobsResponse resp = JaxbUtil.elementToJaxb(respElem);
+            Element reqElement = JaxbUtil.jaxbToElement(req);
+            Element respElement = prov.invoke(reqElement);
+            MoveBlobsResponse resp = JaxbUtil.elementToJaxb(respElement);
 
             // Optional: log or display results
             System.out.printf(
