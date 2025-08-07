@@ -17,6 +17,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.admin.message.MoveBlobsRequest;
 import com.zimbra.soap.admin.message.MoveBlobsResponse;
+import com.zimbra.soap.JaxbUtil;
 
 import com.btactic.hsm.storage.VolumeUtil;
 
