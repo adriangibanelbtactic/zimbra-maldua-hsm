@@ -178,7 +178,7 @@ public class ZetaHsmMoveBlobsUtil {
             // Optional: log or display results
             System.out.printf(
                 "Moved %d blobs (%d bytes) from %d mailboxes.\n",
-                resp.getNumBlobsMoved(), resp.getNumBytesMoved(), resp.getNumMailboxesMoved()
+                resp.getNumBlobsMoved(), resp.getNumBytesMoved(), resp.getTotalMailboxes()
             );
 
         } catch (Exception e) {
