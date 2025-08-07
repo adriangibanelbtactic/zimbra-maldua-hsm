@@ -11,6 +11,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
@@ -83,6 +84,7 @@ public class ZetaHsmMoveBlobsUtil {
     }
 
     public static void main(String[] args) {
+        CliUtil.toolSetup();
         String defaultMoveBlobsQuery = "is:anywhere";
 
         Map<String, String> opts = parseArgs(args);
