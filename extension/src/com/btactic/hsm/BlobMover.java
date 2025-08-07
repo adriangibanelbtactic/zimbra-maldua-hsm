@@ -68,6 +68,8 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.btactic.hsm.storage.VolumeUtil;
+
 public class BlobMover {
 
     private HashMap<String, MailboxBlob> mAllDestinationBlobs = null;
@@ -84,32 +86,6 @@ public class BlobMover {
             ids.add(mailboxInfo.getId());
         }
         return ids;
-    }
-
-    private List<Short> getValidOriginLocators(SoapProvisioning prov, int destinationLocator) throws ServiceException {
-        List<Short> validOriginLocators = new ArrayList<Short>();
-
-        GetAllVolumesRequest request = new GetAllVolumesRequest();
-        Element requestElement = JaxbUtil.jaxbToElement(request);
-        Element respElem = prov.invoke(requestElement);
-        GetAllVolumesResponse response = JaxbUtil.elementToJaxb(respElem);
-
-        for (VolumeInfo volumeInfo : response.getVolumes()) {
-
-            if (volumeInfo.getId() == destinationLocator) {
-                continue;
-            }
-
-            if (volumeInfo.getType() == Volume.TYPE_INDEX) {
-                continue;
-            }
-
-            if ((Volume.StoreType.getStoreTypeBy(volumeInfo.getStoreType()).equals(Volume.StoreType.INTERNAL)) && (volumeInfo.getStoreManagerClass().equals("com.zimbra.cs.store.file.FileBlobStore"))) {
-                validOriginLocators.add(volumeInfo.getId());
-            }
-        }
-
-        return validOriginLocators;
     }
 
     private void filterAndAddToFilteredItemIds(DbConnection dbConnection, Mailbox mbox, List<Integer> zimbraQueryPreFilterItemsChunk, List<MovedItemInfo> zimbraQueryPostFilterItemsInfos, String validOriginLocatorsString) throws ServiceException {
@@ -218,7 +194,7 @@ public class BlobMover {
             originLocatorsString = requestedOriginLocators;
             ZetaHsmLog.debug("Using provided requestedOriginLocators: '" + originLocatorsString + "'.");
         } else {
-            List<Short> validOriginLocators = getValidOriginLocators(prov, destinationLocator);
+            List<Short> validOriginLocators = VolumeUtil.getValidOriginLocators(prov, destinationLocator);
             if (validOriginLocators.isEmpty()) {
                 ZetaHsmLog.info("No valid origin volume Ids for this zimbraHsmPolicy. Skipping.");
                 return null;
