@@ -35,6 +35,7 @@ This documentation is aimed at developers, not at admins.
 
 - Just copy `bin/zetahsm` it to: `/opt/zimbra/bin/zetahsm` with `root:root` ownership. Make sure it has `755` permissions.
 - Just copy `bin/zetamoveblobs` it to: `/opt/zimbra/bin/zetamoveblobs` with `root:root` ownership. Make sure it has `755` permissions.
+- Just copy `bin/zetaschedulesmpolicy` it to: `/opt/zimbra/bin/zetaschedulesmpolicy` with `root:root` ownership. Make sure it has `755` permissions.
 
 ## Licenses
 

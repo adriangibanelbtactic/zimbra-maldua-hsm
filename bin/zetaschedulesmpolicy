@@ -1,0 +1,169 @@
+#!/usr/bin/perl -w
+use strict;
+
+# Path to zetahsm command
+my $ZETAHSM_CMD = "/opt/zimbra/bin/zetahsm --start";
+my $CRON_BEGIN  = "# STORAGE MANAGEMENT BEGIN";
+my $CRON_END    = "# STORAGE MANAGEMENT END";
+
+# Ensure running as zimbra
+my $user = `whoami`;
+chomp($user);
+if ($user ne "zimbra") {
+    print STDERR "Error: $0 must be run as user zimbra\n";
+    exit 1;
+}
+
+# Show usage
+sub usage {
+    my $prog = $0;
+    if ($prog =~ /\/([^\/]+)$/) {
+        $prog = $1;
+    }
+    print <<"USAGE";
+Schedule Storage Management Policy
+
+Usage: $prog [-l|-h|-f|-e { <hours:00> } ] -- hours are allowed in 24-hours format and minutes are not allowed
+  -l,--list           print existing schedule
+  -h,--help           get help about $prog (default command)
+  -f,--flush          remove current schedule (cancel all scheduled Storage Management policy)
+  -e,--edit <arg>     edit current schedule with specified schedule
+
+  Storage Management Policy schedule examples:
+
+    Prints current Storage Management scheduled policy:
+    $prog -l
+
+    Schedule Storage Management policy at 9 AM like:
+    $prog -e 09:00
+
+    Schedule Storage Management policy at 3 PM like:
+    $prog -e 15:00
+
+    Flush/Cancel current scheduled Storage Management policy:
+    $prog -f
+
+    Get help about $prog:
+    $prog -h
+USAGE
+}
+
+# Get current crontab for zimbra
+sub get_crontab {
+    my @lines = `crontab -l 2>/dev/null`;
+    chomp @lines;
+    return @lines;
+}
+
+# Write updated crontab
+sub write_crontab {
+    my @lines = @_;
+    open(my $tmp, ">", "/tmp/zetaschedulesmpolicy_cron") or die "Cannot write temp cron: $!";
+    print $tmp join("\n", @lines), "\n";
+    close($tmp);
+    system("crontab /tmp/zetaschedulesmpolicy_cron");
+    unlink("/tmp/zetaschedulesmpolicy_cron");
+}
+
+# Ensure block exists; if not, rebuild it
+sub ensure_block {
+    my @cron = get_crontab();
+    my $has_block = 0;
+    for my $i (0..$#cron) {
+        if ($cron[$i] =~ /^\Q$CRON_BEGIN\E$/) {
+            $has_block = 1;
+            last;
+        }
+    }
+    unless ($has_block) {
+        print "Rebuilding Storage Management cron\n";
+        push @cron, $CRON_BEGIN, $CRON_END;
+        write_crontab(@cron);
+        return 1; # block was rebuilt
+    }
+    return 0;
+}
+
+# Parse args
+my $cmd = shift @ARGV // "-h";
+my $arg = shift @ARGV // "";
+
+if ($cmd eq "-h" || $cmd eq "--help") {
+    usage();
+    exit 0;
+}
+
+if ($cmd eq "-l" || $cmd eq "--list") {
+    ensure_block();
+    my @cron = get_crontab();
+    my $inside = 0;
+    print "Current Schedule:\n";
+    foreach my $line (@cron) {
+        if ($line =~ /^\Q$CRON_BEGIN\E$/) { $inside = 1; next; }
+        if ($line =~ /^\Q$CRON_END\E$/)   { $inside = 0; last; }
+        if ($inside && $line =~ /^0\s+(\d\d)\s+\*\s+\*\s+\*\s+\Q$ZETAHSM_CMD\E$/) {
+            printf "%02d:00\n", $1;
+        }
+    }
+    exit 0;
+}
+
+if ($cmd eq "-f" || $cmd eq "--flush") {
+    ensure_block();
+    my @cron = get_crontab();
+    my @newcron;
+    my $inside = 0;
+    foreach my $line (@cron) {
+        if ($line =~ /^\Q$CRON_BEGIN\E$/) { push @newcron, $CRON_BEGIN; $inside = 1; next; }
+        if ($line =~ /^\Q$CRON_END\E$/)   { push @newcron, $CRON_END; $inside = 0; next; }
+        push @newcron, $line unless $inside;
+    }
+    write_crontab(@newcron);
+    print "Schedule flushed\n";
+    exit 0;
+}
+
+if ($cmd eq "-e" || $cmd eq "--edit") {
+    if ($arg !~ /^\d\d:\d\d$/) {
+        print STDERR "ERROR: Invalid time format\n";
+        usage();
+        exit 1;
+    }
+    my ($hh, $mm) = split(/:/, $arg);
+    if ($mm ne "00") {
+        print STDERR "ERROR: Minutes are not allowed\n";
+        usage();
+        exit 2;
+    }
+    if ($hh < 0 || $hh > 23) {
+        print STDERR "ERROR: Invalid hours\n";
+        usage();
+        exit 3;
+    }
+    ensure_block();
+    my @cron = get_crontab();
+    my @newcron;
+    my $inside = 0;
+    foreach my $line (@cron) {
+        if ($line =~ /^\Q$CRON_BEGIN\E$/) {
+            push @newcron, $CRON_BEGIN;
+            push @newcron, sprintf("0 %02d * * * %s", $hh, $ZETAHSM_CMD);
+            $inside = 1;
+            next;
+        }
+        if ($line =~ /^\Q$CRON_END\E$/) {
+            push @newcron, $CRON_END;
+            $inside = 0;
+            next;
+        }
+        push @newcron, $line unless $inside;
+    }
+    write_crontab(@newcron);
+    print "Schedule edited \nCurrent Schedule: \n";
+    printf "%02d:00\n", $hh;
+    exit 0;
+}
+
+# If none matched
+usage();
+exit 0;
