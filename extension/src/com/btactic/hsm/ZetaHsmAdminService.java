@@ -25,7 +25,7 @@ import com.btactic.hsm.service.admin.MoveBlobs;
 public class ZetaHsmAdminService extends AdminService implements DocumentService {
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
-        dispatcher.registerHandler(ZetaHsmAdminConstants.ZETA_HSM_REQUEST, new ZetaHsm());
+        dispatcher.registerHandler(HsmConstants.HSM_REQUEST, new ZetaHsm());
         dispatcher.registerHandler(HsmConstants.MOVE_BLOBS_REQUEST, new MoveBlobs());
     }
 
