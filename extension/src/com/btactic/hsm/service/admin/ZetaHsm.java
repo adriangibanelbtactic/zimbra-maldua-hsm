@@ -41,8 +41,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.service.admin.AdminRightCheckPoint;
 
-import com.zimbra.soap.admin.message.ZetaHsmRequest;
-import com.zimbra.soap.admin.message.ZetaHsmResponse;
+import com.zimbra.soap.admin.message.HsmRequest;
+import com.zimbra.soap.admin.message.HsmResponse;
 
 public final class ZetaHsm extends AdminDocumentHandler {
 
@@ -55,42 +55,33 @@ public final class ZetaHsm extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST(sm.getClass().getName()
                     + " is not supported", null);
         }
-        // Workaround in order to be able to use elementToJaxb with non standard Zimbra classes
-        // Make sure your custom Request class is inside the com.zimbra.soap.admin.message package
-        ZetaHsmRequest req = JaxbUtil.elementToJaxb(request, ZetaHsmRequest.class);
+        HsmRequest req = JaxbUtil.elementToJaxb(request);
         com.btactic.hsm.ZetaHsm zetahsm = com.btactic.hsm.ZetaHsm.getInstance();
-        ZetaHsmResponse resp = new ZetaHsmResponse();
+        HsmResponse resp = new HsmResponse();
 
-        if (req.getAction() == ZetaHsmRequest.HsmAction.start) {
+        if (req.getAction() == HsmRequest.HsmAction.start) {
             // Optional initial reset
         }
 
-        if (req.getAction() == ZetaHsmRequest.HsmAction.start) {
+        if (req.getAction() == HsmRequest.HsmAction.start) {
                 try {
                     zetahsm.process();
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("error while performing ZetaHsm", e);
                 }
-        } else if (req.getAction() == ZetaHsmRequest.HsmAction.stop) {
+        } else if (req.getAction() == HsmRequest.HsmAction.stop) {
             zetahsm.stopProcessing();
         }
 
         // return the stats for all actions.
         boolean isRunning = zetahsm.isRunning();
         if (isRunning) {
-            resp.setStatus(ZetaHsmResponse.HsmStatus.running);
+            resp.setStatus(HsmResponse.HsmStatus.running);
         } else {
-            resp.setStatus(ZetaHsmResponse.HsmStatus.stopped);
+            resp.setStatus(HsmResponse.HsmStatus.stopped);
         }
 
-        // Setting:
-        //  removePrefixes to true
-        //  useContextMarshaller to false
-        // and passing a class inside the com.zimbra.soap.admin.message package
-        // (classes that you can make yourself in the Extension)
-        // let's you use this JaxbUtil.jaxbToElement method to reply Soap queries from the
-        // zimbraAdmin endpoint quite nicely.
-        return JaxbUtil.jaxbToElement(resp, XMLElement.mFactory, true, false);
+        return zsc.jaxbToElement(resp);
     }
 
     @Override
