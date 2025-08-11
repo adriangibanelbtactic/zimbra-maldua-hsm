@@ -22,7 +22,7 @@ import com.zimbra.cs.service.admin.AdminService;
 import com.btactic.hsm.soap.ZetaHsmAdminConstants;
 
 import com.btactic.hsm.soap.ZetaHsm;
-import com.btactic.hsm.soap.MoveBlobs;
+import com.btactic.hsm.service.admin.MoveBlobs;
 
 public class ZetaHsmAdminService extends AdminService implements DocumentService {
 

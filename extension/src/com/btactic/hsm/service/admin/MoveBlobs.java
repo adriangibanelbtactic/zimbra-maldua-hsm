@@ -18,7 +18,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.btactic.hsm.soap;
+package com.btactic.hsm.service.admin;
 
 import java.util.Arrays;
 import java.util.ArrayList;
