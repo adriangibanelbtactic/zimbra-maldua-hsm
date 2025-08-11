@@ -19,8 +19,6 @@ import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.cs.service.admin.AdminService;
 
-import com.btactic.hsm.soap.ZetaHsmAdminConstants;
-
 import com.btactic.hsm.service.admin.ZetaHsm;
 import com.btactic.hsm.service.admin.MoveBlobs;
 
