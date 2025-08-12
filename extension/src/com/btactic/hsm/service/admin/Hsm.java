@@ -41,7 +41,6 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.service.admin.AdminRightCheckPoint;
 
-import com.zimbra.soap.admin.message.HsmRequest;
 import com.zimbra.soap.admin.message.HsmResponse;
 
 public final class Hsm extends AdminDocumentHandler {
@@ -55,30 +54,13 @@ public final class Hsm extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST(sm.getClass().getName()
                     + " is not supported", null);
         }
-        HsmRequest req = JaxbUtil.elementToJaxb(request);
         com.btactic.hsm.ZetaHsm zetahsm = com.btactic.hsm.ZetaHsm.getInstance();
         HsmResponse resp = new HsmResponse();
 
-        if (req.getAction() == HsmRequest.HsmAction.start) {
-            // Optional initial reset
-        }
-
-        if (req.getAction() == HsmRequest.HsmAction.start) {
-                try {
-                    zetahsm.process();
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("error while performing Hsm", e);
-                }
-        } else if (req.getAction() == HsmRequest.HsmAction.stop) {
-            zetahsm.stopProcessing();
-        }
-
-        // return the stats for all actions.
-        boolean isRunning = zetahsm.isRunning();
-        if (isRunning) {
-            resp.setStatus(HsmResponse.HsmStatus.running);
-        } else {
-            resp.setStatus(HsmResponse.HsmStatus.stopped);
+        try {
+            zetahsm.process();
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("error while performing Hsm", e);
         }
 
         return zsc.jaxbToElement(resp);
