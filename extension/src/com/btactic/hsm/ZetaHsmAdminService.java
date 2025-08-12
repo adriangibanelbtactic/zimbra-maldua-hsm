@@ -19,13 +19,13 @@ import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
 import com.zimbra.cs.service.admin.AdminService;
 
-import com.btactic.hsm.service.admin.ZetaHsm;
+import com.btactic.hsm.service.admin.Hsm;
 import com.btactic.hsm.service.admin.MoveBlobs;
 
 public class ZetaHsmAdminService extends AdminService implements DocumentService {
 
     public void registerHandlers(DocumentDispatcher dispatcher) {
-        dispatcher.registerHandler(HsmConstants.HSM_REQUEST, new ZetaHsm());
+        dispatcher.registerHandler(HsmConstants.HSM_REQUEST, new Hsm());
         dispatcher.registerHandler(HsmConstants.MOVE_BLOBS_REQUEST, new MoveBlobs());
     }
 

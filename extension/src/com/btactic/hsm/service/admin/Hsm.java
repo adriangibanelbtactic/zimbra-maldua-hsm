@@ -44,7 +44,7 @@ import com.zimbra.cs.service.admin.AdminRightCheckPoint;
 import com.zimbra.soap.admin.message.HsmRequest;
 import com.zimbra.soap.admin.message.HsmResponse;
 
-public final class ZetaHsm extends AdminDocumentHandler {
+public final class Hsm extends AdminDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -67,7 +67,7 @@ public final class ZetaHsm extends AdminDocumentHandler {
                 try {
                     zetahsm.process();
                 } catch (IOException e) {
-                    throw ServiceException.FAILURE("error while performing ZetaHsm", e);
+                    throw ServiceException.FAILURE("error while performing Hsm", e);
                 }
         } else if (req.getAction() == HsmRequest.HsmAction.stop) {
             zetahsm.stopProcessing();
