@@ -21,19 +21,18 @@
 package com.btactic.hsm;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.JaxbUtil;
@@ -42,58 +41,60 @@ import com.zimbra.soap.admin.message.ZetaHsmResponse;
 
 public class ZetaHsmUtil {
 
-    private static final String LO_HELP = "help";
-    private static final String LO_VERBOSE = "verbose";
-    private static final String LO_VOLUMES = "volumes";
+    private static final Options options = new Options();
 
-    private Options options;
+    static {
+        options.addOption("h", "help", false, "Display this help message.");
+        options.addOption("v", "verbose", false, "Display stack trace on error.");
+    }
+
     private boolean verbose = false;
     private ZetaHsmRequest.HsmAction action;
 
-    private ZetaHsmUtil() {
-        options = new Options();
-
-        options.addOption(new Option("h", LO_HELP, false, "Display this help message."));
-        options.addOption(new Option("v", LO_VERBOSE, false, "Display stack trace on error."));
-    }
-
-    private void usage(String errorMsg) {
+    private static void usage(String errorMsg) {
         int exitStatus = 0;
-
         if (errorMsg != null) {
             System.err.println(errorMsg);
             exitStatus = 1;
         }
-        HelpFormatter format = new HelpFormatter();
-        format.printHelp(new PrintWriter(System.err, true), 80,
-            "zetahsm [options] start/status/stop", null, options, 2, 2,
-            "\nThe \"start/stop\" command is required, to avoid unintentionally running an HSM.  ");
+        HelpFormatter formatter = new HelpFormatter();
+        PrintWriter pw = new PrintWriter(System.err, true);
+        formatter.printHelp(
+            pw,
+            80,
+            "zetahsm <options> start|status|stop",
+            null,
+            options,
+            2,
+            2,
+            "\nThe \"start/stop\" command is required, to avoid unintentionally running an HSM."
+        );
         System.exit(exitStatus);
     }
 
-    private void parseArgs(String[] args)
-    throws ParseException {
-        GnuParser parser = new GnuParser();
-        CommandLine cl = parser.parse(options, args);
+    private static Map<String, String> parseArgs(String[] args) {
+        Map<String, String> opts = new HashMap<>();
+        try {
+            CommandLineParser parser = new GnuParser();
+            CommandLine cmd = parser.parse(options, args);
 
-        if (CliUtil.hasOption(cl, LO_HELP)) {
+            if (cmd.hasOption("h")) {
+                usage(null);
+            }
+            if (cmd.hasOption("v")) {
+                opts.put("verbose", "true");
+            }
+
+            if (cmd.getArgs().length > 0) {
+                opts.put("command", cmd.getArgs()[0]);
+            } else {
+                usage("Missing command: start, status, or stop");
+            }
+        } catch (ParseException e) {
+            System.err.println("Error parsing command-line arguments: " + e.getMessage());
             usage(null);
         }
-        // Require the "start" command, so that someone doesn't inadvertently
-        // kick of a ZetaHSM.
-        if (cl.getArgs().length == 0) {
-            usage(null);
-        } else if  (cl.getArgs()[0].equals("stop")) {
-            action = ZetaHsmRequest.HsmAction.stop;
-        } else if (cl.getArgs()[0].equals("status")) {
-            action = ZetaHsmRequest.HsmAction.status;
-        } else if (cl.getArgs()[0].equals("start")) {
-            action = ZetaHsmRequest.HsmAction.start;
-        } else {
-            usage(null);
-        }
-
-        verbose = CliUtil.hasOption(cl, LO_VERBOSE);
+        return opts;
     }
 
     private void run() throws Exception {
@@ -114,6 +115,7 @@ public class ZetaHsmUtil {
         // Workaround in order to be able to use elementToJaxb with non standard Zimbra classes
         // Make sure your custom Response class is inside the com.zimbra.soap.admin.message package
         ZetaHsmResponse response = JaxbUtil.elementToJaxb(respElem, ZetaHsmResponse.class);
+
         if (action == ZetaHsmRequest.HsmAction.start) {
             System.out.println("ZetaHSM scheduled. Run \"zetahsm status\" to check the status.");
         } else {
@@ -123,11 +125,19 @@ public class ZetaHsmUtil {
 
     public static void main(String[] args) {
         ZetaHsmUtil app = new ZetaHsmUtil();
+        Map<String, String> opts = parseArgs(args);
 
-        try {
-            app.parseArgs(args);
-        } catch (ParseException e) {
-            app.usage(e.getMessage());
+        app.verbose = Boolean.parseBoolean(opts.get("verbose"));
+        String cmd = opts.get("command");
+
+        if ("stop".equals(cmd)) {
+            app.action = ZetaHsmRequest.HsmAction.stop;
+        } else if ("status".equals(cmd)) {
+            app.action = ZetaHsmRequest.HsmAction.status;
+        } else if ("start".equals(cmd)) {
+            app.action = ZetaHsmRequest.HsmAction.start;
+        } else {
+            usage("Invalid command: " + cmd);
         }
 
         try {
