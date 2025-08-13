@@ -36,8 +36,8 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.admin.message.ZetaHsmRequest;
-import com.zimbra.soap.admin.message.ZetaHsmResponse;
+import com.zimbra.soap.admin.message.HsmRequest;
+// import com.zimbra.soap.admin.message.HsmResponse;
 
 public class ZetaHsmUtil {
 
@@ -118,16 +118,18 @@ public class ZetaHsmUtil {
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
 
-        ZetaHsmRequest request = new ZetaHsmRequest(action);
-        Element requestElement = JaxbUtil.jaxbToElement(request, XMLElement.mFactory, true, false);
-        Element respElem = prov.invoke(requestElement);
-        ZetaHsmResponse response = JaxbUtil.elementToJaxb(respElem, ZetaHsmResponse.class);
+        HsmRequest req = new HsmRequest();
+        req.setDestVolumeId(destVolId);
+        req.setSourceVolumeIds(sourceVolIds);
+        req.setTypes(types);
+        req.setMaxBytes(maxByteLimit);
+        req.setQuery(hsmQuery);
 
-        if (action == ZetaHsmRequest.HsmAction.start) {
-            System.out.println("ZetaHSM scheduled. Run \"zetahsm -u\" to check the status.");
-        } else {
-            System.out.println("Status = " + response.getStatus().name());
-        }
+        Element reqElement = JaxbUtil.jaxbToElement(req);
+        Element respElement = prov.invoke(reqElement);
+        // HsmResponse resp = JaxbUtil.elementToJaxb(respElement);
+
+        System.out.println("ZetaHSM scheduled. Run \"zetahsm --status\" to check the status.");
     }
 
     public static void main(String[] args) {
