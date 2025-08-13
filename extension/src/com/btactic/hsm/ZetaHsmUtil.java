@@ -55,12 +55,7 @@ public class ZetaHsmUtil {
     private ZetaHsmRequest.HsmAction action;
     private String serverHost = "localhost";
 
-    private static void usage(String errorMsg) {
-        int exitStatus = 0;
-        if (errorMsg != null) {
-            System.err.println(errorMsg);
-            exitStatus = 1;
-        }
+    private static void usage() {
         HelpFormatter formatter = new HelpFormatter();
         PrintWriter pw = new PrintWriter(System.err, true);
         formatter.printHelp(
@@ -73,7 +68,6 @@ public class ZetaHsmUtil {
             2,
             null
         );
-        System.exit(exitStatus);
     }
 
     private static Map<String, String> parseArgs(String[] args) {
@@ -83,7 +77,8 @@ public class ZetaHsmUtil {
             CommandLine cmd = parser.parse(options, args);
 
             if (cmd.hasOption("h")) {
-                usage(null);
+                usage();
+                System.exit(0);
             }
 
             int actionCount = 0;
@@ -101,7 +96,9 @@ public class ZetaHsmUtil {
             }
 
             if (actionCount > 1) {
-                usage("Only one action flag can be specified at a time (-t, -u, or -a).");
+                System.err.println("Only one action flag can be specified at a time (-t, -u, or -a).");
+                usage();
+                System.exit(1);
             }
 
             if (cmd.hasOption("s")) {
@@ -110,7 +107,8 @@ public class ZetaHsmUtil {
 
         } catch (ParseException e) {
             System.err.println("Error parsing command-line arguments: " + e.getMessage());
-            usage(null);
+            usage();
+            System.exit(2);
         }
         return opts;
     }
@@ -142,7 +140,9 @@ public class ZetaHsmUtil {
 
         String actionOpt = opts.get("action");
         if (actionOpt == null) {
-            usage("Missing action: must specify one of -t (start), -u (status), or -a (abort).");
+            System.err.println("Missing action: must specify one of -t (start), -u (status), or -a (abort).");
+            usage();
+            System.exit(3);
         }
 
         switch (actionOpt) {
@@ -156,14 +156,16 @@ public class ZetaHsmUtil {
                 app.action = ZetaHsmRequest.HsmAction.stop;
                 break;
             default:
-                usage("Invalid action: " + actionOpt);
+                System.err.println("Invalid action: " + actionOpt);
+                usage();
+                System.exit(4);
         }
 
         try {
             app.run();
         } catch (Exception e) {
             System.err.println(e.getMessage() != null ? e.getMessage() : e.toString());
-            System.exit(1);
+            System.exit(5);
         }
     }
 }
