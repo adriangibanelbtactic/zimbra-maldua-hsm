@@ -164,6 +164,10 @@ public class ZetaHsmUtil {
         String startTime = startMillis != null ? sdf.format(new Date(startMillis)) : "N/A";
         String endTime = endMillis != null ? sdf.format(new Date(endMillis)) : "N/A";
 
+        if (resp.getRunning()) {
+            System.out.println("Last SM Session Stats");
+        }
+
         // Print times
         System.out.println("Start time: " + startTime);
         if (!resp.getRunning()) {
@@ -172,7 +176,7 @@ public class ZetaHsmUtil {
 
         // Print query if available
         if (resp.getQuery() != null) {
-            System.out.println("Query " + resp.getQuery());
+            System.out.println("Query: " + resp.getQuery());
         }
 
         // Print running status
