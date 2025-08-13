@@ -44,12 +44,16 @@ public class ZetaHsmUtil {
     private static final Options options = new Options();
 
     static {
-        options.addOption("h", "help", false, "Display this help message.");
-        options.addOption("v", "verbose", false, "Display stack trace on error.");
+        options.addOption("a", "abort", false, "Abort the current HSM session.");
+        options.addOption("h", "help", false, "Displays this help message.");
+        options.addOption("s", "server", true, "Mail server hostname. Default is localhost.");
+        options.addOption("t", "start", false, "Start the HSM process.");
+        options.addOption("u", "status", false, "Get status on the last HSM session.");
     }
 
     private boolean verbose = false;
     private ZetaHsmRequest.HsmAction action;
+    private String serverHost = "localhost";
 
     private static void usage(String errorMsg) {
         int exitStatus = 0;
@@ -62,12 +66,12 @@ public class ZetaHsmUtil {
         formatter.printHelp(
             pw,
             80,
-            "zetahsm <options> start|status|stop",
+            "zetahsm <options>",
             null,
             options,
             2,
             2,
-            "\nThe \"start/stop\" command is required, to avoid unintentionally running an HSM."
+            null
         );
         System.exit(exitStatus);
     }
@@ -81,15 +85,29 @@ public class ZetaHsmUtil {
             if (cmd.hasOption("h")) {
                 usage(null);
             }
-            if (cmd.hasOption("v")) {
-                opts.put("verbose", "true");
+
+            int actionCount = 0;
+            if (cmd.hasOption("t")) {
+                opts.put("action", "start");
+                actionCount++;
+            }
+            if (cmd.hasOption("u")) {
+                opts.put("action", "status");
+                actionCount++;
+            }
+            if (cmd.hasOption("a")) {
+                opts.put("action", "abort");
+                actionCount++;
             }
 
-            if (cmd.getArgs().length > 0) {
-                opts.put("command", cmd.getArgs()[0]);
-            } else {
-                usage("Missing command: start, status, or stop");
+            if (actionCount > 1) {
+                usage("Only one action flag can be specified at a time (-t, -u, or -a).");
             }
+
+            if (cmd.hasOption("s")) {
+                opts.put("server", cmd.getOptionValue("s"));
+            }
+
         } catch (ParseException e) {
             System.err.println("Error parsing command-line arguments: " + e.getMessage());
             usage(null);
@@ -103,21 +121,12 @@ public class ZetaHsmUtil {
         prov.soapZimbraAdminAuthenticate();
 
         ZetaHsmRequest request = new ZetaHsmRequest(action);
-        // Setting:
-        //  removePrefixes to true
-        //  useContextMarshaller to false
-        // and passing a class inside the com.zimbra.soap.admin.message package
-        // (classes that you can make yourself in the Extension)
-        // let's you use this JaxbUtil.jaxbToElement method to send Soap queries to the
-        // zimbraAdmin endpoint quite nicely.
         Element requestElement = JaxbUtil.jaxbToElement(request, XMLElement.mFactory, true, false);
         Element respElem = prov.invoke(requestElement);
-        // Workaround in order to be able to use elementToJaxb with non standard Zimbra classes
-        // Make sure your custom Response class is inside the com.zimbra.soap.admin.message package
         ZetaHsmResponse response = JaxbUtil.elementToJaxb(respElem, ZetaHsmResponse.class);
 
         if (action == ZetaHsmRequest.HsmAction.start) {
-            System.out.println("ZetaHSM scheduled. Run \"zetahsm status\" to check the status.");
+            System.out.println("ZetaHSM scheduled. Run \"zetahsm -u\" to check the status.");
         } else {
             System.out.println("Status = " + response.getStatus().name());
         }
@@ -127,31 +136,33 @@ public class ZetaHsmUtil {
         ZetaHsmUtil app = new ZetaHsmUtil();
         Map<String, String> opts = parseArgs(args);
 
-        app.verbose = Boolean.parseBoolean(opts.get("verbose"));
-        String cmd = opts.get("command");
+        if (opts.containsKey("server")) {
+            app.serverHost = opts.get("server");
+        }
 
-        if ("stop".equals(cmd)) {
-            app.action = ZetaHsmRequest.HsmAction.stop;
-        } else if ("status".equals(cmd)) {
-            app.action = ZetaHsmRequest.HsmAction.status;
-        } else if ("start".equals(cmd)) {
-            app.action = ZetaHsmRequest.HsmAction.start;
-        } else {
-            usage("Invalid command: " + cmd);
+        String actionOpt = opts.get("action");
+        if (actionOpt == null) {
+            usage("Missing action: must specify one of -t (start), -u (status), or -a (abort).");
+        }
+
+        switch (actionOpt) {
+            case "start":
+                app.action = ZetaHsmRequest.HsmAction.start;
+                break;
+            case "status":
+                app.action = ZetaHsmRequest.HsmAction.status;
+                break;
+            case "abort":
+                app.action = ZetaHsmRequest.HsmAction.stop;
+                break;
+            default:
+                usage("Invalid action: " + actionOpt);
         }
 
         try {
             app.run();
         } catch (Exception e) {
-            if (app.verbose) {
-                e.printStackTrace(new PrintWriter(System.err, true));
-            } else {
-                String msg = e.getMessage();
-                if (msg == null) {
-                    msg = e.toString();
-                }
-                System.err.println(msg);
-            }
+            System.err.println(e.getMessage() != null ? e.getMessage() : e.toString());
             System.exit(1);
         }
     }
