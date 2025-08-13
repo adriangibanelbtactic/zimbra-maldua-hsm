@@ -113,7 +113,7 @@ public class ZetaHsmUtil {
         return opts;
     }
 
-    private void run() throws Exception {
+    private void startHSM() throws Exception {
         CliUtil.toolSetup();
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
@@ -145,24 +145,14 @@ public class ZetaHsmUtil {
             System.exit(3);
         }
 
-        switch (actionOpt) {
-            case "start":
-                app.action = ZetaHsmRequest.HsmAction.start;
-                break;
-            case "status":
-                app.action = ZetaHsmRequest.HsmAction.status;
-                break;
-            case "abort":
-                app.action = ZetaHsmRequest.HsmAction.stop;
-                break;
-            default:
-                System.err.println("Invalid action: " + actionOpt);
-                usage();
-                System.exit(4);
-        }
-
         try {
-            app.run();
+            if ("start".equals(actionOpt)) {
+                startHSM();
+            } else if ("abort".equals(actionOpt)) {
+                abortHSM();
+            } else { // status
+                printHSMStatus();
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage() != null ? e.getMessage() : e.toString());
             System.exit(5);
