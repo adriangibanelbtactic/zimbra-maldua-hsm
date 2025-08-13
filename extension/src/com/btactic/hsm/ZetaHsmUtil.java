@@ -40,6 +40,8 @@ import com.zimbra.soap.admin.message.HsmRequest;
 // import com.zimbra.soap.admin.message.HsmResponse;
 import com.zimbra.soap.admin.message.AbortHsmRequest;
 // import com.zimbra.soap.admin.message.AbortHsmResponse;
+import com.zimbra.soap.admin.message.GetHsmStatusRequest;
+import com.zimbra.soap.admin.message.GetHsmStatusResponse;
 
 public class ZetaHsmUtil {
 
@@ -141,6 +143,62 @@ public class ZetaHsmUtil {
         // AbortHsmResponse resp = JaxbUtil.elementToJaxb(respElement);
 
         System.out.println("ZetaHSM abort was sent. Run \"zetahsm --status\" to check the status.");
+    }
+
+    private void printHSMStatus() throws Exception {
+        CliUtil.toolSetup();
+        SoapProvisioning prov = SoapProvisioning.getAdminInstance();
+        prov.soapZimbraAdminAuthenticate();
+
+        GetHsmStatusRequest req = new HsmRequest();
+        Element reqElement = JaxbUtil.jaxbToElement(req);
+        Element respElement = prov.invoke(reqElement);
+        GetHsmStatusResponse resp = JaxbUtil.elementToJaxb(respElement);
+
+        // Start and end times
+        Long startMillis = resp.getStartDate();
+        Long endMillis = resp.getEndDate();
+
+        // Format dates for display
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+        String startTime = startMillis != null ? sdf.format(new Date(startMillis)) : "N/A";
+        String endTime = endMillis != null ? sdf.format(new Date(endMillis)) : "N/A";
+
+        // Print times
+        System.out.println("Start time: " + startTime);
+        if (!resp.getRunning()) {
+            System.out.println("End time: " + endTime);
+        }
+
+        // Print query if available
+        if (resp.getQuery() != null) {
+            System.out.println("Query " + resp.getQuery());
+        }
+
+        // Print running status
+        if (resp.getRunning()) {
+            System.out.println("Currently running.");
+        } else {
+            System.out.println("Not currently running.");
+        }
+
+        // Print blobs moved
+        if (resp.getNumBlobsMoved() != null && resp.getDestVolumeId() != null) {
+            System.out.println("Moved " + resp.getNumBlobsMoved() + " blob" +
+                    (resp.getNumBlobsMoved() == 1 ? "" : "s") +
+                    " to volume " + resp.getDestVolumeId() + ".");
+        }
+
+        // Print mailboxes processed
+        if (resp.getNumMailboxes() != null && resp.getTotalMailboxes() != null) {
+            System.out.println("Mailboxes processed: " + resp.getNumMailboxes() +
+                    " out of " + resp.getTotalMailboxes() + ".");
+        }
+
+        // Print error if any
+        if (resp.getError() != null) {
+            System.out.println("Error: " + resp.getError());
+        }
     }
 
     public static void main(String[] args) {
