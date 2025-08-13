@@ -21,7 +21,11 @@
 package com.btactic.hsm;
 
 import java.io.PrintWriter;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
@@ -36,8 +40,12 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.admin.message.ZetaHsmRequest;
-import com.zimbra.soap.admin.message.ZetaHsmResponse;
+import com.zimbra.soap.admin.message.HsmRequest;
+// import com.zimbra.soap.admin.message.HsmResponse;
+import com.zimbra.soap.admin.message.AbortHsmRequest;
+// import com.zimbra.soap.admin.message.AbortHsmResponse;
+import com.zimbra.soap.admin.message.GetHsmStatusRequest;
+import com.zimbra.soap.admin.message.GetHsmStatusResponse;
 
 public class ZetaHsmUtil {
 
@@ -52,7 +60,6 @@ public class ZetaHsmUtil {
     }
 
     private boolean verbose = false;
-    private ZetaHsmRequest.HsmAction action;
     private String serverHost = "localhost";
 
     private static void usage() {
@@ -113,20 +120,91 @@ public class ZetaHsmUtil {
         return opts;
     }
 
-    private void run() throws Exception {
+    private void startHSM() throws Exception {
         CliUtil.toolSetup();
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
 
-        ZetaHsmRequest request = new ZetaHsmRequest(action);
-        Element requestElement = JaxbUtil.jaxbToElement(request, XMLElement.mFactory, true, false);
-        Element respElem = prov.invoke(requestElement);
-        ZetaHsmResponse response = JaxbUtil.elementToJaxb(respElem, ZetaHsmResponse.class);
+        HsmRequest req = new HsmRequest();
 
-        if (action == ZetaHsmRequest.HsmAction.start) {
-            System.out.println("ZetaHSM scheduled. Run \"zetahsm -u\" to check the status.");
+        Element reqElement = JaxbUtil.jaxbToElement(req);
+        Element respElement = prov.invoke(reqElement);
+        // HsmResponse resp = JaxbUtil.elementToJaxb(respElement);
+
+        System.out.println("ZetaHSM scheduled. Run \"zetahsm --status\" to check the status.");
+    }
+
+    private void abortHSM() throws Exception {
+        CliUtil.toolSetup();
+        SoapProvisioning prov = SoapProvisioning.getAdminInstance();
+        prov.soapZimbraAdminAuthenticate();
+
+        AbortHsmRequest req = new AbortHsmRequest();
+
+        Element reqElement = JaxbUtil.jaxbToElement(req);
+        Element respElement = prov.invoke(reqElement);
+        // AbortHsmResponse resp = JaxbUtil.elementToJaxb(respElement);
+
+        System.out.println("ZetaHSM abort was sent. Run \"zetahsm --status\" to check the status.");
+    }
+
+    private void printHSMStatus() throws Exception {
+        CliUtil.toolSetup();
+        SoapProvisioning prov = SoapProvisioning.getAdminInstance();
+        prov.soapZimbraAdminAuthenticate();
+
+        GetHsmStatusRequest req = new GetHsmStatusRequest();
+        Element reqElement = JaxbUtil.jaxbToElement(req);
+        Element respElement = prov.invoke(reqElement);
+        GetHsmStatusResponse resp = JaxbUtil.elementToJaxb(respElement);
+
+        // Start and end times
+        Long startMillis = resp.getStartDate();
+        Long endMillis = resp.getEndDate();
+
+        // Format dates for display
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault());
+        String startTime = startMillis != null ? dtf.format(Instant.ofEpochMilli(startMillis)) : "N/A";
+        String endTime = endMillis != null ? dtf.format(Instant.ofEpochMilli(endMillis)) : "N/A";
+
+        if (resp.getRunning()) {
+            System.out.println("Last SM Session Stats");
+        }
+
+        // Print times
+        System.out.println("Start time: " + startTime);
+        if (!resp.getRunning()) {
+            System.out.println("End time: " + endTime);
+        }
+
+        // Print query if available
+        if (resp.getQuery() != null) {
+            System.out.println("Query: " + resp.getQuery());
+        }
+
+        // Print running status
+        if (resp.getRunning()) {
+            System.out.println("Currently running.");
         } else {
-            System.out.println("Status = " + response.getStatus().name());
+            System.out.println("Not currently running.");
+        }
+
+        // Print blobs moved
+        if (resp.getNumBlobsMoved() != null && resp.getDestVolumeId() != null) {
+            System.out.println("Moved " + resp.getNumBlobsMoved() + " blob" +
+                    (resp.getNumBlobsMoved() == 1 ? "" : "s") +
+                    " to volume " + resp.getDestVolumeId() + ".");
+        }
+
+        // Print mailboxes processed
+        if (resp.getNumMailboxes() != null && resp.getTotalMailboxes() != null) {
+            System.out.println("Mailboxes processed: " + resp.getNumMailboxes() +
+                    " out of " + resp.getTotalMailboxes() + ".");
+        }
+
+        // Print error if any
+        if (resp.getError() != null) {
+            System.out.println("Error: " + resp.getError());
         }
     }
 
@@ -145,24 +223,14 @@ public class ZetaHsmUtil {
             System.exit(3);
         }
 
-        switch (actionOpt) {
-            case "start":
-                app.action = ZetaHsmRequest.HsmAction.start;
-                break;
-            case "status":
-                app.action = ZetaHsmRequest.HsmAction.status;
-                break;
-            case "abort":
-                app.action = ZetaHsmRequest.HsmAction.stop;
-                break;
-            default:
-                System.err.println("Invalid action: " + actionOpt);
-                usage();
-                System.exit(4);
-        }
-
         try {
-            app.run();
+            if ("start".equals(actionOpt)) {
+                app.startHSM();
+            } else if ("abort".equals(actionOpt)) {
+                app.abortHSM();
+            } else { // status
+                app.printHSMStatus();
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage() != null ? e.getMessage() : e.toString());
             System.exit(5);

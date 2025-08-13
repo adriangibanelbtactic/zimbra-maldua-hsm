@@ -28,6 +28,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HsmConstants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.store.StoreManager;
@@ -35,6 +36,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.soap.admin.type.Name;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -52,14 +54,15 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
         ScheduleSMPolicyRequest req = JaxbUtil.elementToJaxb(request);
 
         Name server = req.getServer();
-        // TODO: Extract smSchedulePolicyEnabled with probably getOptionalElement
-        // TODO: Extract smSchedulePolicyStartTime with probably getOptionalElement
+        // TODO: Check if we are getting the expected values
+        boolean smSchedulePolicyEnabled = request.getAttributeBool(HsmConstants.A_SM_SCHEDULE_POLICY_ENABLED);
+        int smSchedulePolicyStartTime = request.getAttributeInt(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME);
 
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
         // TODO: Proxy to the correct server if we are not in the right server
 
-        com.btactic.hsm.ScheduleSMPolicy scheduleSMPolicy = com.btactic.hsm.ScheduleSMPolicy();
+        com.btactic.hsm.ScheduleSMPolicy scheduleSMPolicy = new com.btactic.hsm.ScheduleSMPolicy();
 
         try {
             scheduleSMPolicy.setSchedule(smSchedulePolicyStartTime);
@@ -73,7 +76,7 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
             throw ServiceException.FAILURE("error while performing ScheduleSMPolicy", e);
         }
 
-        ScheduleSMPolicyResponse resp = new ScheduleSMPolicyResponse();
+        ScheduleSMPolicyResponse resp = new ScheduleSMPolicyResponse(smSchedulePolicyEnabled);
 
         return zsc.jaxbToElement(resp);
     }
