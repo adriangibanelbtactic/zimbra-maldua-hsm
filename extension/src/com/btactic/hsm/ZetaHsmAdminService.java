@@ -23,6 +23,7 @@ import com.btactic.hsm.service.admin.AbortHsm;
 import com.btactic.hsm.service.admin.GetHsmStatus;
 import com.btactic.hsm.service.admin.Hsm;
 import com.btactic.hsm.service.admin.MoveBlobs;
+import com.btactic.hsm.service.admin.ScheduleSMPolicy;
 
 public class ZetaHsmAdminService extends AdminService implements DocumentService {
 
@@ -31,6 +32,7 @@ public class ZetaHsmAdminService extends AdminService implements DocumentService
         dispatcher.registerHandler(HsmConstants.GET_HSM_STATUS_REQUEST, new GetHsmStatus());
         dispatcher.registerHandler(HsmConstants.HSM_REQUEST, new Hsm());
         dispatcher.registerHandler(HsmConstants.MOVE_BLOBS_REQUEST, new MoveBlobs());
+        dispatcher.registerHandler(HsmConstants.SCHEDULE_SMPOLICY_REQUEST, new ScheduleSMPolicy());
     }
 
 }
