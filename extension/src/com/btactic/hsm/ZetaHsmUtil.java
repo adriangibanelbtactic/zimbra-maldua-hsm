@@ -38,6 +38,8 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.HsmRequest;
 // import com.zimbra.soap.admin.message.HsmResponse;
+import com.zimbra.soap.admin.message.AbortHsmRequest;
+// import com.zimbra.soap.admin.message.AbortHsmResponse;
 
 public class ZetaHsmUtil {
 
@@ -119,17 +121,26 @@ public class ZetaHsmUtil {
         prov.soapZimbraAdminAuthenticate();
 
         HsmRequest req = new HsmRequest();
-        req.setDestVolumeId(destVolId);
-        req.setSourceVolumeIds(sourceVolIds);
-        req.setTypes(types);
-        req.setMaxBytes(maxByteLimit);
-        req.setQuery(hsmQuery);
 
         Element reqElement = JaxbUtil.jaxbToElement(req);
         Element respElement = prov.invoke(reqElement);
         // HsmResponse resp = JaxbUtil.elementToJaxb(respElement);
 
         System.out.println("ZetaHSM scheduled. Run \"zetahsm --status\" to check the status.");
+    }
+
+    private void abortHSM() throws Exception {
+        CliUtil.toolSetup();
+        SoapProvisioning prov = SoapProvisioning.getAdminInstance();
+        prov.soapZimbraAdminAuthenticate();
+
+        AbortHsmRequest req = new HsmRequest();
+
+        Element reqElement = JaxbUtil.jaxbToElement(req);
+        Element respElement = prov.invoke(reqElement);
+        // AbortHsmResponse resp = JaxbUtil.elementToJaxb(respElement);
+
+        System.out.println("ZetaHSM abort was sent. Run \"zetahsm --status\" to check the status.");
     }
 
     public static void main(String[] args) {
