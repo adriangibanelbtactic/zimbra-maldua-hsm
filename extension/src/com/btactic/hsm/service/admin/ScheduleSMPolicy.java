@@ -54,8 +54,9 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
         ScheduleSMPolicyRequest req = JaxbUtil.elementToJaxb(request);
 
         Name server = req.getServer();
-        boolean smSchedulePolicyEnabled = Boolean.parseBoolean(request.getOptionalAttribute(HsmConstants.A_SM_SCHEDULE_POLICY_ENABLED, false));
-        int smSchedulePolicyStartTime = Integer.parseInt(request.getOptionalAttribute(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME, 0));
+        // TODO: Check if we are getting the expected values
+        boolean smSchedulePolicyEnabled = request.getAttributeBool(HsmConstants.A_SM_SCHEDULE_POLICY_ENABLED);
+        int smSchedulePolicyStartTime = request.getAttributeInt(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME);
 
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
