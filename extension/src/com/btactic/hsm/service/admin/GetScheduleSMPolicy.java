@@ -35,6 +35,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.file.FileBlobStore;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.soap.admin.type.Name;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -58,7 +59,7 @@ public final class GetScheduleSMPolicy extends AdminDocumentHandler {
         // TODO: Proxy to the correct server if we are not in the right server
 
         com.btactic.hsm.ScheduleSMPolicy scheduleSMPolicy = com.btactic.hsm.ScheduleSMPolicy();
-        bool isEnabled;
+        boolean isEnabled;
         String error;
         Integer startTime;
 

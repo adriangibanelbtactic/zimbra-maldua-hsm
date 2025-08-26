@@ -62,7 +62,7 @@ public final class GetHsmStatus extends AdminDocumentHandler {
             throw ServiceException.FAILURE("error while performing GetHsmStatus", e);
         }
 
-        bool isRunningMockup = false;
+        boolean isRunningMockup = false;
         GetHsmStatusResponse resp = new GetHsmStatusResponse(isRunningMockup);
         resp.setStartDate(System.currentTimeMillis() - 3600_000L); // 1 hour ago
         resp.setEndDate(System.currentTimeMillis());              // now
