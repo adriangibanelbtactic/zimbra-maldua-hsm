@@ -28,6 +28,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.HsmConstants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.store.StoreManager;
@@ -53,8 +54,8 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
         ScheduleSMPolicyRequest req = JaxbUtil.elementToJaxb(request);
 
         Name server = req.getServer();
-        // TODO: Extract smSchedulePolicyEnabled with probably getOptionalElement
-        // TODO: Extract smSchedulePolicyStartTime with probably getOptionalElement
+        boolean smSchedulePolicyEnabled = request.getOptionalAttributeBool(HsmConstants.A_SM_SCHEDULE_POLICY_ENABLED, false);
+        int smSchedulePolicyStartTime = (int) request.getOptionalAttributeLong(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME, 0);
 
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
@@ -74,7 +75,7 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
             throw ServiceException.FAILURE("error while performing ScheduleSMPolicy", e);
         }
 
-        ScheduleSMPolicyResponse resp = new ScheduleSMPolicyResponse();
+        ScheduleSMPolicyResponse resp = new ScheduleSMPolicyResponse(smSchedulePolicyEnabled);
 
         return zsc.jaxbToElement(resp);
     }
