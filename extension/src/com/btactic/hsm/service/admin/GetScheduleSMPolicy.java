@@ -59,17 +59,9 @@ public final class GetScheduleSMPolicy extends AdminDocumentHandler {
         // TODO: Proxy to the correct server if we are not in the right server
 
         com.btactic.hsm.ScheduleSMPolicy scheduleSMPolicy = new com.btactic.hsm.ScheduleSMPolicy();
-        boolean isEnabled;
-        String error;
-        Integer startTime;
-
-        try {
-            isEnabled = scheduleSMPolicy.isEnabled();
-            error = scheduleSMPolicy.getError();
-            startTime = scheduleSMPolicy.getStartTime();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("error while performing GetScheduleSMPolicy", e);
-        }
+        boolean isEnabled = scheduleSMPolicy.isEnabled();
+        String error = scheduleSMPolicy.getError();
+        Integer startTime = scheduleSMPolicy.getStartTime();
 
         GetScheduleSMPolicyResponse resp = new GetScheduleSMPolicyResponse(isEnabled);
         resp.setError(error);
