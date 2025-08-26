@@ -56,7 +56,6 @@ public class ZetaHsmUtil {
     }
 
     private boolean verbose = false;
-    private ZetaHsmRequest.HsmAction action;
     private String serverHost = "localhost";
 
     private static void usage() {
