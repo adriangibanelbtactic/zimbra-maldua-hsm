@@ -62,7 +62,7 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
 
         // TODO: Proxy to the correct server if we are not in the right server
 
-        com.btactic.hsm.ScheduleSMPolicy scheduleSMPolicy = com.btactic.hsm.ScheduleSMPolicy();
+        com.btactic.hsm.ScheduleSMPolicy scheduleSMPolicy = new com.btactic.hsm.ScheduleSMPolicy();
 
         try {
             scheduleSMPolicy.setSchedule(smSchedulePolicyStartTime);
