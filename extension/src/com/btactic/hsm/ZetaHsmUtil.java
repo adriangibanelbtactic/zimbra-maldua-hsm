@@ -21,7 +21,11 @@
 package com.btactic.hsm;
 
 import java.io.PrintWriter;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
@@ -135,7 +139,7 @@ public class ZetaHsmUtil {
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
 
-        AbortHsmRequest req = new HsmRequest();
+        AbortHsmRequest req = new AbortHsmRequest();
 
         Element reqElement = JaxbUtil.jaxbToElement(req);
         Element respElement = prov.invoke(reqElement);
@@ -149,7 +153,7 @@ public class ZetaHsmUtil {
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();
         prov.soapZimbraAdminAuthenticate();
 
-        GetHsmStatusRequest req = new HsmRequest();
+        GetHsmStatusRequest req = new GetHsmStatusRequest();
         Element reqElement = JaxbUtil.jaxbToElement(req);
         Element respElement = prov.invoke(reqElement);
         GetHsmStatusResponse resp = JaxbUtil.elementToJaxb(respElement);
@@ -159,9 +163,9 @@ public class ZetaHsmUtil {
         Long endMillis = resp.getEndDate();
 
         // Format dates for display
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-        String startTime = startMillis != null ? sdf.format(new Date(startMillis)) : "N/A";
-        String endTime = endMillis != null ? sdf.format(new Date(endMillis)) : "N/A";
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH).withZone(ZoneId.systemDefault());
+        String startTime = startMillis != null ? dtf.format(Instant.ofEpochMilli(startMillis)) : "N/A";
+        String endTime = endMillis != null ? dtf.format(Instant.ofEpochMilli(endMillis)) : "N/A";
 
         if (resp.getRunning()) {
             System.out.println("Last SM Session Stats");
@@ -221,11 +225,11 @@ public class ZetaHsmUtil {
 
         try {
             if ("start".equals(actionOpt)) {
-                startHSM();
+                app.startHSM();
             } else if ("abort".equals(actionOpt)) {
-                abortHSM();
+                app.abortHSM();
             } else { // status
-                printHSMStatus();
+                app.printHSMStatus();
             }
         } catch (Exception e) {
             System.err.println(e.getMessage() != null ? e.getMessage() : e.toString());
