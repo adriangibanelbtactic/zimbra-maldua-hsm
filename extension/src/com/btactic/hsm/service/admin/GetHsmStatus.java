@@ -68,7 +68,8 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         resp.setEndDate(System.currentTimeMillis());              // now
         resp.setWasAborted(false);
         resp.setAborting(false);
-        resp.setError("No errors detected");
+        // resp.setError("Some kind of error.");
+        resp.setError("");
         resp.setNumBlobsMoved(12345);
         resp.setNumBytesMoved(9876543210L);
         resp.setNumMailboxes(42);
