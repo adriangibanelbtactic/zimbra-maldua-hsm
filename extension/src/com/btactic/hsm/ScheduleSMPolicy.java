@@ -17,35 +17,181 @@
 
 package com.btactic.hsm;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ScheduleSMPolicy {
 
+    private static final String ZETAHSM_CMD = "/opt/zimbra/bin/zetahsm --start";
+    private static final String CRON_BEGIN = "# STORAGE MANAGEMENT BEGIN";
+    private static final String CRON_END = "# STORAGE MANAGEMENT END";
+    private static final String TMP_CRON_FILE = "/tmp/zetaschedulesmpolicy_cron";
+
     private boolean enabled = false;
     private String error = null;
-    private int startTime = 0;
+    private int startTime = -1; // -1 means not scheduled
+
+    // -------------------------------
+    // Public API
+    // -------------------------------
 
     public boolean isEnabled() {
+        try {
+            parseCrontab();
+        } catch (IOException e) {
+            this.error = e.getMessage();
+        }
         return enabled;
     }
 
     public String getError() {
+        // TODO: Fetch error from actual HSM session.
         return error;
     }
 
     public int getStartTime() {
+        try {
+            parseCrontab();
+        } catch (IOException e) {
+            this.error = e.getMessage();
+        }
         return startTime;
     }
 
     public void setSchedule(int smSchedulePolicyStartTime) throws IOException {
+        if (smSchedulePolicyStartTime < 0 || smSchedulePolicyStartTime > 23) {
+            throw new IOException("Invalid hour: " + smSchedulePolicyStartTime);
+        }
         this.startTime = smSchedulePolicyStartTime;
+        this.enabled = true;
+
+        List<String> cron = getCrontab();
+        List<String> newCron = new ArrayList<>();
+        boolean inside = false;
+        for (String line : cron) {
+            if (line.equals(CRON_BEGIN)) {
+                newCron.add(CRON_BEGIN);
+                newCron.add(String.format("0 %02d * * * %s", startTime, ZETAHSM_CMD));
+                inside = true;
+                continue;
+            }
+            if (line.equals(CRON_END)) {
+                newCron.add(CRON_END);
+                inside = false;
+                continue;
+            }
+            if (!inside) {
+                newCron.add(line);
+            }
+        }
+        if (!cron.contains(CRON_BEGIN) || !cron.contains(CRON_END)) {
+            // block missing, rebuild it
+            newCron.add(CRON_BEGIN);
+            newCron.add(String.format("0 %02d * * * %s", startTime, ZETAHSM_CMD));
+            newCron.add(CRON_END);
+        }
+        writeCrontab(newCron);
     }
 
     public void enable() throws IOException {
-        this.enabled = true;
+        if (startTime < 0) {
+            throw new IOException("No start time set. Call setSchedule() first.");
+        }
+        setSchedule(startTime);
     }
 
     public void disable() throws IOException {
+        List<String> cron = getCrontab();
+        List<String> newCron = new ArrayList<>();
+        boolean inside = false;
+        for (String line : cron) {
+            if (line.equals(CRON_BEGIN)) {
+                newCron.add(CRON_BEGIN);
+                inside = true;
+                continue;
+            }
+            if (line.equals(CRON_END)) {
+                newCron.add(CRON_END);
+                inside = false;
+                continue;
+            }
+            if (!inside) {
+                newCron.add(line);
+            }
+        }
+        if (!cron.contains(CRON_BEGIN) || !cron.contains(CRON_END)) {
+            // If block missing, just append empty block
+            newCron.add(CRON_BEGIN);
+            newCron.add(CRON_END);
+        }
+        writeCrontab(newCron);
         this.enabled = false;
+        this.startTime = -1;
+    }
+
+    // -------------------------------
+    // Helpers
+    // -------------------------------
+
+    private List<String> getCrontab() throws IOException {
+        List<String> lines = new ArrayList<>();
+        ProcessBuilder pb = new ProcessBuilder("crontab", "-l");
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        return lines;
+    }
+
+    private void writeCrontab(List<String> lines) throws IOException {
+        File tmpFile = new File(TMP_CRON_FILE);
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(tmpFile))) {
+            for (String line : lines) {
+                bw.write(line);
+                bw.newLine();
+            }
+        }
+        ProcessBuilder pb = new ProcessBuilder("crontab", TMP_CRON_FILE);
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        try {
+            p.waitFor();
+        } catch (InterruptedException e) {
+            throw new IOException("Interrupted while installing new crontab", e);
+        } finally {
+            tmpFile.delete();
+        }
+    }
+
+    private void parseCrontab() throws IOException {
+        List<String> cron = getCrontab();
+        boolean inside = false;
+        enabled = false;
+        startTime = -1;
+        for (String line : cron) {
+            if (line.equals(CRON_BEGIN)) {
+                inside = true;
+                continue;
+            }
+            if (line.equals(CRON_END)) {
+                inside = false;
+                continue;
+            }
+            if (inside && line.matches("^0\\s+(\\d{2})\\s+\\*\\s+\\*\\s+\\*\\s+" + java.util.regex.Pattern.quote(ZETAHSM_CMD) + "$")) {
+                String hour = line.split("\\s+")[1];
+                startTime = Integer.parseInt(hour);
+                enabled = true;
+            }
+        }
     }
 }
