@@ -99,6 +99,28 @@ public class ScheduleSMPolicy {
         writeCrontab(newCron);
     }
 
+    public void setSchedule(String smSchedulePolicyStartTime) throws IOException {
+        if (smSchedulePolicyStartTime == null || !smSchedulePolicyStartTime.matches("^\\d{2}:\\d{2}$")) {
+            throw new IOException("Invalid time format. Expected HH:00, got: " + smSchedulePolicyStartTime);
+        }
+
+        String[] parts = smSchedulePolicyStartTime.split(":");
+        int hour;
+        try {
+            hour = Integer.parseInt(parts[0]);
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid hour: " + parts[0]);
+        }
+
+        String minutes = parts[1];
+        if (!"00".equals(minutes)) {
+            throw new IOException("Minutes must be 00. Got: " + minutes);
+        }
+
+        // Reuse the existing int-based method
+        setSchedule(hour);
+    }
+
     public void enable() throws IOException {
         if (startTime < 0) {
             throw new IOException("No start time set. Call setSchedule() first.");

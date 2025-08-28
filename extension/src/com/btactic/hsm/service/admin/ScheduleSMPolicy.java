@@ -56,7 +56,7 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
         Name server = req.getServer();
         // TODO: Check if we are getting the expected values
         boolean smSchedulePolicyEnabled = request.getAttributeBool(HsmConstants.A_SM_SCHEDULE_POLICY_ENABLED);
-        int smSchedulePolicyStartTime = request.getAttributeInt(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME);
+        String smSchedulePolicyStartTime = request.getAttribute(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME);
 
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
