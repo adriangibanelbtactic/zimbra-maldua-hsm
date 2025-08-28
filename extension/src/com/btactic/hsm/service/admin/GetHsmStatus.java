@@ -60,11 +60,13 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         com.btactic.hsm.ZetaHsm zetahsm = com.btactic.hsm.ZetaHsm.getInstance();
         BlobMoveStats blobMoveStats = zetahsm.getLatestBlobMoveStats();
 
+        boolean isRunning = zetahsm.isRunning();
+        GetHsmStatusResponse resp = new GetHsmStatusResponse(isRunning);
         // Mockup values
-        boolean isRunningMockup = true;
-        GetHsmStatusResponse resp = new GetHsmStatusResponse(isRunningMockup);
         resp.setStartDate(System.currentTimeMillis() - 3600_000L); // 1 hour ago
-        // resp.setEndDate(System.currentTimeMillis());              // now
+        if (!(isRunning)) {
+            resp.setEndDate(System.currentTimeMillis());              // now
+        }
         resp.setWasAborted(false);
         resp.setAborting(false);
         // resp.setError("Some kind of error.");
