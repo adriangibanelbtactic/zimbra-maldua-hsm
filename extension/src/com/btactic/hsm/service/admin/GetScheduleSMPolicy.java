@@ -61,13 +61,20 @@ public final class GetScheduleSMPolicy extends AdminDocumentHandler {
         com.btactic.hsm.ScheduleSMPolicy scheduleSMPolicy = new com.btactic.hsm.ScheduleSMPolicy();
         boolean isEnabled = scheduleSMPolicy.isEnabled();
         String error = scheduleSMPolicy.getError();
-        Integer startTime = scheduleSMPolicy.getStartTime();
 
         GetScheduleSMPolicyResponse resp = new GetScheduleSMPolicyResponse(isEnabled);
         resp.setError(error);
-        resp.setSmScheduleStartTime(startTime);
 
-        return zsc.jaxbToElement(resp);
+        // Let's ignore standard method for now and override with string
+        // Integer startTime = scheduleSMPolicy.getStartTime();
+        // resp.setSmScheduleStartTime(startTime);
+        // return zsc.jaxbToElement(resp);
+
+        String smSchedulePolicyStartTime = scheduleSMPolicy.getStartTimeString();
+        Element scheduleSMPolicyElement = zsc.jaxbToElement(resp);
+        scheduleSMPolicyElement.addAttribute("smSchedulePolicyStartTime", smSchedulePolicyStartTime);
+
+        return scheduleSMPolicyElement;
     }
 
     @Override
