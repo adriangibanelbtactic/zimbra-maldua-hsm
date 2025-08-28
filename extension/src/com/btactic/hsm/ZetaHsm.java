@@ -46,6 +46,7 @@ public class ZetaHsm {
 
     private boolean inProgress = false;
     private boolean stopProcessing = false;
+    private BlobMover blobMover = null;
 
     private final static ZetaHsm SINGLETON = new ZetaHsm();
 
@@ -69,6 +70,14 @@ public class ZetaHsm {
     
     public synchronized boolean isRunning() {
         return inProgress;
+    }
+
+    public synchronized BlobMoveStats getLatestBlobMoveStats() {
+        if (blobMover != null) {
+           return blobMover.getStats();
+        } else {
+            return null;
+        }
     }
 
     private synchronized void resetProgress() {
@@ -188,7 +197,7 @@ public class ZetaHsm {
                     ZetaHsmLog.debug("hsmTypesString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmTypesString + "'");
                     ZetaHsmLog.debug("hsmSearchQueryString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmSearchQueryString + "'");
 
-                    BlobMover blobMover = new BlobMover();
+                    blobMover = new BlobMover();
                     blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator);
                 }
                 ZetaHsmLog.debug("ZetaHsm RUN function - End");

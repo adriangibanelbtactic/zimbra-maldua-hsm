@@ -43,6 +43,8 @@ import com.zimbra.cs.service.admin.AdminRightCheckPoint;
 
 import com.zimbra.soap.admin.message.GetHsmStatusResponse;
 
+import com.btactic.hsm.BlobMoveStats;
+
 public final class GetHsmStatus extends AdminDocumentHandler {
 
     @Override
@@ -54,28 +56,35 @@ public final class GetHsmStatus extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST(sm.getClass().getName()
                     + " is not supported", null);
         }
+
         com.btactic.hsm.ZetaHsm zetahsm = com.btactic.hsm.ZetaHsm.getInstance();
+        BlobMoveStats blobMoveStats = zetahsm.getLatestBlobMoveStats();
 
-        try {
-            zetahsm.process();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("error while performing GetHsmStatus", e);
-        }
-
-        boolean isRunningMockup = false;
+        // Mockup values
+        boolean isRunningMockup = true;
         GetHsmStatusResponse resp = new GetHsmStatusResponse(isRunningMockup);
         resp.setStartDate(System.currentTimeMillis() - 3600_000L); // 1 hour ago
-        resp.setEndDate(System.currentTimeMillis());              // now
+        // resp.setEndDate(System.currentTimeMillis());              // now
         resp.setWasAborted(false);
         resp.setAborting(false);
         // resp.setError("Some kind of error.");
         resp.setError("");
-        resp.setNumBlobsMoved(12345);
-        resp.setNumBytesMoved(9876543210L);
-        resp.setNumMailboxes(42);
+
         resp.setTotalMailboxes(100);
         resp.setDestVolumeId((short) 3);
         resp.setQuery("before:2025/08/01");
+
+        // Actual values that we can gather for now
+        if (blobMoveStats != null) {
+            int numBlobsMoved = blobMoveStats.getNumBlobsMoved();
+            resp.setNumBlobsMoved(numBlobsMoved);
+
+            long numBytesMoved = blobMoveStats.getNumBytesMoved();
+            resp.setNumBytesMoved(numBytesMoved);
+
+            int numMailboxesMoved = blobMoveStats.getNumMailboxesMoved();
+            resp.setNumMailboxes(numMailboxesMoved);
+        }
 
         return zsc.jaxbToElement(resp);
     }

@@ -74,6 +74,11 @@ public class BlobMover {
 
     private HashMap<String, MailboxBlob> mAllDestinationBlobs = null;
     private FileBlobStore mStore = (FileBlobStore) StoreManager.getInstance();
+    private BlobMoveStats stats = null;
+
+    public BlobMoveStats getStats() {
+        return stats;
+    }
 
     private List<Integer> getAllMailboxIds(SoapProvisioning prov)
     throws ServiceException {
@@ -185,7 +190,7 @@ public class BlobMover {
      *                                </ul>
      */
     public BlobMoveStats moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes, String requestedOriginLocators) throws ServiceException {
-        BlobMoveStats stats = new BlobMoveStats();
+        stats = new BlobMoveStats();
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
 
         String originLocatorsString;
