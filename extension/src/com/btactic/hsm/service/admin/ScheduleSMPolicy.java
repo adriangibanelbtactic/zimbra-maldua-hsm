@@ -81,11 +81,13 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
         // Let's ignore standard method for now and override with string
         // Integer smSchedulePolicyStartTimeInteger = scheduleSMPolicy.getStartTime();
         // resp.setSmScheduleStartTime(smSchedulePolicyStartTimeInteger);
+        // return zsc.jaxbToElement(resp);
 
         smSchedulePolicyStartTime = scheduleSMPolicy.getStartTimeString();
-        resp.addAttribute("smSchedulePolicyStartTime", smSchedulePolicyStartTime);
+        Element scheduleSMPolicyElement = zsc.jaxbToElement(resp);
+        scheduleSMPolicyElement.addAttribute("smSchedulePolicyStartTime", smSchedulePolicyStartTime);
 
-        return zsc.jaxbToElement(resp);
+        return scheduleSMPolicyElement;
     }
 
     @Override
