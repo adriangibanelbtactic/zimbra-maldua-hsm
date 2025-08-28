@@ -203,7 +203,7 @@ public class ZetaHsmUtil {
         }
 
         // Print error if any
-        if (resp.getError() != null) {
+        if ( (resp.getError() != null) && (!("".equals(resp.getError()))) ) {
             System.out.println("Error: " + resp.getError());
         }
     }
