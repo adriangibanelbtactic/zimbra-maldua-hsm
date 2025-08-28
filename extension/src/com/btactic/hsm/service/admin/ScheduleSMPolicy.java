@@ -77,6 +77,8 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
         }
 
         ScheduleSMPolicyResponse resp = new ScheduleSMPolicyResponse(smSchedulePolicyEnabled);
+        Integer smSchedulePolicyStartTimeInteger = scheduleSMPolicy.getStartTime();
+        resp.setSmScheduleStartTime(smSchedulePolicyStartTimeInteger);
 
         return zsc.jaxbToElement(resp);
     }
