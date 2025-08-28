@@ -64,6 +64,12 @@ public class ScheduleSMPolicy {
         return startTime;
     }
 
+    public String getStartTimeString() {
+        int hour = getStartTime();
+        // format as HH:00 with leading zero if needed
+        return String.format("%02d:00", hour);
+    }
+
     public void setSchedule(int smSchedulePolicyStartTime) throws IOException {
         if (smSchedulePolicyStartTime < 0 || smSchedulePolicyStartTime > 23) {
             throw new IOException("Invalid hour: " + smSchedulePolicyStartTime);
