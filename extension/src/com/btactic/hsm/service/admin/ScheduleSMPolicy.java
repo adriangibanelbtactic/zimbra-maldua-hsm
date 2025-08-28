@@ -78,7 +78,16 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
 
         ScheduleSMPolicyResponse resp = new ScheduleSMPolicyResponse(smSchedulePolicyEnabled);
 
-        return zsc.jaxbToElement(resp);
+        // Let's ignore standard method for now and override with string
+        // Integer smSchedulePolicyStartTimeInteger = scheduleSMPolicy.getStartTime();
+        // resp.setSmScheduleStartTime(smSchedulePolicyStartTimeInteger);
+        // return zsc.jaxbToElement(resp);
+
+        smSchedulePolicyStartTime = scheduleSMPolicy.getStartTimeString();
+        Element scheduleSMPolicyElement = zsc.jaxbToElement(resp);
+        scheduleSMPolicyElement.addAttribute("smSchedulePolicyStartTime", smSchedulePolicyStartTime);
+
+        return scheduleSMPolicyElement;
     }
 
     @Override
