@@ -161,7 +161,6 @@ public class ZetaHsm {
 
         public void run() {
             ZetaHsmLog.debug("ZetaHsm RUN function - Start");
-            resetProgress();
             try {
                 String[] zimbraHsmPolicyList = Provisioning.getInstance().getLocalServer().getMultiAttr("zimbraHsmPolicy");
 
@@ -205,6 +204,8 @@ public class ZetaHsm {
             catch (ServiceException e) {
                 ZetaHsmLog.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
                 return;
+            } finally {
+                resetProgress();
             }
         }
     }
