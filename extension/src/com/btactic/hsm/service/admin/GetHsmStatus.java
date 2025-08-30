@@ -79,7 +79,6 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         resp.setError(error);
 
         // Mockup values
-        resp.setTotalMailboxes(100);
         resp.setDestVolumeId((short) 3);
         resp.setQuery("before:2025/08/01");
 
@@ -102,6 +101,13 @@ public final class GetHsmStatus extends AdminDocumentHandler {
             resp.setNumMailboxes(numMailboxesMoved);
         } else {
             resp.setNumMailboxes(0);
+        }
+
+        int totalMailboxes = zetahsm.getTotalMailboxes();
+        if (!(totalMailboxes == -1)) {
+            resp.setTotalMailboxes(totalMailboxes);
+        } else {
+            resp.setTotalMailboxes(0);
         }
 
         return zsc.jaxbToElement(resp);
