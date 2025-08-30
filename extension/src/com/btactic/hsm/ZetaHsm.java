@@ -85,7 +85,7 @@ public class ZetaHsm {
         aborting = false;
     }
 
-    public void process() throws ServiceException, IOException {
+    public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
             if (inProgress) {
                 throw MailServiceException.TRY_AGAIN("ZetaHsm is already in progress. Only one request can be run at a time.");

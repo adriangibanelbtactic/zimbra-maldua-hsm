@@ -58,7 +58,7 @@ public final class Hsm extends AdminDocumentHandler {
         HsmResponse resp = new HsmResponse();
 
         try {
-            zetahsm.process();
+            zetahsm.doHsm();
         } catch (IOException e) {
             throw ServiceException.FAILURE("error while performing Hsm", e);
         }
