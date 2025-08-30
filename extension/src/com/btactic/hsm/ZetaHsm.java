@@ -80,11 +80,6 @@ public class ZetaHsm {
         }
     }
 
-    private synchronized void resetProgress() {
-        inProgress = false;
-        aborting = false;
-    }
-
     public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
             if (inProgress) {
@@ -205,7 +200,7 @@ public class ZetaHsm {
                 ZetaHsmLog.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
                 return;
             } finally {
-                resetProgress();
+                inProgress = false;
             }
         }
     }
