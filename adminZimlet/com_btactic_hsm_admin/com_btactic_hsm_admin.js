@@ -185,7 +185,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 type: _DWT_BUTTON_,
                                 label: "Refresh Status",
                                 onActivate: function() {
-                                    var form = this.getForm();
+                                    var form = this.getForm();                        // whole form
+                                    var item = form.getItemById("HsmStatusInfo");     // xform item
+                                    if (item) {
+                                        var ctrl = item.getDwtControl();              // underlying DwtAlert
+                                        if (ctrl) {
+                                            ctrl.setContent("Fetching status...");    // or your computed string
+                                        }
+                                    }
                                     com_btactic_hsm_ext.refreshStatus(form, "HsmStatusInfo");
                                 }
                             },
@@ -289,11 +296,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                     content = "Latest SM was run from " + start + " to " + end;
                 }
             }
-            console.log("DEBUG-HSM-ADMIN: '" +  content + "'")
+            console.log("DEBUG-HSM-ADMIN: '" +  content + "'");
 
-            var statusWidget = form.getItemById(statusItemId);
-            if (statusWidget) {
-                statusWidget.setContent(content || "");
+            var item = form.getItemById(statusItemId);
+            if (item) {
+                var ctrl = item.getDwtControl();
+                if (ctrl) {
+                    ctrl.setContent(content || "");
+                }
             }
 
         } catch (e) {
