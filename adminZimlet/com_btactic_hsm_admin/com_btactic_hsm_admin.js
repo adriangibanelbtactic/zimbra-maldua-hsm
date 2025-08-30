@@ -194,14 +194,18 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                   console.log(i, it.id, it.__attributes && it.__attributes.hsmRole, it);
                                 });
                                 console.log("DEBUG - To confirm in your console - END");
+                                /*
+                                // optional: show a quick placeholder
+                                var statusItem = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", "statusInfo");
+                                if (statusItem) {
+                                  console.log("statusItem:", statusItem);
+                                  console.log("Available methods:", Object.getOwnPropertyNames(statusItem));
+                                  var ctrl = statusItem.getDwtControl();
+                                  if (ctrl) ctrl.setContent("Fetching HSM status…");
+                                }
+                                com_btactic_hsm_ext.refreshStatus(group); // pass the local container
+                                */
 
-                                  // optional: show a quick placeholder
-                                  var statusItem = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", "statusInfo");
-                                  if (statusItem) {
-                                    var ctrl = statusItem.getDwtControl();
-                                    if (ctrl) ctrl.setContent("Fetching HSM status…");
-                                  }
-                                  com_btactic_hsm_ext.refreshStatus(group); // pass the local container
                                 }
                             },
                             {
