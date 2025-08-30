@@ -67,7 +67,7 @@ public class ZetaHsm {
     public synchronized boolean isAborting() {
         return aborting;
     }
-    
+
     public synchronized boolean isRunning() {
         return inProgress;
     }
