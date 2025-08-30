@@ -67,7 +67,9 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         if (!(isRunning)) {
             resp.setEndDate(System.currentTimeMillis());              // now
         }
-        resp.setWasAborted(false);
+
+        boolean wasAborted = zetahsm.wasAborted();
+        resp.setWasAborted(wasAborted);
 
         boolean isAborting = zetahsm.isAborting();
         resp.setAborting(isAborting);
