@@ -182,6 +182,23 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
+                                type: _DWT_BUTTON_,
+                                label: "Refresh Status",
+                                onActivate: function() {
+                                    var form = this.getForm();
+                                    com_btactic_hsm_ext.refreshStatus(form, "HsmStatusInfo");
+                                }
+                            },
+                            {
+                                type: _DWT_ALERT_,
+                                id: "HsmStatusInfo",
+                                containerCssStyle: "padding-bottom:0px",
+                                style: DwtAlert.INFO,
+                                iconVisible: true,
+                                content: "",
+                                colSpan: "*"
+                            },
+                            {
                             ref : "zimbraHsmPolicy",
                             type : _REPEAT_,
                             label : com_btactic_hsm_admin.HSMPolicy,
@@ -239,6 +256,49 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
         ZaItem.loadMethods["ZaServer"].push(ZaServer.loadHsmMethod);
     }
+
+    com_btactic_hsm_ext.refreshStatus = function(form, statusItemId) {
+        var controller = ZaApp.getInstance().getCurrentController();
+
+        try {
+            var soapDoc = AjxSoapDoc.create("GetHsmStatusRequest", ZaZimbraAdmin.URN, null);
+
+            var params = { soapDoc: soapDoc };
+            var reqMgrParams = {
+                controller: controller,
+                busyMsg: "Fetching HSM Status..."
+            };
+
+            var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
+
+            var content = "";
+            if (resp) {
+                var running = resp.running == "1" || resp.running === true;
+                if (running) {
+                    var numBlobs = resp.numBlobsMoved || 0;
+                    var numBytes = resp.numBytesMoved || 0;
+                    var numMboxes = resp.numMailboxes || 0;
+                    var totalMboxes = resp.totalMailboxes || 0;
+                    content = numBlobs + " BLOBS moved. " +
+                              numBytes + " BYTES moved. " +
+                              numMboxes + " of " + totalMboxes + " mailboxes moved.";
+                } else if (resp.startDate && resp.endDate &&
+                          resp.startDate > 0 && resp.endDate > 0) {
+                    var start = new Date(parseInt(resp.startDate));
+                    var end = new Date(parseInt(resp.endDate));
+                    content = "Latest SM was run from " + start + " to " + end;
+                }
+            }
+
+            var statusWidget = form.getItemById(statusItemId);
+            if (statusWidget) {
+                statusWidget.setContent(content || "");
+            }
+
+        } catch (e) {
+            controller._handleException(e);
+        }
+    };
 
     // Helper to launch the HSM Policy Edit Wizard
     com_btactic_hsm_ext.CustomZaXFormDialog = function (params) {
