@@ -74,8 +74,8 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         boolean isAborting = zetahsm.isAborting();
         resp.setAborting(isAborting);
 
-        // resp.setError("Some kind of error.");
-        resp.setError("");
+        String error = zetahsm.getError();
+        resp.setError(error);
 
         resp.setTotalMailboxes(100);
         resp.setDestVolumeId((short) 3);
