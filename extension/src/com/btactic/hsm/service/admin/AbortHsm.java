@@ -57,7 +57,7 @@ public final class AbortHsm extends AdminDocumentHandler {
         com.btactic.hsm.ZetaHsm zetahsm = com.btactic.hsm.ZetaHsm.getInstance();
 
         boolean isRunning = zetahsm.isRunning();
-        zetahsm.stopProcessing();
+        zetahsm.abort();
 
         AbortHsmResponse resp = new AbortHsmResponse(isRunning);
 
