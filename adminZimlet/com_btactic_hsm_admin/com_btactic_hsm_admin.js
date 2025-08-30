@@ -299,9 +299,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             console.log("DEBUG-HSM-ADMIN: '" +  content + "'");
 
             var item = form.getItemById(statusItemId);
+            console.log("form:");
+            console.log(form);
+            console.log("item:");
+            console.log(item);
             if (item) {
                 var ctrl = item.getDwtControl();
                 if (ctrl) {
+                    console.log("ctrl detected");
+                    console.log(item);
                     ctrl.setContent(content || "");
                 }
             }
