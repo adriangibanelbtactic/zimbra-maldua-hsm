@@ -251,12 +251,14 @@ public class ZetaHsm {
                 String[] zimbraHsmPolicyList = Provisioning.getInstance().getLocalServer().getMultiAttr("zimbraHsmPolicy");
 
                 if (zimbraHsmPolicyList.length == 0) {
-                    ZetaHsmLog.info("'zimbraHsmPolicy' attribute is empty. Nothing to do. Aborting.");
+                    error = "'zimbraHsmPolicy' attribute is empty. Nothing to do. Aborting.";
+                    ZetaHsmLog.info(error);
                     return;
                 }
 
                 if (!(isValidHsmPolicySyntaxList(zimbraHsmPolicyList))) {
-                    ZetaHsmLog.error("One or more of the 'zimbraHsmPolicy' values does not have a valid syntax. Aborting.");
+                    error = "One or more of the 'zimbraHsmPolicy' values does not have a valid syntax. Aborting.";
+                    ZetaHsmLog.error(error);
                     return;
                 }
 
@@ -265,7 +267,8 @@ public class ZetaHsm {
 
                 short destinationLocator = getDestinationLocator(prov);
                 if (destinationLocator == -1) {
-                    ZetaHsmLog.error("We did not find an expected (Secondary, internal, current and FileBlobStore class) destination volume. Aborting.");
+                    error = "We did not find an expected (Secondary, internal, current and FileBlobStore class) destination volume. Aborting.";
+                    ZetaHsmLog.error(error);
                     return;
                 }
 
@@ -291,7 +294,8 @@ public class ZetaHsm {
                 ZetaHsmLog.debug("ZetaHsm RUN function - End");
             }
             catch (ServiceException e) {
-                ZetaHsmLog.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
+                error = "Unable to get 'zimbraHsmPolicy' attribute. Aborting.";
+                ZetaHsmLog.info(error, e);
                 return;
             } finally {
                 endDate = System.currentTimeMillis();
