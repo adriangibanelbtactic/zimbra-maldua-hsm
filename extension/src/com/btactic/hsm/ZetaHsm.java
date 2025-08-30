@@ -44,7 +44,7 @@ import java.util.regex.Matcher;
 
 public class ZetaHsm {
 
-    private boolean inProgress = false;
+    private boolean running = false;
     private boolean aborting = false;
     private BlobMover blobMover = null;
 
@@ -58,7 +58,7 @@ public class ZetaHsm {
     }
 
     public synchronized void abort() {
-        if (inProgress) {
+        if (running) {
             ZetaHsmLog.info("Setting aborting flag.");
             aborting = true;
         }
@@ -69,7 +69,7 @@ public class ZetaHsm {
     }
 
     public synchronized boolean isRunning() {
-        return inProgress;
+        return running;
     }
 
     public synchronized BlobMoveStats getLatestBlobMoveStats() {
@@ -82,10 +82,10 @@ public class ZetaHsm {
 
     public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
-            if (inProgress) {
+            if (running) {
                 throw MailServiceException.TRY_AGAIN("ZetaHsm is already in progress. Only one request can be run at a time.");
             }
-            inProgress = true;
+            running = true;
         }
         Thread thread = new ZetaHsmThread();
         thread.setName("ZetaHsm");
@@ -200,7 +200,7 @@ public class ZetaHsm {
                 ZetaHsmLog.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
                 return;
             } finally {
-                inProgress = false;
+                running = false;
             }
         }
     }
