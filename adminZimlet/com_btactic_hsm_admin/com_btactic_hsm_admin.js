@@ -206,6 +206,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             },
                             {
                                 type: _DWT_ALERT_,
+                                hsmRole: "statusInfo",
                                 id: "HsmStatusInfo",
                                 containerCssStyle: "padding-bottom:0px",
                                 style: DwtAlert.INFO,
