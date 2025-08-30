@@ -263,22 +263,22 @@ public class ZetaHsm {
                         .getLocalServer()
                         .getMultiAttr("zimbraHsmPolicy");
             } catch (ServiceException e) {
-                error = "Unable to get 'zimbraHsmPolicy' attribute. Aborting.";
-                ZetaHsmLog.info(error, e);
+                error = "Unable to get 'zimbraHsmPolicy' attribute.";
+                ZetaHsmLog.error(error + " Aborting.", e);
                 endHsm();
                 return;
             }
 
             if (zimbraHsmPolicyList.length == 0) {
-                error = "'zimbraHsmPolicy' attribute is empty. Nothing to do. Aborting.";
-                ZetaHsmLog.info(error);
+                error = "'zimbraHsmPolicy' attribute is empty. Nothing to do.";
+                ZetaHsmLog.info(error + " Aborting.");
                 endHsm();
                 return;
             }
 
             if (!(isValidHsmPolicySyntaxList(zimbraHsmPolicyList))) {
-                error = "One or more of the 'zimbraHsmPolicy' values does not have a valid syntax. Aborting.";
-                ZetaHsmLog.error(error);
+                error = "One or more of the 'zimbraHsmPolicy' values does not have a valid syntax.";
+                ZetaHsmLog.info(error + " Aborting.");
                 endHsm();
                 return;
             }
@@ -288,8 +288,8 @@ public class ZetaHsm {
                 prov = SoapProvisioning.getAdminInstance();
                 prov.soapZimbraAdminAuthenticate();
             } catch (Exception e) {  // whatever SoapProvisioning throws
-                error = "Failed to authenticate with Zimbra Admin SOAP. Aborting.";
-                ZetaHsmLog.error(error, e);
+                error = "Failed to authenticate with Zimbra Admin SOAP.";
+                ZetaHsmLog.error(error + " Aborting.", e);
                 endHsm();
                 return;
             }
@@ -298,15 +298,15 @@ public class ZetaHsm {
             try {
                 destinationLocator = getDestinationLocator(prov);
             } catch (Exception e) {
-                error = "Error while getting destination locator. Aborting.";
-                ZetaHsmLog.error(error, e);
+                error = "Error while getting destination locator.";
+                ZetaHsmLog.error(error + " Aborting.", e);
                 endHsm();
                 return;
             }
 
             if (destinationLocator == -1) {
-                error = "We did not find an expected (Secondary, internal, current and FileBlobStore class) destination volume. Aborting.";
-                ZetaHsmLog.error(error);
+                error = "We did not find an expected (Secondary, internal, current and FileBlobStore class) destination volume.";
+                ZetaHsmLog.error(error + " Aborting.");
                 endHsm();
                 return;
             }
@@ -332,8 +332,8 @@ public class ZetaHsm {
                 try {
                     blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator);
                 } catch (Exception e) {
-                    error = "Error while moving items. Aborting.";
-                    ZetaHsmLog.error(error, e);
+                    error = "Error while moving items.";
+                    ZetaHsmLog.error(error + " Aborting.", e);
                     endHsm();
                     return;
                 }
