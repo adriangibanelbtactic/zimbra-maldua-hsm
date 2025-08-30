@@ -48,6 +48,8 @@ public class ZetaHsm {
     private boolean aborting = false;
     private boolean running = false;
     private String error = new String("");
+    Long startDate = 0L;
+    Long endDate = null;
 
     private BlobMover blobMover = null;
 
@@ -83,6 +85,14 @@ public class ZetaHsm {
         return error;
     }
 
+    public synchronized String getStartDate() {
+        return startDate;
+    }
+
+    public synchronized String getEndDate() {
+        return endDate;
+    }
+
     public synchronized BlobMoveStats getLatestBlobMoveStats() {
         if (blobMover != null) {
            return blobMover.getStats();
@@ -100,6 +110,8 @@ public class ZetaHsm {
             aborted = false;
             running = true;
             error = new String("");
+            startDate = System.currentTimeMillis();
+            endDate = null;
 
         }
         Thread thread = new ZetaHsmThread();
@@ -215,6 +227,7 @@ public class ZetaHsm {
                 ZetaHsmLog.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
                 return;
             } finally {
+                endDate = System.currentTimeMillis();
                 running = false;
             }
         }
