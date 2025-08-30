@@ -278,6 +278,10 @@ public class ZetaHsm {
                 return;
             } finally {
                 endDate = System.currentTimeMillis();
+                if (aborting) {
+                    aborted = true;
+                    aborting = false;
+                }
                 running = false;
             }
         }
