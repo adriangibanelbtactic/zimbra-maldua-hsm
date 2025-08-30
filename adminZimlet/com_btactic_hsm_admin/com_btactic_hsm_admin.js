@@ -297,7 +297,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         console.log(item);
         console.log("DEBUG-item - END");
         console.log("DEBUG-SOMETHING-FOUND ctrl - BEGIN");
-        var ctrl = item.getDwtControl && item.getDwtControl();
+        var ctrl = item.widget;
         console.log(ctrl);
         console.log("DEBUG-SOMETHING-FOUND ctrl - END");
         if (ctrl) ctrl.setContent(html || "");
