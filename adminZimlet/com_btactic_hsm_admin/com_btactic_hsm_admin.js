@@ -182,6 +182,43 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
+                                type: _DWT_BUTTON_,
+                                label: "Refresh Status",
+                                hsmRole: "refreshButton",           // <— stable tag
+                                onActivate: function () {
+                                  var group = this.getParentItem(); // the “HSM (Maldua)” subpanel
+
+                                console.log("DEBUG - To confirm in your console - BEGIN");
+                                console.log("Group children:", group.items);
+                                group.items.forEach(function(it, i) {
+                                  console.log(i, it.id, it.__attributes && it.__attributes.hsmRole, it);
+                                });
+                                console.log("DEBUG - To confirm in your console - END");
+                                /*
+                                // optional: show a quick placeholder
+                                var statusItem = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", "statusInfo");
+                                if (statusItem) {
+                                  console.log("statusItem:", statusItem);
+                                  console.log("Available methods:", Object.getOwnPropertyNames(statusItem));
+                                  var ctrl = statusItem.getDwtControl();
+                                  if (ctrl) ctrl.setContent("Fetching HSM status…");
+                                }
+                                */
+                                com_btactic_hsm_ext.refreshStatus(group); // pass the local container
+
+                                }
+                            },
+                            {
+                                type: _DWT_ALERT_,
+                                hsmRole: "statusInfo",
+                                id: "HsmStatusInfo",
+                                containerCssStyle: "padding-bottom:0px",
+                                style: DwtAlert.INFO,
+                                iconVisible: true,
+                                content: "",
+                                colSpan: "*"
+                            },
+                            {
                             ref : "zimbraHsmPolicy",
                             type : _REPEAT_,
                             label : com_btactic_hsm_admin.HSMPolicy,
@@ -239,6 +276,67 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
         ZaItem.loadMethods["ZaServer"].push(ZaServer.loadHsmMethod);
     }
+
+    // Find a direct child XFormItem in a group by an attribute we set in the schema
+    com_btactic_hsm_ext.findChildByAttr = function (group, key, value) {
+      console.log("DEBUG-findChildByAttr - 1");
+      if (!group || !group.items) return null;
+      console.log("DEBUG-findChildByAttr - 2");
+      for (var i = 0; i < group.items.length; i++) {
+        var it = group.items[i];
+        if (it && it.__attributes && it.__attributes[key] === value) return it;
+      }
+      return null;
+    };
+
+    // Render string safely into the DwtAlert in that group
+    com_btactic_hsm_ext.setAlertContentInGroup = function (group, role, html) {
+      var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
+      if (item) {
+        console.log("DEBUG-item - BEGIN");
+        console.log(item);
+        console.log("DEBUG-item - END");
+        console.log("DEBUG-SOMETHING-FOUND ctrl - BEGIN");
+        var ctrl = item.widget;
+        console.log(ctrl);
+        console.log("DEBUG-SOMETHING-FOUND ctrl - END");
+        if (ctrl) ctrl.setContent(html || "");
+      }
+    };
+
+    com_btactic_hsm_ext.refreshStatus = function (group) {
+      var controller = ZaApp.getInstance().getCurrentController();
+      try {
+        var soapDoc = AjxSoapDoc.create("GetHsmStatusRequest", ZaZimbraAdmin.URN, null);
+        var params = { soapDoc: soapDoc };
+        var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
+        var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
+
+        var content = "";
+        if (resp) {
+          var running = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
+          if (running) {
+            var numBlobs = resp.numBlobsMoved || 0;
+            var numBytes = resp.numBytesMoved || 0;
+            var numMbx   = resp.numMailboxes   || 0;
+            var totalMbx = resp.totalMailboxes || 0;
+            content = numBlobs + " BLOBS moved. " +
+                      numBytes + " BYTES moved. " +
+                      numMbx + " of " + totalMbx + " mailboxes moved.";
+          } else if (resp.startDate > 0 && resp.endDate > 0) {
+            var start = new Date(parseInt(resp.startDate, 10));
+            var end   = new Date(parseInt(resp.endDate, 10));
+            content = "Latest SM was run from " + start + " to " + end + ".";
+          }
+          // else: leave empty if missing/invalid dates
+        }
+        console.log("DEBUG-BEFORE-SettingAlert");
+        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+        console.log("DEBUG-AFTER-SettingAlert");
+      } catch (e) {
+        controller._handleException(e);
+      }
+    };
 
     // Helper to launch the HSM Policy Edit Wizard
     com_btactic_hsm_ext.CustomZaXFormDialog = function (params) {
