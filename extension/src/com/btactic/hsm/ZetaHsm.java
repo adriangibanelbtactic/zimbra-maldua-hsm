@@ -93,11 +93,41 @@ public class ZetaHsm {
         return endDate;
     }
 
-    public synchronized BlobMoveStats getLatestBlobMoveStats() {
+    private synchronized BlobMoveStats getLatestBlobMoveStats() {
         if (blobMover != null) {
            return blobMover.getStats();
         } else {
             return null;
+        }
+    }
+
+    public synchronized int getNumBlobsMoved() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            int numBlobsMoved = blobMoveStats.getNumBlobsMoved();
+            return numBlobsMoved;
+        } else {
+            return -1;
+        }
+    }
+
+    public synchronized long getNumBytesMoved() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            long numBytesMoved = blobMoveStats.getNumBytesMoved();
+            return numBytesMoved;
+        } else {
+            return -1L;
+        }
+    }
+
+    public synchronized int getNumMailboxesMoved() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            int numMailboxesMoved = blobMoveStats.getNumMailboxesMoved();
+            return numMailboxesMoved;
+        } else {
+            return -1;
         }
     }
 

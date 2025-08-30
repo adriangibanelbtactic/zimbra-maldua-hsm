@@ -58,7 +58,6 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         }
 
         com.btactic.hsm.ZetaHsm zetahsm = com.btactic.hsm.ZetaHsm.getInstance();
-        BlobMoveStats blobMoveStats = zetahsm.getLatestBlobMoveStats();
 
         boolean isRunning = zetahsm.isRunning();
         GetHsmStatusResponse resp = new GetHsmStatusResponse(isRunning);
@@ -84,16 +83,25 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         resp.setDestVolumeId((short) 3);
         resp.setQuery("before:2025/08/01");
 
-        // Actual values that we can gather for now
-        if (blobMoveStats != null) {
-            int numBlobsMoved = blobMoveStats.getNumBlobsMoved();
+        int numBlobsMoved = zetahsm.getNumBlobsMoved();
+        if (!(numBlobsMoved == -1)) {
             resp.setNumBlobsMoved(numBlobsMoved);
+        } else {
+            resp.setNumBlobsMoved(0);
+        }
 
-            long numBytesMoved = blobMoveStats.getNumBytesMoved();
+        long numBytesMoved = zetahsm.getNumBytesMoved();
+        if (!(numBytesMoved == -1L)) {
             resp.setNumBytesMoved(numBytesMoved);
+        } else {
+            resp.setNumBytesMoved(0L);
+        }
 
-            int numMailboxesMoved = blobMoveStats.getNumMailboxesMoved();
+        int numMailboxesMoved = zetahsm.getNumMailboxesMoved();
+        if (!(numMailboxesMoved == -1)) {
             resp.setNumMailboxes(numMailboxesMoved);
+        } else {
+            resp.setNumMailboxes(0);
         }
 
         return zsc.jaxbToElement(resp);
