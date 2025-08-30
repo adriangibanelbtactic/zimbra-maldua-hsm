@@ -79,7 +79,6 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         resp.setError(error);
 
         // Mockup values
-        resp.setDestVolumeId((short) 3);
         resp.setQuery("before:2025/08/01");
 
         int numBlobsMoved = zetahsm.getNumBlobsMoved();
@@ -108,6 +107,11 @@ public final class GetHsmStatus extends AdminDocumentHandler {
             resp.setTotalMailboxes(totalMailboxes);
         } else {
             resp.setTotalMailboxes(0);
+        }
+
+        short destinationVolumeId = zetahsm.getDestinationVolumeId();
+        if (!(destinationVolumeId == -1)) {
+            resp.setDestVolumeId(destinationVolumeId);
         }
 
         return zsc.jaxbToElement(resp);
