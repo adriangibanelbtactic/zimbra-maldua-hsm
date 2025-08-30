@@ -231,14 +231,6 @@ public class BlobMover {
             }
             stats.incrementMailboxes();
 
-            // Enforced 2 seconds delay between mailboxes
-            // TODO: Remove it after debugging
-            try {
-                Thread.sleep(2 * 1000); // 2 seconds
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // restore interrupted status
-            }
-
         }
         return stats;
     }
