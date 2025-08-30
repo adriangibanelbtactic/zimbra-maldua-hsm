@@ -141,6 +141,16 @@ public class ZetaHsm {
         }
     }
 
+    public synchronized short getDestinationVolumeId() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            short destinationVolumeId = blobMoveStats.getDestinationVolumeId();
+            return destinationVolumeId;
+        } else {
+            return -1;
+        }
+    }
+
     public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
             if (running) {

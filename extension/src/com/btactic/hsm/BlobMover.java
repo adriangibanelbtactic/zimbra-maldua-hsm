@@ -191,6 +191,7 @@ public class BlobMover {
      */
     public BlobMoveStats moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes, String requestedOriginLocators) throws ServiceException {
         stats = new BlobMoveStats();
+        stats.setDestinationVolumeId(destinationLocator);
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
 
         String originLocatorsString;
