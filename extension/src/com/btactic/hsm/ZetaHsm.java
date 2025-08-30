@@ -85,11 +85,11 @@ public class ZetaHsm {
         return error;
     }
 
-    public synchronized String getStartDate() {
+    public synchronized Long getStartDate() {
         return startDate;
     }
 
-    public synchronized String getEndDate() {
+    public synchronized Long getEndDate() {
         return endDate;
     }
 
