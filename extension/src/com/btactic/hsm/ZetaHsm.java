@@ -66,6 +66,10 @@ public class ZetaHsm {
         if (running) {
             ZetaHsmLog.info("Setting aborting flag.");
             aborting = true;
+            BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+            if (blobMoveStats != null) {
+                blobMoveStats.setAborting(true);
+            }
         }
     }
 
@@ -278,6 +282,9 @@ public class ZetaHsm {
                     ZetaHsmLog.debug("hsmTypesString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmTypesString + "'");
                     ZetaHsmLog.debug("hsmSearchQueryString - (" + zimbraHsmPolicyCounter + "/" + zimbraHsmPolicyList.length + ")" + " : '" + hsmSearchQueryString + "'");
 
+                    if (aborting) {
+                        break;
+                    }
                     blobMover = new BlobMover();
                     blobMover.moveItems(prov, hsmTypesString, hsmSearchQueryString, destinationLocator);
                 }

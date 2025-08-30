@@ -24,6 +24,7 @@ public class BlobMoveStats {
     private int totalMailboxes;
     private short destinationVolumeId;
     private String query;
+    private boolean aborting;
 
     public BlobMoveStats() {
         this.numBlobsMoved = 0;
@@ -32,6 +33,7 @@ public class BlobMoveStats {
         this.totalMailboxes = 0;
         this.destinationVolumeId = -1;
         this.query = null;
+        this.aborting = false;
     }
 
     public void addBlobs(int count) {
@@ -84,5 +86,13 @@ public class BlobMoveStats {
 
     public void setQuery(String query) {
         this.query = query;
+    }
+
+    public boolean getAborting() {
+        return aborting;
+    }
+
+    public void setAborting(boolean aborting) {
+        this.aborting = aborting;
     }
 }

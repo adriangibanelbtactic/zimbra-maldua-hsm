@@ -161,6 +161,10 @@ public class BlobMover {
 
     public boolean moveItems(Mailbox mbox, Integer mboxId, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, String validOriginLocatorsString, long maximumBytes, BlobMoveStats stats) throws ServiceException {
 
+        if (stats.getAborting()) {
+            return false; // Signal to stop higher-level migration
+        }
+
         Iterable<List<MovedItemInfo>> filteredChunks = getFilteredChunks(mbox, hsmTypesString, hsmSearchQueryString, validOriginLocatorsString);
 
         boolean continueMoving = true;
@@ -232,7 +236,7 @@ public class BlobMover {
             boolean continueMoving = moveItems(mbox, mboxId, hsmTypesString, hsmSearchQueryString, destinationLocator, originLocatorsString, maximumBytes, stats);
 
             if (!continueMoving) {
-                ZetaHsmLog.info("HSM migration stopped early after mailbox " + mboxId + " due to maximumBytes limit.");
+                ZetaHsmLog.info("HSM migration stopped early after mailbox " + mboxId + " due to maximumBytes limit or Abort Request.");
                 break;
             }
             stats.incrementMailboxes();
@@ -246,6 +250,10 @@ public class BlobMover {
     }
 
     private boolean moveItems(Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, BlobMoveStats stats) throws ServiceException {
+        if (stats.getAborting()) {
+            return false; // Signal to stop higher-level migration
+        }
+
         DbConnection dbConnection = null;
         Iterator itemsToMigrateInfosIter = itemsToMigrateInfos.iterator();
         List<MovedItemInfo> itemsInfosToMigrateChunk = new ArrayList<MovedItemInfo>();
@@ -291,6 +299,10 @@ public class BlobMover {
 
     private boolean moveChunkItems(DbConnection dbConnection, Mailbox mbox, short destinationLocator, List<MovedItemInfo> itemsToMigrateInfos, long maximumBytes, BlobMoveStats stats) throws ServiceException {
 
+        if (stats.getAborting()) {
+            return false; // Signal to stop higher-level migration
+        }
+
         List<MailboxBlob> originBlobs = new ArrayList<MailboxBlob>();
         ZetaHsmLog.debug("Moving " + itemsToMigrateInfos.size() + " messages. (Attempt)");
         MailboxBlob originBlob = null;
@@ -317,6 +329,10 @@ public class BlobMover {
                         // TODO: Probably count an error here
                         ZetaHsmLog.warn("Could not get size of item: '" + movedItemInfo.getId() + "' blob. Skipping its HSM move.");
                         continue;
+                    }
+
+                    if (stats.getAborting()) {
+                        return false; // Signal to stop higher-level migration
                     }
 
                     if (maximumBytes > 0 && stats.getNumBytesMoved() + blobSize > maximumBytes) {
