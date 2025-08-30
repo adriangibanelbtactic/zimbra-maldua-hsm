@@ -23,6 +23,7 @@ public class BlobMoveStats {
     private int numMailboxesMoved;
     private int totalMailboxes;
     private short destinationVolumeId;
+    private String query;
 
     public BlobMoveStats() {
         this.numBlobsMoved = 0;
@@ -30,6 +31,7 @@ public class BlobMoveStats {
         this.numMailboxesMoved = 0;
         this.totalMailboxes = 0;
         this.destinationVolumeId = -1;
+        this.query = null;
     }
 
     public void addBlobs(int count) {
@@ -74,5 +76,13 @@ public class BlobMoveStats {
 
     public void setDestinationVolumeId(short destinationVolumeId) {
         this.destinationVolumeId = destinationVolumeId;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        this.query = query;
     }
 }

@@ -151,6 +151,16 @@ public class ZetaHsm {
         }
     }
 
+    public synchronized String getQuery() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            String query = blobMoveStats.getQuery();
+            return query;
+        } else {
+            return null;
+        }
+    }
+
     public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
             if (running) {
