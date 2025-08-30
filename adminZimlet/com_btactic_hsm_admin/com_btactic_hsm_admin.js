@@ -293,6 +293,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     com_btactic_hsm_ext.setAlertContentInGroup = function (group, role, html) {
       var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
       if (item) {
+        console.log("DEBUG-item - BEGIN");
+        console.log(item);
+        console.log("DEBUG-item - END");
         console.log("DEBUG-SOMETHING-FOUND ctrl - BEGIN");
         var ctrl = item.getDwtControl && item.getDwtControl();
         console.log(ctrl);
