@@ -279,7 +279,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     // Find a direct child XFormItem in a group by an attribute we set in the schema
     com_btactic_hsm_ext.findChildByAttr = function (group, key, value) {
+      console.log("DEBUG-findChildByAttr - 1");
       if (!group || !group.items) return null;
+      console.log("DEBUG-findChildByAttr - 2");
       for (var i = 0; i < group.items.length; i++) {
         var it = group.items[i];
         if (it && it.__attributes && it.__attributes[key] === value) return it;
@@ -291,7 +293,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     com_btactic_hsm_ext.setAlertContentInGroup = function (group, role, html) {
       var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
       if (item) {
+        console.log("DEBUG-SOMETHING-FOUND ctrl - BEGIN");
         var ctrl = item.getDwtControl && item.getDwtControl();
+        console.log(ctrl);
+        console.log("DEBUG-SOMETHING-FOUND ctrl - END");
         if (ctrl) ctrl.setContent(html || "");
       }
     };
@@ -322,8 +327,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
           }
           // else: leave empty if missing/invalid dates
         }
-
+        console.log("DEBUG-BEFORE-SettingAlert");
         com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+        console.log("DEBUG-AFTER-SettingAlert");
       } catch (e) {
         controller._handleException(e);
       }
