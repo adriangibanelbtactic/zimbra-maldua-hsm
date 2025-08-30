@@ -203,8 +203,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                   var ctrl = statusItem.getDwtControl();
                                   if (ctrl) ctrl.setContent("Fetching HSM status…");
                                 }
-                                com_btactic_hsm_ext.refreshStatus(group); // pass the local container
                                 */
+                                com_btactic_hsm_ext.refreshStatus(group); // pass the local container
 
                                 }
                             },
