@@ -44,8 +44,13 @@ import java.util.regex.Matcher;
 
 public class ZetaHsm {
 
-    private boolean inProgress = false;
+    private boolean aborted = false;
     private boolean aborting = false;
+    private boolean running = false;
+    private String error = new String("");
+    Long startDate = 0L;
+    Long endDate = null;
+
     private BlobMover blobMover = null;
 
     private final static ZetaHsm SINGLETON = new ZetaHsm();
@@ -58,18 +63,34 @@ public class ZetaHsm {
     }
 
     public synchronized void abort() {
-        if (inProgress) {
+        if (running) {
             ZetaHsmLog.info("Setting aborting flag.");
             aborting = true;
         }
     }
 
-    private synchronized boolean isAborting() {
+    public synchronized boolean wasAborted() {
+        return aborted;
+    }
+
+    public synchronized boolean isAborting() {
         return aborting;
     }
-    
+
     public synchronized boolean isRunning() {
-        return inProgress;
+        return running;
+    }
+
+    public synchronized String getError() {
+        return error;
+    }
+
+    public synchronized Long getStartDate() {
+        return startDate;
+    }
+
+    public synchronized Long getEndDate() {
+        return endDate;
     }
 
     public synchronized BlobMoveStats getLatestBlobMoveStats() {
@@ -80,17 +101,18 @@ public class ZetaHsm {
         }
     }
 
-    private synchronized void resetProgress() {
-        inProgress = false;
-        aborting = false;
-    }
-
-    public void process() throws ServiceException, IOException {
+    public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
-            if (inProgress) {
+            if (running) {
                 throw MailServiceException.TRY_AGAIN("ZetaHsm is already in progress. Only one request can be run at a time.");
             }
-            inProgress = true;
+            aborting = false;
+            aborted = false;
+            running = true;
+            error = new String("");
+            startDate = System.currentTimeMillis();
+            endDate = null;
+
         }
         Thread thread = new ZetaHsmThread();
         thread.setName("ZetaHsm");
@@ -205,7 +227,8 @@ public class ZetaHsm {
                 ZetaHsmLog.info("Unable to get 'zimbraHsmPolicy' attribute. Aborting.", e);
                 return;
             } finally {
-                resetProgress();
+                endDate = System.currentTimeMillis();
+                running = false;
             }
         }
     }
