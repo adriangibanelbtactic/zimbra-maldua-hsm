@@ -47,6 +47,7 @@ public class ZetaHsm {
     private boolean aborted = false;
     private boolean aborting = false;
     private boolean running = false;
+    private String error = new String("");
 
     private BlobMover blobMover = null;
 
@@ -78,6 +79,10 @@ public class ZetaHsm {
         return running;
     }
 
+    public synchronized String getError() {
+        return error;
+    }
+
     public synchronized BlobMoveStats getLatestBlobMoveStats() {
         if (blobMover != null) {
            return blobMover.getStats();
@@ -94,6 +99,7 @@ public class ZetaHsm {
             aborting = false;
             aborted = false;
             running = true;
+            error = new String("");
 
         }
         Thread thread = new ZetaHsmThread();
