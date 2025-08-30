@@ -289,6 +289,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                     content = "Latest SM was run from " + start + " to " + end;
                 }
             }
+            console.log("DEBUG-HSM-ADMIN: '" +  content + "'")
 
             var statusWidget = form.getItemById(statusItemId);
             if (statusWidget) {
