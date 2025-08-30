@@ -209,6 +209,10 @@ public class BlobMover {
         }
 
         List<Integer> mailboxIds = getAllMailboxIds(prov);
+
+        int totalMailboxes = mailboxIds.size();
+        stats.setTotalMailboxes(totalMailboxes);
+
         for (int mboxId : mailboxIds) {
             ZetaHsmLog.debug("mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 

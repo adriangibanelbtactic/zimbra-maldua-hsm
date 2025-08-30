@@ -21,11 +21,13 @@ public class BlobMoveStats {
     private int numBlobsMoved;
     private long numBytesMoved;
     private int numMailboxesMoved;
+    private int totalMailboxes;
 
     public BlobMoveStats() {
         this.numBlobsMoved = 0;
         this.numBytesMoved = 0L;
         this.numMailboxesMoved = 0;
+        this.totalMailboxes = 0;
     }
 
     public void addBlobs(int count) {
@@ -54,5 +56,13 @@ public class BlobMoveStats {
 
     public int getNumMailboxesMoved() {
         return numMailboxesMoved;
+    }
+
+    public int getTotalMailboxes() {
+        return totalMailboxes;
+    }
+
+    public void setTotalMailboxes(int totalMailboxes) {
+        this.totalMailboxes = totalMailboxes;
     }
 }

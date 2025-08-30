@@ -131,6 +131,16 @@ public class ZetaHsm {
         }
     }
 
+    public synchronized int getTotalMailboxes() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            int totalMailboxes = blobMoveStats.getTotalMailboxes();
+            return totalMailboxes;
+        } else {
+            return -1;
+        }
+    }
+
     public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
             if (running) {
