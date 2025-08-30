@@ -187,6 +187,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 hsmRole: "refreshButton",           // <— stable tag
                                 onActivate: function () {
                                   var group = this.getParentItem(); // the “HSM (Maldua)” subpanel
+
+                                console.log("DEBUG - To confirm in your console - BEGIN");
+                                console.log("Group children:", group.items);
+                                group.items.forEach(function(it, i) {
+                                  console.log(i, it.id, it.__attributes && it.__attributes.hsmRole, it);
+                                });
+                                console.log("DEBUG - To confirm in your console - END");
+
                                   // optional: show a quick placeholder
                                   var statusItem = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", "statusInfo");
                                   if (statusItem) {
