@@ -62,10 +62,12 @@ public final class GetHsmStatus extends AdminDocumentHandler {
 
         boolean isRunning = zetahsm.isRunning();
         GetHsmStatusResponse resp = new GetHsmStatusResponse(isRunning);
-        // Mockup values
-        resp.setStartDate(System.currentTimeMillis() - 3600_000L); // 1 hour ago
+
+        Long startDate = zetahsm.getStartDate();
+        resp.setStartDate(startDate);
         if (!(isRunning)) {
-            resp.setEndDate(System.currentTimeMillis());              // now
+            Long endDate = zetahsm.getEndDate();
+            resp.setEndDate(endDate);
         }
 
         boolean wasAborted = zetahsm.wasAborted();
@@ -77,6 +79,7 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         String error = zetahsm.getError();
         resp.setError(error);
 
+        // Mockup values
         resp.setTotalMailboxes(100);
         resp.setDestVolumeId((short) 3);
         resp.setQuery("before:2025/08/01");
