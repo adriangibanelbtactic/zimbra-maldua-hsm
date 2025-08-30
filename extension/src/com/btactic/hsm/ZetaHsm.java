@@ -44,8 +44,10 @@ import java.util.regex.Matcher;
 
 public class ZetaHsm {
 
-    private boolean running = false;
+    private boolean aborted = false;
     private boolean aborting = false;
+    private boolean running = false;
+
     private BlobMover blobMover = null;
 
     private final static ZetaHsm SINGLETON = new ZetaHsm();
@@ -62,6 +64,10 @@ public class ZetaHsm {
             ZetaHsmLog.info("Setting aborting flag.");
             aborting = true;
         }
+    }
+
+    public synchronized boolean wasAborted() {
+        return aborted;
     }
 
     public synchronized boolean isAborting() {
@@ -85,7 +91,10 @@ public class ZetaHsm {
             if (running) {
                 throw MailServiceException.TRY_AGAIN("ZetaHsm is already in progress. Only one request can be run at a time.");
             }
+            aborting = false;
+            aborted = false;
             running = true;
+
         }
         Thread thread = new ZetaHsmThread();
         thread.setName("ZetaHsm");
