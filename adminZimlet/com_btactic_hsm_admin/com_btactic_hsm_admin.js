@@ -185,22 +185,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 type: _DWT_BUTTON_,
                                 label: "Refresh Status",
                                 onActivate: function() {
-                                      console.log("Log 1: Log the button’s context when clicked - BEGIN");
-                                      console.log("this =", this);           // the DwtButton
-                                      console.log("parentItem =", this.getParentItem());  // its xform wrapper
-                                      console.log("form =", this.getForm()); // ZaServerXFormView
-                                      console.log("Log 1: Log the button’s context when clicked - END");
                                     var form = this.getForm();                        // whole form
-                                    console.log("Log 2: Log all ids registered in the form - BEGIN");
-                                    console.log("All form items:", form._idItems);
-                                    console.log("Log 2: Log all ids registered in the form - END");
                                     var item = form.getItemById("HsmStatusInfo");     // xform item
-                                    console.log("Log 3: Log what you get back for your alert - BEGIN");
-                                    console.log("HsmStatusInfo item:", item);
-                                    if (item) {
-                                        console.log("Underlying DwtAlert:", item.getDwtControl());
-                                    }
-                                    console.log("Log 3: Log what you get back for your alert - END");
                                     if (item) {
                                         var ctrl = item.getDwtControl();              // underlying DwtAlert
                                         if (ctrl) {
