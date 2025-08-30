@@ -183,6 +183,15 @@ public class ZetaHsm {
         thread.start();
     }
 
+    private void endHsm() {
+        endDate = System.currentTimeMillis();
+        if (aborting) {
+            aborted = true;
+            aborting = false;
+        }
+        running = false;
+    }
+
     private class ZetaHsmThread extends Thread {
 
         private boolean isValidHsmPolicySyntaxList(String[] zimbraHsmPolicyList) {
@@ -298,12 +307,7 @@ public class ZetaHsm {
                 ZetaHsmLog.info(error, e);
                 return;
             } finally {
-                endDate = System.currentTimeMillis();
-                if (aborting) {
-                    aborted = true;
-                    aborting = false;
-                }
-                running = false;
+                endHsm();
             }
         }
     }
