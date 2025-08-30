@@ -191,6 +191,8 @@ public class BlobMover {
      */
     public BlobMoveStats moveItems(SoapProvisioning prov, String hsmTypesString, String hsmSearchQueryString, short destinationLocator, long maximumBytes, String requestedOriginLocators) throws ServiceException {
         stats = new BlobMoveStats();
+        stats.setDestinationVolumeId(destinationLocator);
+        stats.setQuery(hsmSearchQueryString);
         mAllDestinationBlobs = new HashMap<String, MailboxBlob>();
 
         String originLocatorsString;
@@ -209,6 +211,10 @@ public class BlobMover {
         }
 
         List<Integer> mailboxIds = getAllMailboxIds(prov);
+
+        int totalMailboxes = mailboxIds.size();
+        stats.setTotalMailboxes(totalMailboxes);
+
         for (int mboxId : mailboxIds) {
             ZetaHsmLog.debug("mailbox: " + mboxId + " - hsmTypesString: '" + hsmTypesString + "' - hsmSearchQueryString: '" + hsmSearchQueryString + "' - destinationLocator: " + destinationLocator + ".");
 

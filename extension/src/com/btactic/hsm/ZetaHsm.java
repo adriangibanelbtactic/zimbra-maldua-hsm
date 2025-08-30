@@ -131,6 +131,36 @@ public class ZetaHsm {
         }
     }
 
+    public synchronized int getTotalMailboxes() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            int totalMailboxes = blobMoveStats.getTotalMailboxes();
+            return totalMailboxes;
+        } else {
+            return -1;
+        }
+    }
+
+    public synchronized short getDestinationVolumeId() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            short destinationVolumeId = blobMoveStats.getDestinationVolumeId();
+            return destinationVolumeId;
+        } else {
+            return -1;
+        }
+    }
+
+    public synchronized String getQuery() {
+        BlobMoveStats blobMoveStats = getLatestBlobMoveStats();
+        if (blobMoveStats != null) {
+            String query = blobMoveStats.getQuery();
+            return query;
+        } else {
+            return null;
+        }
+    }
+
     public void doHsm() throws ServiceException, IOException {
         synchronized (this) {
             if (running) {
@@ -258,6 +288,10 @@ public class ZetaHsm {
                 return;
             } finally {
                 endDate = System.currentTimeMillis();
+                if (aborting) {
+                    aborted = true;
+                    aborting = false;
+                }
                 running = false;
             }
         }
