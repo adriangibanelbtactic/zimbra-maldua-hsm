@@ -45,7 +45,7 @@ import java.util.regex.Matcher;
 public class ZetaHsm {
 
     private boolean inProgress = false;
-    private boolean stopProcessing = false;
+    private boolean aborting = false;
     private BlobMover blobMover = null;
 
     private final static ZetaHsm SINGLETON = new ZetaHsm();
@@ -57,15 +57,15 @@ public class ZetaHsm {
         return SINGLETON;
     }
 
-    public synchronized void stopProcessing() {
+    public synchronized void abort() {
         if (inProgress) {
-            ZetaHsmLog.info("Setting stopProcessing flag.");
-            stopProcessing = true;
+            ZetaHsmLog.info("Setting aborting flag.");
+            aborting = true;
         }
     }
 
-    private synchronized boolean isStopProcessing() {
-        return stopProcessing;
+    private synchronized boolean isAborting() {
+        return aborting;
     }
     
     public synchronized boolean isRunning() {
@@ -82,7 +82,7 @@ public class ZetaHsm {
 
     private synchronized void resetProgress() {
         inProgress = false;
-        stopProcessing = false;
+        aborting = false;
     }
 
     public void process() throws ServiceException, IOException {
