@@ -261,6 +261,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     },
                                     // HSM Status Block
                                     {
+                                        colSpan: 5,
                                         type: _ZAALLSCREEN_GROUPER_,
                                         width: "100%",
                                         label: "HSM Status",
@@ -306,6 +307,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 height: 10
                                             },
                                             {
+                                                colSpan: 5,
                                                 type: _DWT_ALERT_,
                                                 hsmRole: "statusInfo",
                                                 id: "HsmStatusInfo",
