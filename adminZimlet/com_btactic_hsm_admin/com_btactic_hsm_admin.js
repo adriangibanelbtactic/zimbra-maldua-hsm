@@ -224,53 +224,71 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
-                                type: _DWT_BUTTON_,
-                                label: com_btactic_hsm_ext.refreshRunning ? "Stop HSM Status Refresh" : "Start HSM Status Refresh",
-                                hsmRole: "refreshHsmButton",
-                                onActivate: function() {
-                                    var group = this.getParentItem();
+                                type: _GROUP_,
+                                width: "100%",
+                                colSizes: ["20%","20%", "60%"]
+                                items: [
+                                    // HSM Status Block
+                                    {
+                                        type: _ZALEFT_GROUPER_,
+                                        width: "100%",
+                                        label: "HSM Status",
+                                        items: [
+                                            {
+                                                type: _DWT_BUTTON_,
+                                                label: com_btactic_hsm_ext.refreshRunning
+                                                    ? "Stop HSM Status Refresh"
+                                                    : "Start HSM Status Refresh",
+                                                hsmRole: "refreshHsmButton",
+                                                onActivate: function() {
+                                                    var group = this.getParentItem();
 
-                                    if (!com_btactic_hsm_ext.refreshRunning) {
-                                        // Start refreshing
-                                        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status...");
-                                        com_btactic_hsm_ext.refreshStatus(group);
+                                                    if (!com_btactic_hsm_ext.refreshRunning) {
+                                                        // Start refreshing
+                                                        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status...");
+                                                        com_btactic_hsm_ext.refreshStatus(group);
 
-                                        com_btactic_hsm_ext.startRefreshLoop(group);
+                                                        com_btactic_hsm_ext.startRefreshLoop(group);
 
-                                        com_btactic_hsm_ext.refreshRunning = true;
+                                                        com_btactic_hsm_ext.refreshRunning = true;
 
-                                    } else {
-                                        // Stop refreshing
-                                        clearInterval(com_btactic_hsm_ext._refreshTimer);
-                                        com_btactic_hsm_ext._refreshTimer = null;
-                                        com_btactic_hsm_ext.refreshRunning = false;
+                                                    } else {
+                                                        // Stop refreshing
+                                                        clearInterval(com_btactic_hsm_ext._refreshTimer);
+                                                        com_btactic_hsm_ext._refreshTimer = null;
+                                                        com_btactic_hsm_ext.refreshRunning = false;
+                                                    }
+
+                                                    // Update the button label using the helper
+                                                    com_btactic_hsm_ext.setHsmButtonLabel(
+                                                        group,
+                                                        "refreshHsmButton",
+                                                        com_btactic_hsm_ext.refreshRunning
+                                                            ? "Stop HSM Status Refresh"
+                                                            : "Start HSM Status Refresh"
+                                                    );
+                                                }
+                                            },
+                                            {
+                                                type: _SPACER_,
+                                                height: 10
+                                            },
+                                            {
+                                                type: _DWT_ALERT_,
+                                                hsmRole: "statusInfo",
+                                                id: "HsmStatusInfo",
+                                                containerCssStyle: "padding-bottom:0px",
+                                                style: DwtAlert.INFO,
+                                                iconVisible: true,
+                                                content: "(HSM Status.)"
+                                            }
+                                        ]
                                     }
-
-                                    // Update the button label using the helper
-                                    com_btactic_hsm_ext.setHsmButtonLabel(
-                                        group,
-                                        "refreshHsmButton",
-                                        com_btactic_hsm_ext.refreshRunning
-                                            ? "Stop HSM Status Refresh"
-                                            : "Start HSM Status Refresh"
-                                    );
-                                }
+                                ]
                             },
                             {
-                                // Force a line break
-                                colSpan: "*",
                                 type: _SPACER_,
-                            },
-                            {
-                                type: _DWT_ALERT_,
-                                hsmRole: "statusInfo",
-                                id: "HsmStatusInfo",
-                                containerCssStyle: "padding-bottom:0px",
-                                style: DwtAlert.INFO,
-                                iconVisible: true,
-                                content: "",
-                                colSpan: "*",
-                                content: "(HSM Status.)"
+                                colSpan: "*"
                             },
                             {
                             ref : "zimbraHsmPolicy",
