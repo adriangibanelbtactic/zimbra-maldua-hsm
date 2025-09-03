@@ -350,7 +350,35 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
         com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
       } catch (e) {
-        controller._handleException(e);
+          // Check specifically for network errors
+          if (e && e.code === "AjxException.NETWORK_ERROR") {
+              // Stop refresh timer if running
+              if (com_btactic_hsm_ext._refreshTimer) {
+                  clearInterval(com_btactic_hsm_ext._refreshTimer);
+                  com_btactic_hsm_ext._refreshTimer = null;
+              }
+
+              // Reset refresh running flag
+              com_btactic_hsm_ext.refreshRunning = false;
+
+              // Update the button label
+              com_btactic_hsm_ext.setHsmButtonLabel(
+                  group,
+                  "refreshHsmButton",
+                  "Start HSM Status Refresh"
+              );
+
+              // Optionally show a friendly error in the status alert
+              com_btactic_hsm_ext.setAlertContentInGroup(
+                  group,
+                  "statusInfo",
+                  "Cannot connect to server. HSM refresh stopped."
+              );
+
+          } else {
+              // Let other exceptions be handled normally
+              controller._handleException(e);
+          }
       }
     };
 
