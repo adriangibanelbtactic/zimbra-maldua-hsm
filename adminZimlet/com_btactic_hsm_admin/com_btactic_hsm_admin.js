@@ -199,7 +199,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 style: DwtAlert.INFO,
                                 iconVisible: true,
                                 content: "",
-                                colSpan: "*"
+                                colSpan: "*",
+                                content: "(HSM Status.)"
                             },
                             {
                             ref : "zimbraHsmPolicy",
