@@ -212,9 +212,13 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     }
 
                                     // Update the button label dynamically
-                                    this.setLabel(com_btactic_hsm_ext.refreshRunning
-                                                  ? "Stop HSM Status Refresh"
-                                                  : "Start HSM Status Refresh");
+                                    if (this.widget) {
+                                        this.widget.setLabel(
+                                            com_btactic_hsm_ext.refreshRunning
+                                            ? "Stop HSM Status Refresh"
+                                            : "Start HSM Status Refresh"
+                                        );
+                                    }
                                 }
                             },
                             {
