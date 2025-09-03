@@ -1,4 +1,10 @@
-/* make these buttons shrink to fit text */
+/* Make these buttons shrink to fit text. */
+.HsmStatusButton .ZWidgetTable {
+  width: auto !important;
+  table-layout: auto !important;
+}
+
+/* Avoid buttons to be stuck together. */
 .HsmStatusButton {
-  display: inline-block !important; /* avoids stretching */
+  margin-right: 8px;
 }
