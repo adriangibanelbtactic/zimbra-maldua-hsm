@@ -211,12 +211,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 width : "98%",
                 cellpadding : 2,
                 colSizes : [ "auto" ],
-                numCols : 1,
                 id : "server_zeta_hsm",
                 items: [
                     {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromoWithImage, colSpan:"*", cssStyle:com_btactic_hsm_admin.zetaPromoCss},
                     {type:_SPACER_, colSpan:"*"},
                     {type:_ZA_TOP_GROUPER_,
+                        colSpan:"*",
                         label:com_btactic_hsm_admin.zetaHSMTab,
                         items:[
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationSyntax, colSpan : "*"},
@@ -226,15 +226,48 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {
                                 type: _GROUP_,
                                 width: "100%",
-                                colSizes: ["20%","20%", "60%"]
+                                colSpan:"*",
+                                colSizes: ["20%","20%","20%","20%","20%"],
                                 items: [
+                                    // HSM Schedule
+                                    {
+                                        colSpan: 1,
+                                        type: _ZALEFT_GROUPER_,
+                                        width: "100%",
+                                        label: "HSM Schedule",
+                                        items: [
+                                            {
+                                                type: _SPACER_,
+                                                height: 10
+                                            }
+                                        ]
+                                    },
+                                    // HSM Controls
+                                    {
+                                        colSpan: 1,
+                                        type: _ZALEFT_GROUPER_,
+                                        width: "100%",
+                                        label: "HSM Controls",
+                                        items: [
+                                            {
+                                                type: _SPACER_,
+                                                height: 10
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: _SPACER_,
+                                        height: 10
+                                    },
                                     // HSM Status Block
                                     {
-                                        type: _ZALEFT_GROUPER_,
+                                        colSpan: 5,
+                                        type: _ZAALLSCREEN_GROUPER_,
                                         width: "100%",
                                         label: "HSM Status",
                                         items: [
                                             {
+                                                colSpan: 1,
                                                 type: _DWT_BUTTON_,
                                                 label: com_btactic_hsm_ext.refreshRunning
                                                     ? "Stop HSM Status Refresh"
@@ -274,6 +307,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 height: 10
                                             },
                                             {
+                                                colSpan: 5,
                                                 type: _DWT_ALERT_,
                                                 hsmRole: "statusInfo",
                                                 id: "HsmStatusInfo",
