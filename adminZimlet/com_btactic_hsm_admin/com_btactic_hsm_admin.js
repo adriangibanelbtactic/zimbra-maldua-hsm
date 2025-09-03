@@ -183,12 +183,32 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
                                 type: _DWT_BUTTON_,
-                                label: "Refresh Status",
-                                hsmRole: "refreshButton",           // <— stable tag
+                                label: "HSM Status Refresh ON",
+                                hsmRole: "refreshHsmStatusOnButton",
                                 onActivate: function () {
-                                  var group = this.getParentItem(); // the "HSM (Maldua)" subpanel
-                                  com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
-                                  com_btactic_hsm_ext.refreshStatus(group); // pass the local container
+                                    // If already running, don't start again
+                                    if (com_btactic_hsm_ext._refreshTimer) return;
+
+                                    // Immediate fetch once
+                                    com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
+                                    com_btactic_hsm_ext.refreshStatus(group);
+
+                                    // Then poll every 1 second
+                                    com_btactic_hsm_ext._refreshTimer = setInterval(function () {
+                                        com_btactic_hsm_ext.refreshStatus(group);
+                                    }, 1000);
+                                }
+                            },
+                            {
+                                colSpan: "*",
+                                type: _DWT_BUTTON_,
+                                label: "HSM Status Refresh OFF",
+                                hsmRole: "refreshHsmStatusOffButton",
+                                onActivate: function () {
+                                  if (com_btactic_hsm_ext._refreshTimer) {
+                                      clearInterval(com_btactic_hsm_ext._refreshTimer);
+                                      com_btactic_hsm_ext._refreshTimer = null;
+                                  }
                                 }
                             },
                             {
@@ -260,6 +280,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
         ZaItem.loadMethods["ZaServer"].push(ZaServer.loadHsmMethod);
     }
+
+    com_btactic_hsm_ext._refreshTimer = null;
 
     // Find a direct child XFormItem in a group by an attribute we set in the schema
     com_btactic_hsm_ext.findChildByAttr = function (group, key, value) {
