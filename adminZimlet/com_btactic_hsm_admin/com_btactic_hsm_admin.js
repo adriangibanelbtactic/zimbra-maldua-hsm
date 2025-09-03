@@ -50,6 +50,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_admin.zetaPromoCss = "font-size:16pt; font-weight: bold;";
 
+    com_btactic_hsm_ext.refreshRunning = false;
+
     // Show additional HSM attributes for GlobalConfig
     if (ZaGlobalConfig && ZaGlobalConfig.myXModel && ZaGlobalConfig.myXModel.items) {
         ZaGlobalConfig.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
@@ -182,26 +184,40 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
-                                cssClass: "HsmStatusButton",
                                 type: _DWT_BUTTON_,
-                                label: "HSM Status Refresh ON",
-                                hsmRole: "refreshHsmStatusOnButton",
+                                label: com_btactic_hsm_ext.refreshRunning
+                                        ? "Stop HSM Status Refresh"
+                                        : "Start HSM Status Refresh",
                                 onActivate: function () {
-                                    var group = this.getParentItem(); // the "HSM (Maldua)" subpanel
+                                    var group = this.getParentItem();
 
-                                    // If already running, don't start again
-                                    if (com_btactic_hsm_ext._refreshTimer) return;
-
-                                    // Immediate fetch once
-                                    com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
-                                    com_btactic_hsm_ext.refreshStatus(group);
-
-                                    // Then poll every 1 second
-                                    com_btactic_hsm_ext._refreshTimer = setInterval(function () {
+                                    if (!com_btactic_hsm_ext.refreshRunning) {
+                                        // Start the interval
+                                        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
                                         com_btactic_hsm_ext.refreshStatus(group);
-                                    }, 1000);
+
+                                        com_btactic_hsm_ext._refreshTimer = setInterval(function () {
+                                            com_btactic_hsm_ext.refreshStatus(group);
+                                        }, 1000);
+
+                                        com_btactic_hsm_ext.refreshRunning = true;
+
+                                    } else {
+                                        // Stop the interval
+                                        clearInterval(com_btactic_hsm_ext._refreshTimer);
+                                        com_btactic_hsm_ext._refreshTimer = null;
+                                        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "HSM refresh stopped.");
+
+                                        com_btactic_hsm_ext.refreshRunning = false;
+                                    }
+
+                                    // Update the button label dynamically
+                                    this.setLabel(com_btactic_hsm_ext.refreshRunning
+                                                  ? "Stop HSM Status Refresh"
+                                                  : "Start HSM Status Refresh");
                                 }
                             },
+
                             {
                                 cssClass: "HsmStatusButton",
                                 type: _DWT_BUTTON_,
