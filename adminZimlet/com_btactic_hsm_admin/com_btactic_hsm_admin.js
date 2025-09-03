@@ -186,6 +186,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 label: "HSM Status Refresh ON",
                                 hsmRole: "refreshHsmStatusOnButton",
                                 onActivate: function () {
+                                    var group = this.getParentItem(); // the "HSM (Maldua)" subpanel
+
                                     // If already running, don't start again
                                     if (com_btactic_hsm_ext._refreshTimer) return;
 
