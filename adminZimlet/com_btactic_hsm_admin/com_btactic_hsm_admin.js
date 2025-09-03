@@ -205,8 +205,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         // Stop refreshing
                                         clearInterval(com_btactic_hsm_ext._refreshTimer);
                                         com_btactic_hsm_ext._refreshTimer = null;
-                                        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "HSM refresh stopped.");
-
                                         com_btactic_hsm_ext.refreshRunning = false;
                                     }
 
