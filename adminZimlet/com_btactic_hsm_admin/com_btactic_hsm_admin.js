@@ -351,6 +351,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
       } catch (e) {
           // Check specifically for network errors
+          console.log("DEBUG-EXCEPTION-CODE: '" + e.code + "'");
           if (e && e.code === "AjxException.NETWORK_ERROR") {
               // Stop refresh timer if running
               if (com_btactic_hsm_ext._refreshTimer) {
