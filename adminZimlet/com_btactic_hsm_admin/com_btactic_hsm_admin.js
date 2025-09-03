@@ -202,7 +202,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 }
                             },
                             {
-                                colSpan: "*",
                                 type: _DWT_BUTTON_,
                                 label: "HSM Status Refresh OFF",
                                 hsmRole: "refreshHsmStatusOffButton",
@@ -212,6 +211,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                       com_btactic_hsm_ext._refreshTimer = null;
                                   }
                                 }
+                            },
+                            {
+                                // Force a line break
+                                colSpan: "*",
+                                type: _OUTPUT_,
+                                value: "",
                             },
                             {
                                 type: _DWT_ALERT_,
