@@ -217,19 +217,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                   : "Start HSM Status Refresh");
                                 }
                             },
-
-                            {
-                                cssClass: "HsmStatusButton",
-                                type: _DWT_BUTTON_,
-                                label: "HSM Status Refresh OFF",
-                                hsmRole: "refreshHsmStatusOffButton",
-                                onActivate: function () {
-                                  if (com_btactic_hsm_ext._refreshTimer) {
-                                      clearInterval(com_btactic_hsm_ext._refreshTimer);
-                                      com_btactic_hsm_ext._refreshTimer = null;
-                                  }
-                                }
-                            },
                             {
                                 // Force a line break
                                 colSpan: "*",
