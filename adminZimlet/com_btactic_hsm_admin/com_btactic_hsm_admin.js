@@ -183,6 +183,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
                                 cssClass: "HsmStatusButton",
+                                colSpan: 1,
                                 type: _DWT_BUTTON_,
                                 label: "HSM Status Refresh ON",
                                 hsmRole: "refreshHsmStatusOnButton",
@@ -204,6 +205,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             },
                             {
                                 cssClass: "HsmStatusButton",
+                                colSpan: 1,
                                 type: _DWT_BUTTON_,
                                 label: "HSM Status Refresh OFF",
                                 hsmRole: "refreshHsmStatusOffButton",
