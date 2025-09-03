@@ -217,8 +217,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {
                                 // Force a line break
                                 colSpan: "*",
-                                type: _OUTPUT_,
-                                value: "",
+                                type: _SPACER_,
                             },
                             {
                                 type: _DWT_ALERT_,
