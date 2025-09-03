@@ -227,7 +227,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 type: _GROUP_,
                                 width: "100%",
                                 colSpan:"*",
-                                colSizes: ["20%","20%","60%"],
+                                colSizes: ["20%","20%","20%","20%","20%"],
                                 items: [
                                     // HSM Schedule
                                     {
@@ -257,7 +257,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     },
                                     // HSM Status Block
                                     {
-                                        colSpan: 1,
+                                        colSpan: 3,
                                         type: _ZALEFT_GROUPER_,
                                         width: "100%",
                                         label: "HSM Status",
