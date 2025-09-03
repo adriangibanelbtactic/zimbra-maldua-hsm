@@ -185,25 +185,24 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
                                 type: _DWT_BUTTON_,
-                                label: com_btactic_hsm_ext.refreshRunning
-                                        ? "Stop HSM Status Refresh"
-                                        : "Start HSM Status Refresh",
-                                onActivate: function () {
+                                label: com_btactic_hsm_ext.refreshRunning ? "Stop HSM Status Refresh" : "Start HSM Status Refresh",
+                                hsmRole: "refreshHsmButton",
+                                onActivate: function() {
                                     var group = this.getParentItem();
 
                                     if (!com_btactic_hsm_ext.refreshRunning) {
-                                        // Start the interval
+                                        // Start refreshing
                                         com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
                                         com_btactic_hsm_ext.refreshStatus(group);
 
-                                        com_btactic_hsm_ext._refreshTimer = setInterval(function () {
+                                        com_btactic_hsm_ext._refreshTimer = setInterval(function() {
                                             com_btactic_hsm_ext.refreshStatus(group);
                                         }, 1000);
 
                                         com_btactic_hsm_ext.refreshRunning = true;
 
                                     } else {
-                                        // Stop the interval
+                                        // Stop refreshing
                                         clearInterval(com_btactic_hsm_ext._refreshTimer);
                                         com_btactic_hsm_ext._refreshTimer = null;
                                         com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "HSM refresh stopped.");
@@ -211,14 +210,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         com_btactic_hsm_ext.refreshRunning = false;
                                     }
 
-                                    // Update the button label dynamically
-                                    if (this.widget) {
-                                        this.widget.setLabel(
-                                            com_btactic_hsm_ext.refreshRunning
+                                    // Update the button label using the helper
+                                    com_btactic_hsm_ext.setHsmButtonLabel(
+                                        group,
+                                        "refreshHsmButton",
+                                        com_btactic_hsm_ext.refreshRunning
                                             ? "Stop HSM Status Refresh"
                                             : "Start HSM Status Refresh"
-                                        );
-                                    }
+                                    );
                                 }
                             },
                             {
@@ -315,6 +314,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         var ctrl = item.widget;
         if (ctrl) ctrl.setContent(html || "");
       }
+    };
+
+    // Update the label of a button in a given XForm group by its hsmRole
+    com_btactic_hsm_ext.setHsmButtonLabel = function(group, role, label) {
+        var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
+        if (item && item.widget && typeof item.widget.setText === "function") {
+            item.widget.setText(label);
+        }
     };
 
     com_btactic_hsm_ext.refreshStatus = function (group) {
