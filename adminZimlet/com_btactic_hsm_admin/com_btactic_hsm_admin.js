@@ -216,6 +216,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                     {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromoWithImage, colSpan:"*", cssStyle:com_btactic_hsm_admin.zetaPromoCss},
                     {type:_SPACER_, colSpan:"*"},
                     {type:_ZA_TOP_GROUPER_,
+                        colSpan:"*",
                         label:com_btactic_hsm_admin.zetaHSMTab,
                         items:[
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationSyntax, colSpan : "*"},
