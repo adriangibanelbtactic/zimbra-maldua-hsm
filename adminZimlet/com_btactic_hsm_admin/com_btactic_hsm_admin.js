@@ -186,20 +186,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 label: "Refresh Status",
                                 hsmRole: "refreshButton",           // <— stable tag
                                 onActivate: function () {
-                                  var group = this.getParentItem(); // the “HSM (Maldua)” subpanel
-
-                                /*
-                                // optional: show a quick placeholder
-                                var statusItem = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", "statusInfo");
-                                if (statusItem) {
-                                  console.log("statusItem:", statusItem);
-                                  console.log("Available methods:", Object.getOwnPropertyNames(statusItem));
-                                  var ctrl = statusItem.getDwtControl();
-                                  if (ctrl) ctrl.setContent("Fetching HSM status…");
-                                }
-                                */
-                                com_btactic_hsm_ext.refreshStatus(group); // pass the local container
-
+                                  var group = this.getParentItem(); // the "HSM (Maldua)" subpanel
+                                  com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
+                                  com_btactic_hsm_ext.refreshStatus(group); // pass the local container
                                 }
                             },
                             {
