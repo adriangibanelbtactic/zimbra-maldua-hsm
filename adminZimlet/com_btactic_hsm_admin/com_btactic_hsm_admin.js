@@ -211,7 +211,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 width : "98%",
                 cellpadding : 2,
                 colSizes : [ "auto" ],
-                numCols : 1,
                 id : "server_zeta_hsm",
                 items: [
                     {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromoWithImage, colSpan:"*", cssStyle:com_btactic_hsm_admin.zetaPromoCss},
@@ -257,7 +256,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     },
                                     // HSM Status Block
                                     {
-                                        colSpan: 1,
+                                        colSpan:"*",
                                         type: _ZALEFT_GROUPER_,
                                         width: "100%",
                                         label: "HSM Status",
