@@ -1,0 +1,5 @@
+/* make these buttons shrink to fit text */
+.HsmStatusButton {
+  width: auto !important;
+  display: inline-block !important; /* avoids stretching */
+}
