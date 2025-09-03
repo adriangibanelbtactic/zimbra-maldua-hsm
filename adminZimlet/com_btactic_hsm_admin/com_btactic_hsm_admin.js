@@ -50,6 +50,48 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_admin.zetaPromoCss = "font-size:16pt; font-weight: bold;";
 
+    com_btactic_hsm_ext.refreshRunning = false;
+
+    // Start watchdog-based refresh loop
+    com_btactic_hsm_ext.startRefreshLoop = function(group) {
+        // Reset state
+        com_btactic_hsm_ext.refreshRunning = true;
+        com_btactic_hsm_ext._lastRefreshTime = Date.now();
+
+        // Stop previous loop if any
+        if (com_btactic_hsm_ext._refreshTimer) {
+            clearInterval(com_btactic_hsm_ext._refreshTimer);
+        }
+
+        // Create new loop
+        com_btactic_hsm_ext._refreshTimer = setInterval(function() {
+            var now = Date.now();
+
+            // Timeout watchdog: stop if no successful update within 5s
+            if (now - com_btactic_hsm_ext._lastRefreshTime > 5000) {
+                clearInterval(com_btactic_hsm_ext._refreshTimer);
+                com_btactic_hsm_ext._refreshTimer = null;
+                com_btactic_hsm_ext.refreshRunning = false;
+
+                com_btactic_hsm_ext.setHsmButtonLabel(
+                    group,
+                    "refreshHsmButton",
+                    "Start HSM Status Refresh"
+                );
+
+                com_btactic_hsm_ext.setAlertContentInGroup(
+                    group,
+                    "statusInfo",
+                    "Cannot connect to server. HSM refresh stopped."
+                );
+                return;
+            }
+
+            // Try to refresh
+            com_btactic_hsm_ext.refreshStatus(group);
+        }, 1000);
+    };
+
     // Show additional HSM attributes for GlobalConfig
     if (ZaGlobalConfig && ZaGlobalConfig.myXModel && ZaGlobalConfig.myXModel.items) {
         ZaGlobalConfig.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
@@ -183,13 +225,41 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
                                 type: _DWT_BUTTON_,
-                                label: "Refresh Status",
-                                hsmRole: "refreshButton",           // <— stable tag
-                                onActivate: function () {
-                                  var group = this.getParentItem(); // the "HSM (Maldua)" subpanel
-                                  com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
-                                  com_btactic_hsm_ext.refreshStatus(group); // pass the local container
+                                label: com_btactic_hsm_ext.refreshRunning ? "Stop HSM Status Refresh" : "Start HSM Status Refresh",
+                                hsmRole: "refreshHsmButton",
+                                onActivate: function() {
+                                    var group = this.getParentItem();
+
+                                    if (!com_btactic_hsm_ext.refreshRunning) {
+                                        // Start refreshing
+                                        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status...");
+                                        com_btactic_hsm_ext.refreshStatus(group);
+
+                                        com_btactic_hsm_ext.startRefreshLoop(group);
+
+                                        com_btactic_hsm_ext.refreshRunning = true;
+
+                                    } else {
+                                        // Stop refreshing
+                                        clearInterval(com_btactic_hsm_ext._refreshTimer);
+                                        com_btactic_hsm_ext._refreshTimer = null;
+                                        com_btactic_hsm_ext.refreshRunning = false;
+                                    }
+
+                                    // Update the button label using the helper
+                                    com_btactic_hsm_ext.setHsmButtonLabel(
+                                        group,
+                                        "refreshHsmButton",
+                                        com_btactic_hsm_ext.refreshRunning
+                                            ? "Stop HSM Status Refresh"
+                                            : "Start HSM Status Refresh"
+                                    );
                                 }
+                            },
+                            {
+                                // Force a line break
+                                colSpan: "*",
+                                type: _SPACER_,
                             },
                             {
                                 type: _DWT_ALERT_,
@@ -199,7 +269,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 style: DwtAlert.INFO,
                                 iconVisible: true,
                                 content: "",
-                                colSpan: "*"
+                                colSpan: "*",
+                                content: "(HSM Status.)"
                             },
                             {
                             ref : "zimbraHsmPolicy",
@@ -260,6 +331,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         ZaItem.loadMethods["ZaServer"].push(ZaServer.loadHsmMethod);
     }
 
+    com_btactic_hsm_ext._refreshTimer = null;
+
     // Find a direct child XFormItem in a group by an attribute we set in the schema
     com_btactic_hsm_ext.findChildByAttr = function (group, key, value) {
       if (!group || !group.items) return null;
@@ -279,6 +352,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
       }
     };
 
+    // Update the label of a button in a given XForm group by its hsmRole
+    com_btactic_hsm_ext.setHsmButtonLabel = function(group, role, label) {
+        var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
+        if (item && item.widget && typeof item.widget.setText === "function") {
+            item.widget.setText(label);
+        }
+    };
+
     com_btactic_hsm_ext.refreshStatus = function (group) {
       var controller = ZaApp.getInstance().getCurrentController();
       try {
@@ -287,7 +368,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
         var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
-        var content = "";
+        var content = "No HSM session was run after restart.";
         if (resp) {
           var running = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
           if (running) {
@@ -306,6 +387,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
           // else: leave empty if missing/invalid dates
         }
         com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+        com_btactic_hsm_ext._lastRefreshTime = Date.now();
       } catch (e) {
         controller._handleException(e);
       }
