@@ -182,6 +182,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
+                                width: "30em",
                                 type: _DWT_BUTTON_,
                                 label: "HSM Status Refresh ON",
                                 hsmRole: "refreshHsmStatusOnButton",
@@ -202,6 +203,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 }
                             },
                             {
+                                width: "30em",
                                 type: _DWT_BUTTON_,
                                 label: "HSM Status Refresh OFF",
                                 hsmRole: "refreshHsmStatusOffButton",
@@ -317,7 +319,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
         var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
-        var content = "";
+        var content = "No HSM session was run after restart.";
         if (resp) {
           var running = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
           if (running) {
