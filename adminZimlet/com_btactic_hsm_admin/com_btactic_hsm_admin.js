@@ -52,6 +52,46 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext.refreshRunning = false;
 
+    // Start watchdog-based refresh loop
+    com_btactic_hsm_ext.startRefreshLoop = function(group) {
+        // Reset state
+        com_btactic_hsm_ext.refreshRunning = true;
+        com_btactic_hsm_ext._lastRefreshTime = Date.now();
+
+        // Stop previous loop if any
+        if (com_btactic_hsm_ext._refreshTimer) {
+            clearInterval(com_btactic_hsm_ext._refreshTimer);
+        }
+
+        // Create new loop
+        com_btactic_hsm_ext._refreshTimer = setInterval(function() {
+            var now = Date.now();
+
+            // Timeout watchdog: stop if no successful update within 5s
+            if (now - com_btactic_hsm_ext._lastRefreshTime > 5000) {
+                clearInterval(com_btactic_hsm_ext._refreshTimer);
+                com_btactic_hsm_ext._refreshTimer = null;
+                com_btactic_hsm_ext.refreshRunning = false;
+
+                com_btactic_hsm_ext.setHsmButtonLabel(
+                    group,
+                    "refreshHsmButton",
+                    "Start HSM Status Refresh"
+                );
+
+                com_btactic_hsm_ext.setAlertContentInGroup(
+                    group,
+                    "statusInfo",
+                    "Cannot connect to server. HSM refresh stopped."
+                );
+                return;
+            }
+
+            // Try to refresh
+            com_btactic_hsm_ext.refreshStatus(group);
+        }, 1000);
+    };
+
     // Show additional HSM attributes for GlobalConfig
     if (ZaGlobalConfig && ZaGlobalConfig.myXModel && ZaGlobalConfig.myXModel.items) {
         ZaGlobalConfig.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
@@ -195,9 +235,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status…");
                                         com_btactic_hsm_ext.refreshStatus(group);
 
-                                        com_btactic_hsm_ext._refreshTimer = setInterval(function() {
-                                            com_btactic_hsm_ext.refreshStatus(group);
-                                        }, 1000);
+                                        com_btactic_hsm_ext.startRefreshLoop(group);
 
                                         com_btactic_hsm_ext.refreshRunning = true;
 
@@ -350,32 +388,13 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                     }
                 }
                 com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+                com_btactic_hsm_ext._lastRefreshTime = Date.now();
             },
             errorCallback: function(ex) {
-                // Handle network errors specifically
-                if (ex && ex.code === "AjxException.NETWORK_ERROR") {
-                    if (com_btactic_hsm_ext._refreshTimer) {
-                        clearInterval(com_btactic_hsm_ext._refreshTimer);
-                        com_btactic_hsm_ext._refreshTimer = null;
-                    }
-                    com_btactic_hsm_ext.refreshRunning = false;
-
-                    // Reset button label
-                    com_btactic_hsm_ext.setHsmButtonLabel(
-                        group,
-                        "refreshHsmButton",
-                        "Start HSM Status Refresh"
-                    );
-
-                    // Show friendly error
-                    com_btactic_hsm_ext.setAlertContentInGroup(
-                        group,
-                        "statusInfo",
-                        "Cannot connect to server. HSM refresh stopped."
-                    );
-                } else {
-                    controller._handleException(ex);
-                }
+                // Log the error for debugging
+                console.error("refreshStatus error:", ex);
+                // Re-throw so higher-level handlers still catch it
+                throw ex;
             }
         };
 
