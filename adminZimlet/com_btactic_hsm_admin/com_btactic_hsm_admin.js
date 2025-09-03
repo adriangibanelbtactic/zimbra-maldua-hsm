@@ -255,7 +255,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     },
                                     // HSM Status Block
                                     {
-                                        type: _ZARIGHT_GROUPER_,
+                                        type: _ZALEFT_GROUPER_,
                                         width: "100%",
                                         label: "HSM Status",
                                         items: [
