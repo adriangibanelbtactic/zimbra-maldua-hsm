@@ -52,6 +52,16 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext.refreshRunning = false;
 
+    com_btactic_hsm_ext.enableStartHsmRefreshButton = function() {
+        // Start should be enabled only if not running
+        return !com_btactic_hsm_ext.refreshRunning;
+    };
+
+    com_btactic_hsm_ext.enableStopHsmRefreshButton = function() {
+        // Stop should be enabled only if running
+        return com_btactic_hsm_ext.refreshRunning;
+    };
+
     // Start watchdog-based refresh loop
     com_btactic_hsm_ext.startRefreshLoop = function(group) {
         // Reset state
@@ -289,7 +299,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                     // Disable self, enable Stop
                                                     com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startRefreshButton", false);
                                                     com_btactic_hsm_ext.setButtonEnabledInGroup(group, "stopRefreshButton", true);
-                                                }
+                                                },
+                                                enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmRefreshButton]
                                             },
                                             {
                                                 colSpan: 1,
@@ -307,7 +318,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                     // Disable self, enable Start
                                                     com_btactic_hsm_ext.setButtonEnabledInGroup(group, "stopRefreshButton", false);
                                                     com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startRefreshButton", true);
-                                                }
+                                                },
+                                                enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
                                             },
                                             {
                                                 type: _SPACER_,
