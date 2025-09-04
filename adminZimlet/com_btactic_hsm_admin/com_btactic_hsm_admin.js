@@ -268,6 +268,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         items: [
                                             {
                                                 colSpan: 1,
+                                                cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
                                                 label: com_btactic_hsm_ext.refreshRunning
                                                     ? "Stop HSM Status Refresh"

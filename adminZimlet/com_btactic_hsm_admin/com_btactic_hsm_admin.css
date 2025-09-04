@@ -1,0 +1,5 @@
+/* Shrink button to fit content */
+.HsmStatusButton {
+  width: auto !important;
+  display: inline-block !important;
+}
