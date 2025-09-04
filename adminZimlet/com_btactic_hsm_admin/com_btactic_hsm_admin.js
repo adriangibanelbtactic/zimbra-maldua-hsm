@@ -52,6 +52,16 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext.refreshRunning = false;
 
+    com_btactic_hsm_ext.enableStartHsmRefreshButton = function() {
+        // Start should be enabled only if not running
+        return !com_btactic_hsm_ext.refreshRunning;
+    };
+
+    com_btactic_hsm_ext.enableStopHsmRefreshButton = function() {
+        // Stop should be enabled only if running
+        return com_btactic_hsm_ext.refreshRunning;
+    };
+
     // Start watchdog-based refresh loop
     com_btactic_hsm_ext.startRefreshLoop = function(group) {
         // Reset state
@@ -72,12 +82,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 clearInterval(com_btactic_hsm_ext._refreshTimer);
                 com_btactic_hsm_ext._refreshTimer = null;
                 com_btactic_hsm_ext.refreshRunning = false;
-
-                com_btactic_hsm_ext.setHsmButtonLabel(
-                    group,
-                    "refreshHsmButton",
-                    "Start HSM Status Refresh"
-                );
 
                 com_btactic_hsm_ext.setAlertContentInGroup(
                     group,
@@ -261,7 +265,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     },
                                     // HSM Status Block
                                     {
-                                        colSpan: 5,
+                                        colSpan: 10,
+                                        colSizes: ["10%","10%","10%","10%","10%","10%","10%","10%","10%","10%"],
                                         type: _ZAALLSCREEN_GROUPER_,
                                         width: "100%",
                                         label: "HSM Status",
@@ -270,45 +275,48 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 colSpan: 1,
                                                 cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
-                                                label: com_btactic_hsm_ext.refreshRunning
-                                                    ? "Stop HSM Status Refresh"
-                                                    : "Start HSM Status Refresh",
-                                                hsmRole: "refreshHsmButton",
+                                                label: "Start HSM Status Refresh",
+                                                hsmRole: "startRefreshButton",
                                                 onActivate: function() {
                                                     var group = this.getParentItem();
 
-                                                    if (!com_btactic_hsm_ext.refreshRunning) {
-                                                        // Start refreshing
-                                                        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status...");
-                                                        com_btactic_hsm_ext.refreshStatus(group);
+                                                    com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status...");
+                                                    com_btactic_hsm_ext.refreshStatus(group);
+                                                    com_btactic_hsm_ext.startRefreshLoop(group);
 
-                                                        com_btactic_hsm_ext.startRefreshLoop(group);
+                                                    com_btactic_hsm_ext.refreshRunning = true;
 
-                                                        com_btactic_hsm_ext.refreshRunning = true;
+                                                    // Disable self, enable Stop
+                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startRefreshButton", false);
+                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "stopRefreshButton", true);
+                                                },
+                                                enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmRefreshButton]
+                                            },
+                                            {
+                                                colSpan: 1,
+                                                cssClass: "HsmStatusButton",
+                                                type: _DWT_BUTTON_,
+                                                label: "Stop HSM Status Refresh",
+                                                hsmRole: "stopRefreshButton",
+                                                onActivate: function() {
+                                                    var group = this.getParentItem();
 
-                                                    } else {
-                                                        // Stop refreshing
-                                                        clearInterval(com_btactic_hsm_ext._refreshTimer);
-                                                        com_btactic_hsm_ext._refreshTimer = null;
-                                                        com_btactic_hsm_ext.refreshRunning = false;
-                                                    }
+                                                    clearInterval(com_btactic_hsm_ext._refreshTimer);
+                                                    com_btactic_hsm_ext._refreshTimer = null;
+                                                    com_btactic_hsm_ext.refreshRunning = false;
 
-                                                    // Update the button label using the helper
-                                                    com_btactic_hsm_ext.setHsmButtonLabel(
-                                                        group,
-                                                        "refreshHsmButton",
-                                                        com_btactic_hsm_ext.refreshRunning
-                                                            ? "Stop HSM Status Refresh"
-                                                            : "Start HSM Status Refresh"
-                                                    );
-                                                }
+                                                    // Disable self, enable Start
+                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "stopRefreshButton", false);
+                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startRefreshButton", true);
+                                                },
+                                                enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
                                             },
                                             {
                                                 type: _SPACER_,
                                                 height: 10
                                             },
                                             {
-                                                colSpan: 5,
+                                                colSpan: 10,
                                                 type: _DWT_ALERT_,
                                                 hsmRole: "statusInfo",
                                                 id: "HsmStatusInfo",
@@ -410,6 +418,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
         if (item && item.widget && typeof item.widget.setText === "function") {
             item.widget.setText(label);
+        }
+    };
+
+    // Enable/disable a button in a group by hsmRole
+    com_btactic_hsm_ext.setButtonEnabledInGroup = function(group, role, enabled) {
+        var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
+        if (item && item.widget && typeof item.widget.setEnabled === "function") {
+            item.widget.setEnabled(enabled);
         }
     };
 
