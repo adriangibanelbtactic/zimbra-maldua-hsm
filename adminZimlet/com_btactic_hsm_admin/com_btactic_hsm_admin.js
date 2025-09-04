@@ -304,7 +304,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 containerCssStyle: "padding-bottom:0px",
                                                 style: DwtAlert.INFO,
                                                 iconVisible: true,
-                                                content: "(HSM Status.)"
+                                                content: "Click on: '" + "Monitor ON" + "' to see the HSM Status live."
                                             }
                                         ]
                                     },
