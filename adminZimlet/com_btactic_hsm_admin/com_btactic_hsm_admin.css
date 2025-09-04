@@ -1,10 +1,5 @@
 /* Shrink button to fit content */
-.HsmButtonsInline {
+.HsmStatusButton {
   width: auto !important;
   display: inline-block !important;
-}
-
-.HsmButtonsInline .ZButtonTable {
-  display: inline-table !important;
-  margin-right: 0.5em;
 }

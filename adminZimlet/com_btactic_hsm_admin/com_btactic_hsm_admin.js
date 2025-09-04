@@ -272,6 +272,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     // HSM Status Block
                                     {
                                         colSpan: 5,
+                                        colSizes: ["20%","20%","20%","20%","20%"],
                                         type: _ZAALLSCREEN_GROUPER_,
                                         width: "100%",
                                         label: "HSM Status",
@@ -283,7 +284,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         items: [
                                             {
                                                 colSpan: 1,
-                                                cssClass: "HsmButtonsInline",
+                                                cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
                                                 label: "Start HSM Status Refresh",
                                                 hsmRole: "startRefreshButton",
@@ -304,7 +305,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                             },
                                             {
                                                 colSpan: 1,
-                                                cssClass: "HsmButtonsInline",
+                                                cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
                                                 label: "Stop HSM Status Refresh",
                                                 hsmRole: "stopRefreshButton",
