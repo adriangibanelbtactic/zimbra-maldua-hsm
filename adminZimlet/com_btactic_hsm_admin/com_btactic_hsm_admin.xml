@@ -20,5 +20,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 <zimlet name="com_btactic_hsm_admin" version="9.99.999" label="${msg.label}" description="${msg.description}" extension="true">
     <include>com_btactic_hsm_admin.js</include>
+    <includeCSS>com_btactic_hsm_admin.css</includeCSS>
     <disableUIUndeploy>FALSE</disableUIUndeploy>
 </zimlet>
