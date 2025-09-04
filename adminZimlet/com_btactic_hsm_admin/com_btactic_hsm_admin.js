@@ -286,7 +286,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 colSpan: 1,
                                                 cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
-                                                label: "Start HSM Status Refresh",
+                                                label: "Monitor ON",
                                                 hsmRole: "startRefreshButton",
                                                 onActivate: function() {
                                                     var group = this.getParentItem();
@@ -307,7 +307,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 colSpan: 1,
                                                 cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
-                                                label: "Stop HSM Status Refresh",
+                                                label: "Monitor OFF",
                                                 hsmRole: "stopRefreshButton",
                                                 onActivate: function() {
                                                     var group = this.getParentItem();
@@ -334,7 +334,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 containerCssStyle: "padding-bottom:0px",
                                                 style: DwtAlert.INFO,
                                                 iconVisible: true,
-                                                content: "(HSM Status.)"
+                                                content: "Click on: '" + "Monitor ON" + "' to see the HSM Status live."
                                             }
                                         ]
                                     }
