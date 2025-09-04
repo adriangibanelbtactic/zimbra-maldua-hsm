@@ -229,42 +229,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                         colSpan:"*",
                         label:com_btactic_hsm_admin.zetaHSMTab,
                         items:[
-                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationSyntax, colSpan : "*"},
-                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationTypes, colSpan : "*"},
-                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
-                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
                             {
                                 type: _GROUP_,
                                 width: "100%",
                                 colSpan:"*",
                                 colSizes: ["20%","20%","20%","20%","20%"],
                                 items: [
-                                    // HSM Schedule
-                                    {
-                                        colSpan: 1,
-                                        type: _ZALEFT_GROUPER_,
-                                        width: "100%",
-                                        label: "HSM Schedule",
-                                        items: [
-                                            {
-                                                type: _SPACER_,
-                                                height: 10
-                                            }
-                                        ]
-                                    },
-                                    // HSM Controls
-                                    {
-                                        colSpan: 1,
-                                        type: _ZALEFT_GROUPER_,
-                                        width: "100%",
-                                        label: "HSM Controls",
-                                        items: [
-                                            {
-                                                type: _SPACER_,
-                                                height: 10
-                                            }
-                                        ]
-                                    },
                                     {
                                         type: _SPACER_,
                                         height: 10
@@ -337,6 +307,36 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 content: "(HSM Status.)"
                                             }
                                         ]
+                                    },
+                                    {
+                                        type: _SPACER_,
+                                        height: 10
+                                    },
+                                    // HSM Schedule
+                                    {
+                                        colSpan: 1,
+                                        type: _ZALEFT_GROUPER_,
+                                        width: "100%",
+                                        label: "HSM Schedule",
+                                        items: [
+                                            {
+                                                type: _SPACER_,
+                                                height: 10
+                                            }
+                                        ]
+                                    },
+                                    // HSM Controls
+                                    {
+                                        colSpan: 1,
+                                        type: _ZALEFT_GROUPER_,
+                                        width: "100%",
+                                        label: "HSM Controls",
+                                        items: [
+                                            {
+                                                type: _SPACER_,
+                                                height: 10
+                                            }
+                                        ]
                                     }
                                 ]
                             },
@@ -380,8 +380,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     }
                                 }
                             ]
-                            }
-
+                            },
+                            // Embedded help
+                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationSyntax, colSpan : "*"},
+                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationTypes, colSpan : "*"},
+                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
+                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"}
                         ]
                     }
                 ]
