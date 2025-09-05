@@ -29,6 +29,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         console.log("Start loading com_btactic_hsm_admin.js");
     }
 
+    com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER="com_btactic_hsm_ext" + "_id"
+
     // Using getResource from a ZmZimletBase object does not seem to work in admin
     com_btactic_hsm_admin.zimletImagesPath = "/service/zimlet/com_btactic_hsm_admin/images"
 
@@ -62,16 +64,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         return (com_btactic_hsm_ext.hsmRunning && (!(com_btactic_hsm_ext.hsmAborting)));
     };
 
-    com_btactic_hsm_ext.updateHsmControlButtons = function(group) {
-        // Start button: enabled only when not running
-        var enableStart = !com_btactic_hsm_ext.hsmRunning;
-        com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startHsmButton", enableStart);
-
-        // Abort button: enabled only when running AND not aborting
-        var enableAbort = (com_btactic_hsm_ext.hsmRunning && !com_btactic_hsm_ext.hsmAborting);
-        com_btactic_hsm_ext.setButtonEnabledInGroup(group, "abortHsmButton", enableAbort);
-    };
-
     com_btactic_hsm_ext.refreshRunning = false;
 
     com_btactic_hsm_ext.enableStartHsmRefreshButton = function() {
@@ -85,7 +77,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     // Start watchdog-based refresh loop
-    com_btactic_hsm_ext.startRefreshLoop = function(group) {
+    com_btactic_hsm_ext.startRefreshLoop = function() {
         // Reset state
         com_btactic_hsm_ext.refreshRunning = true;
         com_btactic_hsm_ext._lastRefreshTime = Date.now();
@@ -93,6 +85,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // Stop previous loop if any
         if (com_btactic_hsm_ext._refreshTimer) {
             clearInterval(com_btactic_hsm_ext._refreshTimer);
+            com_btactic_hsm_ext._refreshTimer = null;
         }
 
         // Create new loop
@@ -105,16 +98,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 com_btactic_hsm_ext._refreshTimer = null;
                 com_btactic_hsm_ext.refreshRunning = false;
 
-                com_btactic_hsm_ext.setAlertContentInGroup(
-                    group,
-                    "statusInfo",
-                    "Cannot connect to server. HSM refresh stopped."
-                );
+                com_btactic_hsm_ext.updateStatusInfo("Cannot connect to server. HSM refresh stopped.");
                 return;
             }
 
             // Try to refresh
-            com_btactic_hsm_ext.refreshStatus(group);
+            com_btactic_hsm_ext.refreshStatus();
         }, 1000);
     };
 
@@ -268,16 +257,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
                                                 label: "Monitor ON",
-                                                hsmRole: "startRefreshButton",
+                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "startRefreshButton",
                                                 onActivate: function() {
-                                                    var group = this.getParentItem();
-
-                                                    com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", "Fetching HSM status...");
-                                                    com_btactic_hsm_ext.refreshStatus(group);
-                                                    com_btactic_hsm_ext.startRefreshLoop(group);
-
-                                                    com_btactic_hsm_ext.refreshRunning = true;
-
+                                                    com_btactic_hsm_ext.activateMonitor();
                                                     this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmRefreshButton]
@@ -287,7 +269,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 cssClass: "HsmStatusButton",
                                                 type: _DWT_BUTTON_,
                                                 label: "Monitor OFF",
-                                                hsmRole: "stopRefreshButton",
+                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "stopRefreshButton",
                                                 onActivate: function() {
                                                     var group = this.getParentItem();
 
@@ -306,7 +288,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                             {
                                                 colSpan: 10,
                                                 type: _DWT_ALERT_,
-                                                hsmRole: "statusInfo",
+                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "statusInfo",
                                                 id: "HsmStatusInfo",
                                                 containerCssStyle: "padding-bottom:0px",
                                                 style: DwtAlert.INFO,
@@ -342,7 +324,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                             {
                                                 type: _DWT_BUTTON_,
                                                 label: "Start HSM Session",
-                                                hsmRole: "startHsmButton",
+                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "startHsmButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.startHsmSession();
                                                     this.getForm().refresh();
@@ -352,7 +334,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                             {
                                                 type: _DWT_BUTTON_,
                                                 label: "Abort HSM Session",
-                                                hsmRole: "abortHsmButton",
+                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "abortHsmButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.abortHsmSession();
                                                     this.getForm().refresh();
@@ -432,39 +414,78 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext._refreshTimer = null;
 
-    // Find a direct child XFormItem in a group by an attribute we set in the schema
-    com_btactic_hsm_ext.findChildByAttr = function (group, key, value) {
-      if (!group || !group.items) return null;
-      for (var i = 0; i < group.items.length; i++) {
-        var it = group.items[i];
-        if (it && it.__attributes && it.__attributes[key] === value) return it;
-      }
-      return null;
-    };
+    /**
+    * Recursively searches a container (group/item) for a child with a given attribute.
+    * @param {object} container  The group or form item to search
+    * @param {string} attrName   The attribute name to match (e.g., 'hsmRole')
+    * @param {string} attrValue  The attribute value to match
+    * @return {object|null}      The first matching item or null if not found
+    */
+    com_btactic_hsm_ext.findItemByAttr = function(container, attrName, attrValue) {
+        if (!container || !container.items) return null;
 
-    // Render string safely into the DwtAlert in that group
-    com_btactic_hsm_ext.setAlertContentInGroup = function (group, role, html) {
-      var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
-      if (item) {
-        var ctrl = item.widget;
-        if (ctrl) ctrl.setContent(html || "");
-      }
-    };
+        for (var i = 0; i < container.items.length; i++) {
+            var item = container.items[i];
 
-    // Update the label of a button in a given XForm group by its hsmRole
-    com_btactic_hsm_ext.setHsmButtonLabel = function(group, role, label) {
-        var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
-        if (item && item.widget && typeof item.widget.setText === "function") {
-            item.widget.setText(label);
+            // Match attribute directly
+            if (item[attrName] === attrValue) {
+                if (item.widget) {
+                    return item.widget;
+                } else {
+                    return null;
+                }
+            }
+
+            // Recurse into nested items
+            var found = this.findItemByAttr(item, attrName, attrValue);
+            if (found) return found;
         }
+
+        return null;
     };
 
-    // Enable/disable a button in a group by hsmRole
-    com_btactic_hsm_ext.setButtonEnabledInGroup = function(group, role, enabled) {
-        var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
-        if (item && item.widget && typeof item.widget.setEnabled === "function") {
-            item.widget.setEnabled(enabled);
-        }
+    /**
+    * Convenience wrapper for findItemByAttr specifically for this extension items.
+    * Automatically gets the current form and searches by 'ADMIN_ZIMLET_IDENTIFIER'.
+    *
+    * @param {string} attrValue  The ADMIN_ZIMLET_IDENTIFIER value to search for
+    * @return {object|null}      The first matching item or null if not found
+    */
+    com_btactic_hsm_ext.getWidgetById = function(attrValue) {
+        var controller = ZaApp.getInstance().getCurrentController();
+        if (!controller || !controller.getForm) return null;
+
+        var form = controller.getForm();
+        if (!form) return null;
+
+        return this.findItemByAttr(form, this.ADMIN_ZIMLET_IDENTIFIER, attrValue);
+    };
+
+    // Update the content of a HSM status widget directly
+    com_btactic_hsm_ext.updateStatusInfo = function(message) {
+        var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
+        if (!statusWidget) return;
+
+        // Directly set the value on the XForm widget
+        statusWidget.setValue(message);
+    };
+
+    /**
+    * Activates the monitor for the HSM status.
+    */
+    com_btactic_hsm_ext.activateMonitor = function() {
+        // Show initial status
+        com_btactic_hsm_ext.updateStatusInfo("Fetching HSM status...");
+
+        // Refresh HSM status once immediately
+        com_btactic_hsm_ext.refreshStatus();
+
+        // Start the refresh loop
+        com_btactic_hsm_ext.startRefreshLoop();
+
+        // Flag that refresh is running
+        com_btactic_hsm_ext.refreshRunning = true;
+
     };
 
     com_btactic_hsm_ext.startHsmSession = function() {
@@ -508,55 +529,58 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
     };
 
-    com_btactic_hsm_ext.refreshStatus = function (group) {
+    com_btactic_hsm_ext.refreshStatus = function() {
         var controller = ZaApp.getInstance().getCurrentController();
+
         try {
             var soapDoc = AjxSoapDoc.create("GetHsmStatusRequest", ZaZimbraAdmin.URN, null);
             var params = { soapDoc: soapDoc };
             var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
             var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
-            var content = "No HSM session was run after restart.";
-
+            var message = "No HSM session was run after restart.";
             var running = false, aborting = false, wasAborted = false;
 
             if (resp) {
-                running     = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
-                aborting    = (resp.aborting === true) || (resp.aborting === "1") || (resp.aborting === 1);
-                wasAborted  = (resp.wasAborted === true) || (resp.wasAborted === "1") || (resp.wasAborted === 1);
+                running    = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
+                aborting   = (resp.aborting === true) || (resp.aborting === "1") || (resp.aborting === 1);
+                wasAborted = (resp.wasAborted === true) || (resp.wasAborted === "1") || (resp.wasAborted === 1);
 
                 if (running) {
                     var numBlobs = resp.numBlobsMoved || 0;
                     var numBytes = resp.numBytesMoved || 0;
                     var numMbx   = resp.numMailboxes   || 0;
                     var totalMbx = resp.totalMailboxes || 0;
-                    content = numBlobs + " BLOBS moved. " +
+                    message = numBlobs + " BLOBS moved. " +
                               numBytes + " BYTES moved. " +
                               numMbx + " of " + totalMbx + " mailboxes moved.";
                 } else if (resp.startDate > 0 && resp.endDate > 0) {
                     var start = new Date(parseInt(resp.startDate, 10));
                     var end   = new Date(parseInt(resp.endDate, 10));
-                    content = "Latest SM was run from " + start + " to " + end + ".";
+                    message = "Latest SM was run from " + start + " to " + end + ".";
                 }
             }
 
             // Compare with previous global values
-            var changed = (com_btactic_hsm_ext.hsmRunning !== running) ||
+            var changed = (com_btactic_hsm_ext.hsmRunning  !== running) ||
                           (com_btactic_hsm_ext.hsmAborting !== aborting) ||
-                          (com_btactic_hsm_ext.hsmAborted !== wasAborted);
+                          (com_btactic_hsm_ext.hsmAborted  !== wasAborted);
 
             // Update globals
             com_btactic_hsm_ext.hsmRunning  = running;
             com_btactic_hsm_ext.hsmAborting = aborting;
             com_btactic_hsm_ext.hsmAborted  = wasAborted;
 
-            // Update status content
-            com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+            // Update the status widget directly
+            com_btactic_hsm_ext.updateStatusInfo(message);
             com_btactic_hsm_ext._lastRefreshTime = Date.now();
 
-            // Refresh form if any value changed
-            if (changed && group && group.getForm) {
-                group.getForm().refresh();
+            // Refresh the form if any value changed
+            if (changed) {
+                var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
+                if (statusWidget) {
+                    statusWidget.getForm().refresh();
+                }
             }
 
         } catch (e) {
