@@ -475,6 +475,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     * Activates the monitor for the HSM status.
     */
     com_btactic_hsm_ext.activateMonitor = function() {
+        // activateMonitor: Monitor already running, skipping.
+        if (com_btactic_hsm_ext.refreshRunning) {
+            return;
+        }
+
+        // Avoid double loops
+        com_btactic_hsm_ext.refreshRunning = true;
+        com_btactic_hsm_ext._lastRefreshTime = Date.now();
+
         // Show initial status
         com_btactic_hsm_ext.updateStatusInfo("Fetching HSM status...");
 
@@ -483,9 +492,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
         // Start the refresh loop
         com_btactic_hsm_ext.startRefreshLoop();
-
-        // Flag that refresh is running
-        com_btactic_hsm_ext.refreshRunning = true;
 
     };
 
