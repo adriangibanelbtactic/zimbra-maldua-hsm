@@ -557,6 +557,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
             var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
+            console.log("refreshStatus: raw SOAP response =", resp);
+
             var message = "No HSM session was run after restart.";
             var running = false, aborting = false, wasAborted = false;
 
@@ -581,9 +583,13 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             }
 
             var wasRunning = com_btactic_hsm_ext.hsmRunning;
-            // refreshStatus: HSM stopped running, deactivating monitor...
+            console.log("refreshStatus: wasRunning =", wasRunning, ", running =", running);
+
             if (wasRunning && !running) {
+                console.log("refreshStatus: Detected stop. Calling deactivateMonitor()...");
                 com_btactic_hsm_ext.deactivateMonitor();
+            } else {
+                console.log("refreshStatus: No transition detected.");
             }
 
             // Compare with previous global values
