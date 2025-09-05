@@ -50,6 +50,27 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_admin.zetaPromoCss = "font-size:16pt; font-weight: bold;";
 
+    com_btactic_hsm_ext.hsmRunning = false;
+    com_btactic_hsm_ext.hsmAborting = false;
+
+    com_btactic_hsm_ext.enableStartHsmSessionButton = function() {
+        return !com_btactic_hsm_ext.hsmRunning;
+    };
+
+    com_btactic_hsm_ext.enableAbortHsmSessionButton = function() {
+        return (com_btactic_hsm_ext.hsmRunning && (!(com_btactic_hsm_ext.hsmAborting)));
+    };
+
+    com_btactic_hsm_ext.updateHsmControlButtons = function(group) {
+        // Start button: enabled only when not running
+        var enableStart = !com_btactic_hsm_ext.hsmRunning;
+        com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startHsmButton", enableStart);
+
+        // Abort button: enabled only when running AND not aborting
+        var enableAbort = (com_btactic_hsm_ext.hsmRunning && !com_btactic_hsm_ext.hsmAborting);
+        com_btactic_hsm_ext.setButtonEnabledInGroup(group, "abortHsmButton", enableAbort);
+    };
+
     com_btactic_hsm_ext.refreshRunning = false;
 
     com_btactic_hsm_ext.enableStartHsmRefreshButton = function() {
@@ -322,8 +343,24 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         label: "HSM Controls",
                                         items: [
                                             {
-                                                type: _SPACER_,
-                                                height: 10
+                                                type: _DWT_BUTTON_,
+                                                label: "Start HSM Session",
+                                                hsmRole: "startHsmButton",
+                                                onActivate: function() {
+                                                    com_btactic_hsm_ext.startHsmSession();
+                                                    com_btactic_hsm_ext.updateHsmControlButtons(this.getParentItem());
+                                                },
+                                                enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmSessionButton]
+                                            },
+                                            {
+                                                type: _DWT_BUTTON_,
+                                                label: "Abort HSM Session",
+                                                hsmRole: "abortHsmButton",
+                                                onActivate: function() {
+                                                    com_btactic_hsm_ext.abortHsmSession();
+                                                    com_btactic_hsm_ext.updateHsmControlButtons(this.getParentItem());
+                                                },
+                                                enableDisableChecks: [com_btactic_hsm_ext.enableAbortHsmSessionButton]
                                             }
                                         ]
                                     }
@@ -430,6 +467,47 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
         if (item && item.widget && typeof item.widget.setEnabled === "function") {
             item.widget.setEnabled(enabled);
+        }
+    };
+
+    com_btactic_hsm_ext.startHsmSession = function() {
+        var controller = ZaApp.getInstance().getCurrentController();
+        try {
+            var soapDoc = AjxSoapDoc.create("HsmRequest", ZaZimbraAdmin.URN, null);
+            var params = { soapDoc: soapDoc };
+            var reqMgrParams = { controller: controller, busyMsg: "Starting HSM Session..." };
+            var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.HsmResponse;
+
+            // Mark running, reset aborting
+            com_btactic_hsm_ext.hsmRunning = true;
+            com_btactic_hsm_ext.hsmAborting = false;
+
+        } catch (e) {
+            controller._handleException(e);
+        }
+    };
+
+    com_btactic_hsm_ext.abortHsmSession = function() {
+        if (com_btactic_hsm_ext.hsmAborting) {
+            return; // already aborting
+        }
+
+        var controller = ZaApp.getInstance().getCurrentController();
+        try {
+            com_btactic_hsm_ext.hsmAborting = true;
+            var soapDoc = AjxSoapDoc.create("AbortHsmRequest", ZaZimbraAdmin.URN, null);
+            var params = { soapDoc: soapDoc };
+            var reqMgrParams = { controller: controller, busyMsg: "Aborting HSM Session..." };
+            var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.AbortHsmResponse;
+
+            if (resp && (resp.aborted === true || resp.aborted === "1" || resp.aborted === 1)) {
+                com_btactic_hsm_ext.hsmAborting = true;
+                com_btactic_hsm_ext.hsmRunning = false;
+            }
+
+        } catch (e) {
+            com_btactic_hsm_ext.hsmAborting = false;
+            controller._handleException(e);
         }
     };
 
