@@ -585,7 +585,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             var wasRunning = com_btactic_hsm_ext.hsmRunning;
             console.log("refreshStatus: wasRunning =", wasRunning, ", running =", running);
 
-            if (wasRunning && !running) {
+            var stoppedNow = wasRunning && !running;
+            if (stoppedNow) {
                 console.log("refreshStatus: Detected stop. Calling deactivateMonitor()...");
                 com_btactic_hsm_ext.deactivateMonitor();
             } else {
@@ -607,7 +608,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             com_btactic_hsm_ext._lastRefreshTime = Date.now();
 
             // Refresh the form if any value changed
-            if (changed) {
+            if (changed || stoppedNow) {
                 var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
                 if (statusWidget && typeof statusWidget.getForm === "function") {
                     statusWidget.getForm().refresh();
