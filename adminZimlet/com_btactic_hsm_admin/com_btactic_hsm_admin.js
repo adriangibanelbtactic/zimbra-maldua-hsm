@@ -465,7 +465,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     // Update the content of a HSM status widget directly
     com_btactic_hsm_ext.updateStatusInfo = function(message) {
         var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
-        if (!statusWidget) return;
+        if (!statusWidget || typeof statusWidget.setContent !== "function") {
+            return;
+        }
 
         // Directly set the value on the XForm widget
         statusWidget.setContent(message);
@@ -520,8 +522,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.AbortHsmResponse;
 
             if (resp && (resp.aborted === true || resp.aborted === "1" || resp.aborted === 1)) {
-                com_btactic_hsm_ext.hsmAborting = true;
+                com_btactic_hsm_ext.hsmAborting = false;
                 com_btactic_hsm_ext.hsmRunning = false;
+                com_btactic_hsm_ext.hsmAborted = true;
             }
 
         } catch (e) {
@@ -579,7 +582,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             // Refresh the form if any value changed
             if (changed) {
                 var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
-                if (statusWidget) {
+                if (statusWidget && typeof statusWidget.getForm === "function") {
                     statusWidget.getForm().refresh();
                 }
             }
