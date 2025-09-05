@@ -558,9 +558,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             com_btactic_hsm_ext._lastRefreshTime = Date.now();
 
             // Refresh form if any value changed
-            if (changed) {
-                this.getForm().refresh();
+            if (changed && group && group.getForm) {
+                group.getForm().refresh();
             }
+
         } catch (e) {
             controller._handleException(e);
         }
