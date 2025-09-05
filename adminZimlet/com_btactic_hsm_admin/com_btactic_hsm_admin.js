@@ -344,6 +344,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 hsmRole: "startHsmButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.startHsmSession();
+                                                    console.log("DEBUG-form - BEGIN");
+                                                    console.log(this.getForm());
+                                                    console.log("DEBUG-form - END");
                                                     this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmSessionButton]
