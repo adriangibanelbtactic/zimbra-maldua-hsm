@@ -31,6 +31,11 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER="com_btactic_hsm_ext" + "_id"
 
+    com_btactic_hsm_ext.saveServerForm = function(form) {
+        if (!form) return;
+        this._serverForm = form;
+    };
+
     // Using getResource from a ZmZimletBase object does not seem to work in admin
     com_btactic_hsm_admin.zimletImagesPath = "/service/zimlet/com_btactic_hsm_admin/images"
 
@@ -209,6 +214,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     if(ZaTabView.XFormModifiers["ZaServerXFormView"]) {
         com_btactic_hsm_ext.ServerXFormModifier= function (xFormObject,entry) {
+
             var cnt = xFormObject.items.length;
             var i = 0;
             for(i = 0; i <cnt; i++) {
@@ -259,6 +265,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 label: "Monitor ON",
                                                 [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "startRefreshButton",
                                                 onActivate: function() {
+                                                    var formItem = this.getParentItem();
+                                                    com_btactic_hsm_ext.saveServerForm(formItem);
+
+                                                    com_btactic_hsm_ext.debugStatusInfo = com_btactic_hsm_ext.getWidgetById("statusInfo");
                                                     com_btactic_hsm_ext.activateMonitor();
                                                     this.getForm().refresh();
                                                 },
@@ -416,10 +426,11 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     /**
     * Recursively searches a container (group/item) for a child with a given attribute.
+    * Returns the widget if found.
     * @param {object} container  The group or form item to search
     * @param {string} attrName   The attribute name to match (e.g., 'hsmRole')
     * @param {string} attrValue  The attribute value to match
-    * @return {object|null}      The first matching item or null if not found
+    * @return {object|null}      The widget of the first matching item or null if not found
     */
     com_btactic_hsm_ext.findItemByAttr = function(container, attrName, attrValue) {
         if (!container || !container.items) return null;
@@ -427,8 +438,12 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         for (var i = 0; i < container.items.length; i++) {
             var item = container.items[i];
 
-            // Match attribute directly
-            if (item[attrName] === attrValue) {
+            // Prefer __attributes if available
+            var value = item.__attributes && item.__attributes[attrName] !== undefined
+                        ? item.__attributes[attrName]
+                        : item[attrName];
+
+            if (value === attrValue) {
                 if (item.widget) {
                     return item.widget;
                 } else {
@@ -437,28 +452,28 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             }
 
             // Recurse into nested items
-            var found = this.findItemByAttr(item, attrName, attrValue);
-            if (found) return found;
+            var foundWidget = com_btactic_hsm_ext.findItemByAttr(item, attrName, attrValue);
+            if (foundWidget) return foundWidget;
         }
 
         return null;
     };
 
     /**
-    * Convenience wrapper for findItemByAttr specifically for this extension items.
-    * Automatically gets the current form and searches by 'ADMIN_ZIMLET_IDENTIFIER'.
-    *
+    * Convenience wrapper for finding a widget by ADMIN_ZIMLET_IDENTIFIER in the saved server form.
     * @param {string} attrValue  The ADMIN_ZIMLET_IDENTIFIER value to search for
-    * @return {object|null}      The first matching item or null if not found
+    * @return {object|null}      The widget or null if not found
     */
     com_btactic_hsm_ext.getWidgetById = function(attrValue) {
-        var controller = ZaApp.getInstance().getCurrentController();
-        if (!controller || !controller.getForm) return null;
 
-        var form = controller.getForm();
-        if (!form) return null;
 
-        return this.findItemByAttr(form, this.ADMIN_ZIMLET_IDENTIFIER, attrValue);
+        if (!this._serverForm) {
+            return null;
+        }
+
+        var widget = this.findItemByAttr(this._serverForm, this.ADMIN_ZIMLET_IDENTIFIER, attrValue);
+
+        return widget;
     };
 
     // Update the content of a HSM status widget directly
@@ -467,7 +482,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         if (!statusWidget) return;
 
         // Directly set the value on the XForm widget
-        statusWidget.setValue(message);
+        statusWidget.setContent(message);
     };
 
     /**
