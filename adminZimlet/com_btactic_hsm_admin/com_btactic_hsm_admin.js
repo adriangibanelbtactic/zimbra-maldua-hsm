@@ -435,6 +435,49 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext._refreshTimer = null;
 
+    /**
+    * Recursively searches a container (group/item) for a child with a given attribute.
+    * @param {object} container  The group or form item to search
+    * @param {string} attrName   The attribute name to match (e.g., 'hsmRole')
+    * @param {string} attrValue  The attribute value to match
+    * @return {object|null}      The first matching item or null if not found
+    */
+    com_btactic_hsm_ext.findItemByAttr = function(container, attrName, attrValue) {
+        if (!container || !container.items) return null;
+
+        for (var i = 0; i < container.items.length; i++) {
+            var item = container.items[i];
+
+            // Match attribute directly
+            if (item[attrName] === attrValue) {
+                return item;
+            }
+
+            // Recurse into nested items
+            var found = com_btactic_hsm_ext.findItemByAttr(item, attrName, attrValue);
+            if (found) return found;
+        }
+
+        return null;
+    };
+
+    /**
+    * Convenience wrapper for findItemByAttr specifically for HSM items.
+    * Automatically gets the current form and searches by 'hsmRole'.
+    *
+    * @param {string} attrValue  The hsmRole value to search for
+    * @return {object|null}      The first matching item or null if not found
+    */
+    com_btactic_hsm_ext.findHsmItemByAttr = function(attrValue) {
+        var controller = ZaApp.getInstance().getCurrentController();
+        if (!controller || !controller.getForm) return null;
+
+        var form = controller.getForm();
+        if (!form) return null;
+
+        return com_btactic_hsm_ext.findItemByAttr(form, "hsmRole", attrValue);
+    };
+
     // Find a direct child XFormItem in a group by an attribute we set in the schema
     com_btactic_hsm_ext.findChildByAttr = function (group, key, value) {
       if (!group || !group.items) return null;
@@ -467,6 +510,33 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
         if (item && item.widget && typeof item.widget.setEnabled === "function") {
             item.widget.setEnabled(enabled);
+        }
+    };
+
+    /**
+    * Activates the monitor for the HSM status.
+    * Automatically finds the startRefreshButton and handles the HSM workflow.
+    */
+    com_btactic_hsm_ext.activateMonitor = function() {
+        // Find the startRefreshButton automatically
+        var button = com_btactic_hsm_ext.findHsmItemByAttr("startRefreshButton");
+        if (!button) return; // nothing found
+
+        // Show initial status
+        com_btactic_hsm_ext.setAlertContent("Fetching HSM status...");
+
+        // Refresh HSM status once immediately
+        com_btactic_hsm_ext.refreshStatus();
+
+        // Start the refresh loop
+        com_btactic_hsm_ext.startRefreshLoop();
+
+        // Flag that refresh is running
+        com_btactic_hsm_ext.refreshRunning = true;
+
+        // Refresh the form to update button states/UI
+        if (button.getForm) {
+            button.getForm().refresh();
         }
     };
 
