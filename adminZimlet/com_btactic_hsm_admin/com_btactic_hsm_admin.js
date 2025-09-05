@@ -322,6 +322,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 label: "Start HSM Session",
                                                 [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "startHsmButton",
                                                 onActivate: function() {
+                                                    com_btactic_hsm_ext.activateMonitor();
                                                     com_btactic_hsm_ext.startHsmSession();
                                                     this.getForm().refresh();
                                                 },
