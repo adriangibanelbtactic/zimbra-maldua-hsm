@@ -493,8 +493,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     // Update the content of a HSM status widget directly
-    com_btactic_hsm_ext.setAlertContent = function(hsmRole, message) {
-        var statusWidget = com_btactic_hsm_ext.findHsmItemByAttr(hsmRole);
+    com_btactic_hsm_ext.updateStatusInfo = function(message) {
+        var statusWidget = com_btactic_hsm_ext.findHsmItemByAttr("statusInfo");
         if (!statusWidget) return;
 
         // Directly set the value on the XForm widget
@@ -536,7 +536,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         if (!button) return; // nothing found
 
         // Show initial status
-        com_btactic_hsm_ext.setAlertContent("Fetching HSM status...");
+        com_btactic_hsm_ext.updateStatusInfo("Fetching HSM status...");
 
         // Refresh HSM status once immediately
         com_btactic_hsm_ext.refreshStatus();
@@ -594,55 +594,58 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
     };
 
-    com_btactic_hsm_ext.refreshStatus = function (group) {
+    com_btactic_hsm_ext.refreshStatus = function() {
         var controller = ZaApp.getInstance().getCurrentController();
+
         try {
             var soapDoc = AjxSoapDoc.create("GetHsmStatusRequest", ZaZimbraAdmin.URN, null);
             var params = { soapDoc: soapDoc };
             var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
             var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
-            var content = "No HSM session was run after restart.";
-
+            var message = "No HSM session was run after restart.";
             var running = false, aborting = false, wasAborted = false;
 
             if (resp) {
-                running     = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
-                aborting    = (resp.aborting === true) || (resp.aborting === "1") || (resp.aborting === 1);
-                wasAborted  = (resp.wasAborted === true) || (resp.wasAborted === "1") || (resp.wasAborted === 1);
+                running    = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
+                aborting   = (resp.aborting === true) || (resp.aborting === "1") || (resp.aborting === 1);
+                wasAborted = (resp.wasAborted === true) || (resp.wasAborted === "1") || (resp.wasAborted === 1);
 
                 if (running) {
                     var numBlobs = resp.numBlobsMoved || 0;
                     var numBytes = resp.numBytesMoved || 0;
                     var numMbx   = resp.numMailboxes   || 0;
                     var totalMbx = resp.totalMailboxes || 0;
-                    content = numBlobs + " BLOBS moved. " +
+                    message = numBlobs + " BLOBS moved. " +
                               numBytes + " BYTES moved. " +
                               numMbx + " of " + totalMbx + " mailboxes moved.";
                 } else if (resp.startDate > 0 && resp.endDate > 0) {
                     var start = new Date(parseInt(resp.startDate, 10));
                     var end   = new Date(parseInt(resp.endDate, 10));
-                    content = "Latest SM was run from " + start + " to " + end + ".";
+                    message = "Latest SM was run from " + start + " to " + end + ".";
                 }
             }
 
             // Compare with previous global values
-            var changed = (com_btactic_hsm_ext.hsmRunning !== running) ||
+            var changed = (com_btactic_hsm_ext.hsmRunning  !== running) ||
                           (com_btactic_hsm_ext.hsmAborting !== aborting) ||
-                          (com_btactic_hsm_ext.hsmAborted !== wasAborted);
+                          (com_btactic_hsm_ext.hsmAborted  !== wasAborted);
 
             // Update globals
             com_btactic_hsm_ext.hsmRunning  = running;
             com_btactic_hsm_ext.hsmAborting = aborting;
             com_btactic_hsm_ext.hsmAborted  = wasAborted;
 
-            // Update status content
-            com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+            // Update the status widget directly
+            com_btactic_hsm_ext.updateStatusInfo(message);
             com_btactic_hsm_ext._lastRefreshTime = Date.now();
 
-            // Refresh form if any value changed
-            if (changed && group && group.getForm) {
-                group.getForm().refresh();
+            // Refresh the form if any value changed
+            if (changed) {
+                var statusWidget = com_btactic_hsm_ext.findHsmItemByAttr("statusInfo");
+                if (statusWidget && typeof statusWidget.getForm === "function") {
+                    statusWidget.getForm().refresh();
+                }
             }
 
         } catch (e) {
