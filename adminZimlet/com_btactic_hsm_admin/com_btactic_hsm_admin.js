@@ -643,7 +643,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             // Refresh the form if any value changed
             if (changed) {
                 var statusWidget = com_btactic_hsm_ext.findHsmItemByAttr("statusInfo");
-                if (statusWidget && typeof statusWidget.getForm === "function") {
+                if (statusWidget) {
                     statusWidget.getForm().refresh();
                 }
             }
