@@ -450,7 +450,11 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
             // Match attribute directly
             if (item[attrName] === attrValue) {
-                return item;
+                if (item.widget) {
+                    return item.widget;
+                } else {
+                    return null;
+                }
             }
 
             // Recurse into nested items
