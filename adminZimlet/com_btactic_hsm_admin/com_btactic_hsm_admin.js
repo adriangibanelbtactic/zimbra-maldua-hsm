@@ -492,6 +492,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
       return null;
     };
 
+    // Update the content of a HSM status widget directly
+    com_btactic_hsm_ext.setAlertContent = function(hsmRole, message) {
+        var statusWidget = com_btactic_hsm_ext.findHsmItemByAttr(hsmRole);
+        if (!statusWidget) return;
+
+        // Directly set the value on the XForm widget
+        statusWidget.setValue(message);
+    };
+
     // Render string safely into the DwtAlert in that group
     com_btactic_hsm_ext.setAlertContentInGroup = function (group, role, html) {
       var item = com_btactic_hsm_ext.findChildByAttr(group, "hsmRole", role);
