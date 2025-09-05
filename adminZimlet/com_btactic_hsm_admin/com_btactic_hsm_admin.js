@@ -277,9 +277,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
                                                     com_btactic_hsm_ext.refreshRunning = true;
 
-                                                    // Disable self, enable Stop
-                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startRefreshButton", false);
-                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "stopRefreshButton", true);
+                                                    this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmRefreshButton]
                                             },
@@ -296,9 +294,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                     com_btactic_hsm_ext._refreshTimer = null;
                                                     com_btactic_hsm_ext.refreshRunning = false;
 
-                                                    // Disable self, enable Start
-                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "stopRefreshButton", false);
-                                                    com_btactic_hsm_ext.setButtonEnabledInGroup(group, "startRefreshButton", true);
+                                                    this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
                                             },
@@ -348,7 +344,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 hsmRole: "startHsmButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.startHsmSession();
-                                                    com_btactic_hsm_ext.updateHsmControlButtons(this.getParentItem());
+                                                    this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmSessionButton]
                                             },
@@ -358,7 +354,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 hsmRole: "abortHsmButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.abortHsmSession();
-                                                    com_btactic_hsm_ext.updateHsmControlButtons(this.getParentItem());
+                                                    this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableAbortHsmSessionButton]
                                             }
