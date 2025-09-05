@@ -37,6 +37,10 @@ This documentation is aimed at developers, not at admins.
 - Just copy `bin/zetamoveblobs` it to: `/opt/zimbra/bin/zetamoveblobs` with `root:root` ownership. Make sure it has `755` permissions.
 - Just copy `bin/zetaschedulesmpolicy` it to: `/opt/zimbra/bin/zetaschedulesmpolicy` with `root:root` ownership. Make sure it has `755` permissions.
 
+### Development notes
+
+These [Development notes](DEVELOPMENT_NOTES.md) might be useful for those of you that want to create adminZimlets or extensions.
+
 ## Licenses
 
 ### License (Extension)
