@@ -33,3 +33,31 @@ I think you could move the Request and Response to your own package if you impor
 
 Finally here there is the [complete snapshot of the extension](https://github.com/adriangibanelbtactic/zimbra-maldua-hsm/tree/v0.0.3/extension/) that was using this trick.
 
+## Additional attributes in SOAP Responses
+
+Sometimes you might need to override default SOAP Responses with extra information being returned.
+That can be done with extra attributes. It's a bit tricky so let's see how it's done.
+
+Here there is [an example of an extra attribute](https://github.com/adriangibanelbtactic/zimbra-maldua-hsm/blob/v0.0.4/extension/src/com/btactic/hsm/service/admin/GetScheduleSMPolicy.java#L65-L77).
+
+What you usually do when you are dealing with a response it's just setting up their own attributes thanks to their own functions. Then you return response translated into an Element in one go:
+```java
+GetScheduleSMPolicyResponse resp = new GetScheduleSMPolicyResponse(isEnabled);
+resp.setError(error);
+
+return zsc.jaxbToElement(resp);
+```
+.
+
+In order to add extra attributes you need to capture the response translated into an Element and add the extra attribute there:
+```java
+GetScheduleSMPolicyResponse resp = new GetScheduleSMPolicyResponse(isEnabled);
+resp.setError(error);
+String smSchedulePolicyStartTime = scheduleSMPolicy.getStartTimeString();
+Element scheduleSMPolicyElement = zsc.jaxbToElement(resp);
+
+scheduleSMPolicyElement.addAttribute("smSchedulePolicyStartTime", smSchedulePolicyStartTime);
+
+return scheduleSMPolicyElement;
+```
+.
