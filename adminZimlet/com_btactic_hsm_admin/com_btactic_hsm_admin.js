@@ -572,6 +572,11 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 }
             }
 
+            // refreshStatus: HSM stopped running, deactivating monitor...
+            if (com_btactic_hsm_ext.hsmRunning === true && running === false) {
+                com_btactic_hsm_ext.deactivateMonitor();
+            }
+
             // Compare with previous global values
             var changed = (com_btactic_hsm_ext.hsmRunning  !== running) ||
                           (com_btactic_hsm_ext.hsmAborting !== aborting) ||
