@@ -57,7 +57,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     com_btactic_hsm_ext.hsmAborted   = false;
 
     com_btactic_hsm_ext.enableStartHsmSessionButton = function() {
-        return !com_btactic_hsm_ext.hsmRunning;
+        return ((!com_btactic_hsm_ext.hsmRunning) && (!com_btactic_hsm_ext.hsmAborting));
     };
 
     com_btactic_hsm_ext.enableAbortHsmSessionButton = function() {
@@ -65,6 +65,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     com_btactic_hsm_ext.refreshRunning = false;
+    com_btactic_hsm_ext._loopId = com_btactic_hsm_ext._loopId || 0;
+    com_btactic_hsm_ext._abortMonitoring = false;
 
     com_btactic_hsm_ext.enableStartHsmRefreshButton = function() {
         // Start should be enabled only if not running
@@ -81,6 +83,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // Reset state
         com_btactic_hsm_ext.refreshRunning = true;
         com_btactic_hsm_ext._lastRefreshTime = Date.now();
+        com_btactic_hsm_ext._shouldDeactivateMonitor = false;
 
         // Stop previous loop if any
         if (com_btactic_hsm_ext._refreshTimer) {
@@ -88,8 +91,27 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             com_btactic_hsm_ext._refreshTimer = null;
         }
 
+        var myLoopId = ++com_btactic_hsm_ext._loopId;
+
         // Create new loop
         com_btactic_hsm_ext._refreshTimer = setInterval(function() {
+
+            // Stale loop guard
+            if (myLoopId !== com_btactic_hsm_ext._loopId) {
+              clearInterval(com_btactic_hsm_ext._refreshTimer);
+              return;
+            }
+
+            // startRefreshLoop: stopping due to deactivate flag.
+            if (com_btactic_hsm_ext._shouldDeactivateMonitor) {
+                clearInterval(com_btactic_hsm_ext._refreshTimer);
+                com_btactic_hsm_ext._refreshTimer = null;
+                com_btactic_hsm_ext.refreshRunning = false;
+                // Force UI refresh
+                ZaApp.getInstance().getCurrentController()._view._localXForm.refresh();
+                return;
+            }
+
             var now = Date.now();
 
             // Timeout watchdog: stop if no successful update within 5s
@@ -273,7 +295,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "stopRefreshButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.deactivateMonitor();
-                                                    this.getForm().refresh();
+                                                    // No need to refresh the form
+                                                    // deactivateMonitor thanks to _shouldDeactivateMonitor will take care of it
+                                                    // this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
                                             },
@@ -322,6 +346,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 label: "Start HSM Session",
                                                 [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "startHsmButton",
                                                 onActivate: function() {
+                                                    com_btactic_hsm_ext.activateMonitor();
                                                     com_btactic_hsm_ext.startHsmSession();
                                                     this.getForm().refresh();
                                                 },
@@ -333,6 +358,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "abortHsmButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.abortHsmSession();
+                                                    com_btactic_hsm_ext.activateMonitor();
                                                     this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableAbortHsmSessionButton]
@@ -474,6 +500,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     * Activates the monitor for the HSM status.
     */
     com_btactic_hsm_ext.activateMonitor = function() {
+        // activateMonitor: Monitor already running, skipping.
+        if (com_btactic_hsm_ext.refreshRunning) {
+            return;
+        }
+
+        // Avoid double loops
+        com_btactic_hsm_ext.refreshRunning = true;
+        com_btactic_hsm_ext._lastRefreshTime = Date.now();
+
         // Show initial status
         com_btactic_hsm_ext.updateStatusInfo("Fetching HSM status...");
 
@@ -483,18 +518,13 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // Start the refresh loop
         com_btactic_hsm_ext.startRefreshLoop();
 
-        // Flag that refresh is running
-        com_btactic_hsm_ext.refreshRunning = true;
-
     };
 
     /**
-    * Deactivates the monitor for the HSM status.
+    * Schedules deactivation the monitor for the HSM status.
     */
     com_btactic_hsm_ext.deactivateMonitor = function() {
-        clearInterval(com_btactic_hsm_ext._refreshTimer);
-        com_btactic_hsm_ext._refreshTimer = null;
-        com_btactic_hsm_ext.refreshRunning = false;
+        com_btactic_hsm_ext._shouldDeactivateMonitor = true;
     };
 
     com_btactic_hsm_ext.startHsmSession = function() {
@@ -529,9 +559,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
             if (resp && (resp.aborted === true || resp.aborted === "1" || resp.aborted === 1)) {
                 com_btactic_hsm_ext.hsmAborting = false;
-                com_btactic_hsm_ext.hsmRunning = false;
-                com_btactic_hsm_ext.hsmAborted = true;
+                // Let refreshStatus detect the Running changes only
+                // So that its own comparison logic works
+                // com_btactic_hsm_ext.hsmRunning = false;
+                // com_btactic_hsm_ext.hsmAborted = true;
             }
+
+            // mark that we expect a stop soon
+            com_btactic_hsm_ext._abortMonitoring = true;
 
         } catch (e) {
             com_btactic_hsm_ext.hsmAborting = false;
@@ -571,6 +606,25 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 }
             }
 
+            var wasRunning = com_btactic_hsm_ext.hsmRunning;
+            var stopDetected = false;
+
+            // Case 1: normal transition from running → not running
+            if (wasRunning && !running) {
+                stopDetected = true;
+            }
+
+            // Case 2: monitoring started *after* abort and we see running=false
+            if (com_btactic_hsm_ext._abortMonitoring && !running) {
+                stopDetected = true;
+                com_btactic_hsm_ext._abortMonitoring = false; // clear the flag
+            }
+
+            // Apply stop if detected
+            if (stopDetected) {
+                com_btactic_hsm_ext.deactivateMonitor();
+            }
+
             // Compare with previous global values
             var changed = (com_btactic_hsm_ext.hsmRunning  !== running) ||
                           (com_btactic_hsm_ext.hsmAborting !== aborting) ||
@@ -586,7 +640,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             com_btactic_hsm_ext._lastRefreshTime = Date.now();
 
             // Refresh the form if any value changed
-            if (changed) {
+            if (changed || stopDetected) {
                 var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
                 if (statusWidget && typeof statusWidget.getForm === "function") {
                     statusWidget.getForm().refresh();
