@@ -52,6 +52,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext.hsmRunning = false;
     com_btactic_hsm_ext.hsmAborting = false;
+    com_btactic_hsm_ext.hsmAborted   = false;
 
     com_btactic_hsm_ext.enableStartHsmSessionButton = function() {
         return !com_btactic_hsm_ext.hsmRunning;
@@ -508,36 +509,59 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     com_btactic_hsm_ext.refreshStatus = function (group) {
-      var controller = ZaApp.getInstance().getCurrentController();
-      try {
-        var soapDoc = AjxSoapDoc.create("GetHsmStatusRequest", ZaZimbraAdmin.URN, null);
-        var params = { soapDoc: soapDoc };
-        var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
-        var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
+        var controller = ZaApp.getInstance().getCurrentController();
+        try {
+            var soapDoc = AjxSoapDoc.create("GetHsmStatusRequest", ZaZimbraAdmin.URN, null);
+            var params = { soapDoc: soapDoc };
+            var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
+            var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
-        var content = "No HSM session was run after restart.";
-        if (resp) {
-          var running = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
-          if (running) {
-            var numBlobs = resp.numBlobsMoved || 0;
-            var numBytes = resp.numBytesMoved || 0;
-            var numMbx   = resp.numMailboxes   || 0;
-            var totalMbx = resp.totalMailboxes || 0;
-            content = numBlobs + " BLOBS moved. " +
-                      numBytes + " BYTES moved. " +
-                      numMbx + " of " + totalMbx + " mailboxes moved.";
-          } else if (resp.startDate > 0 && resp.endDate > 0) {
-            var start = new Date(parseInt(resp.startDate, 10));
-            var end   = new Date(parseInt(resp.endDate, 10));
-            content = "Latest SM was run from " + start + " to " + end + ".";
-          }
-          // else: leave empty if missing/invalid dates
+            var content = "No HSM session was run after restart.";
+
+            var running = false, aborting = false, wasAborted = false;
+
+            if (resp) {
+                running     = (resp.running === true) || (resp.running === "1") || (resp.running === 1);
+                aborting    = (resp.aborting === true) || (resp.aborting === "1") || (resp.aborting === 1);
+                wasAborted  = (resp.wasAborted === true) || (resp.wasAborted === "1") || (resp.wasAborted === 1);
+
+                if (running) {
+                    var numBlobs = resp.numBlobsMoved || 0;
+                    var numBytes = resp.numBytesMoved || 0;
+                    var numMbx   = resp.numMailboxes   || 0;
+                    var totalMbx = resp.totalMailboxes || 0;
+                    content = numBlobs + " BLOBS moved. " +
+                              numBytes + " BYTES moved. " +
+                              numMbx + " of " + totalMbx + " mailboxes moved.";
+                } else if (resp.startDate > 0 && resp.endDate > 0) {
+                    var start = new Date(parseInt(resp.startDate, 10));
+                    var end   = new Date(parseInt(resp.endDate, 10));
+                    content = "Latest SM was run from " + start + " to " + end + ".";
+                }
+            }
+
+            // Compare with previous global values
+            var changed = (com_btactic_hsm_ext.hsmRunning !== running) ||
+                          (com_btactic_hsm_ext.hsmAborting !== aborting) ||
+                          (com_btactic_hsm_ext.hsmAborted !== wasAborted);
+
+            // Update globals
+            com_btactic_hsm_ext.hsmRunning  = running;
+            com_btactic_hsm_ext.hsmAborting = aborting;
+            com_btactic_hsm_ext.hsmAborted  = wasAborted;
+
+            // Update status content
+            com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+            com_btactic_hsm_ext._lastRefreshTime = Date.now();
+
+            // Refresh form if any value changed
+            if (changed && group && group.getForm) {
+                group.getForm().refresh();
+            }
+
+        } catch (e) {
+            controller._handleException(e);
         }
-        com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
-        com_btactic_hsm_ext._lastRefreshTime = Date.now();
-      } catch (e) {
-        controller._handleException(e);
-      }
     };
 
     // Helper to launch the HSM Policy Edit Wizard
