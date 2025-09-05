@@ -580,8 +580,9 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 }
             }
 
+            var wasRunning = com_btactic_hsm_ext.hsmRunning;
             // refreshStatus: HSM stopped running, deactivating monitor...
-            if (com_btactic_hsm_ext.hsmRunning === true && running === false) {
+            if (wasRunning && !running) {
                 com_btactic_hsm_ext.deactivateMonitor();
             }
 
