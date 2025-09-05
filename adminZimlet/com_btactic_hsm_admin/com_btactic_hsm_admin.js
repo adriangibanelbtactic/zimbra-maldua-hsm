@@ -536,8 +536,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
             if (resp && (resp.aborted === true || resp.aborted === "1" || resp.aborted === 1)) {
                 com_btactic_hsm_ext.hsmAborting = false;
-                com_btactic_hsm_ext.hsmRunning = false;
-                com_btactic_hsm_ext.hsmAborted = true;
+                // Let refreshStatus detect the Running changes only
+                // So that its own comparison logic works
+                // com_btactic_hsm_ext.hsmRunning = false;
+                // com_btactic_hsm_ext.hsmAborted = true;
             }
 
         } catch (e) {
