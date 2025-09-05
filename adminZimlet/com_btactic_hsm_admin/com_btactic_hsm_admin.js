@@ -272,10 +272,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 label: "Monitor OFF",
                                                 [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "stopRefreshButton",
                                                 onActivate: function() {
-                                                    clearInterval(com_btactic_hsm_ext._refreshTimer);
-                                                    com_btactic_hsm_ext._refreshTimer = null;
-                                                    com_btactic_hsm_ext.refreshRunning = false;
-
+                                                    com_btactic_hsm_ext.deactivateMonitor();
                                                     this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
@@ -489,6 +486,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // Flag that refresh is running
         com_btactic_hsm_ext.refreshRunning = true;
 
+    };
+
+    /**
+    * Deactivates the monitor for the HSM status.
+    */
+    com_btactic_hsm_ext.deactivateMonitor = function() {
+        clearInterval(com_btactic_hsm_ext._refreshTimer);
+        com_btactic_hsm_ext._refreshTimer = null;
+        com_btactic_hsm_ext.refreshRunning = false;
     };
 
     com_btactic_hsm_ext.startHsmSession = function() {
