@@ -553,14 +553,14 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             com_btactic_hsm_ext.hsmAborting = aborting;
             com_btactic_hsm_ext.hsmAborted  = wasAborted;
 
+            // Update status content
+            com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
+            com_btactic_hsm_ext._lastRefreshTime = Date.now();
+
             // Refresh form if any value changed
             if (changed) {
                 this.getForm().refresh();
             }
-
-            // Update status content
-            com_btactic_hsm_ext.setAlertContentInGroup(group, "statusInfo", content);
-            com_btactic_hsm_ext._lastRefreshTime = Date.now();
         } catch (e) {
             controller._handleException(e);
         }
