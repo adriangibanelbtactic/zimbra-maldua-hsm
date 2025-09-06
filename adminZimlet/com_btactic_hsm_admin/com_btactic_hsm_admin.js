@@ -57,7 +57,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     com_btactic_hsm_ext.hsmAborted   = false;
 
     com_btactic_hsm_ext.enableStartHsmSessionButton = function() {
-        return !com_btactic_hsm_ext.hsmRunning;
+        return ((!com_btactic_hsm_ext.hsmRunning) && (!com_btactic_hsm_ext.hsmAborting));
     };
 
     com_btactic_hsm_ext.enableAbortHsmSessionButton = function() {
@@ -357,6 +357,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "abortHsmButton",
                                                 onActivate: function() {
                                                     com_btactic_hsm_ext.abortHsmSession();
+                                                    com_btactic_hsm_ext.activateMonitor();
                                                     this.getForm().refresh();
                                                 },
                                                 enableDisableChecks: [com_btactic_hsm_ext.enableAbortHsmSessionButton]
@@ -561,6 +562,11 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 // So that its own comparison logic works
                 // com_btactic_hsm_ext.hsmRunning = false;
                 // com_btactic_hsm_ext.hsmAborted = true;
+            }
+
+            // Monitoring is OFF → refresh status manually so UI updates
+            if (!com_btactic_hsm_ext.refreshRunning) {
+                com_btactic_hsm_ext.refreshStatus();
             }
 
         } catch (e) {
