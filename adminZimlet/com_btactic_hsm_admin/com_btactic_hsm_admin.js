@@ -30,6 +30,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     }
 
     com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER="com_btactic_hsm_ext" + "_id"
+    com_btactic_hsm_ext._widgetCache = {};
 
     // Using getResource from a ZmZimletBase object does not seem to work in admin
     com_btactic_hsm_admin.zimletImagesPath = "/service/zimlet/com_btactic_hsm_admin/images"
@@ -489,6 +490,11 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext._refreshTimer = null;
 
+    // Helper to clear the cache
+    com_btactic_hsm_ext.clearWidgetCache = function() {
+        this._widgetCache = {};
+    };
+
     /**
     * Recursively searches a container (group/item) for a child with a given attribute.
     * Returns the widget if found.
@@ -530,10 +536,19 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     * @return {object|null}      The widget or null if not found
     */
     com_btactic_hsm_ext.getWidgetById = function(attrValue) {
+        // Return cached widget if exists
+        if (this._widgetCache[attrValue]) {
+            return this._widgetCache[attrValue];
+        }
 
-        var serverForm = ZaApp.getInstance().getCurrentController()._view._localXForm
+        var serverForm = ZaApp.getInstance().getCurrentController()._view._localXForm;
 
         var widget = this.findItemByAttr(serverForm, this.ADMIN_ZIMLET_IDENTIFIER, attrValue);
+
+        // Cache the widget for next time
+        if (widget) {
+            this._widgetCache[attrValue] = widget;
+        }
 
         return widget;
     };
