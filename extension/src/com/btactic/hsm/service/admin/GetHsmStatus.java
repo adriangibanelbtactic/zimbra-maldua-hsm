@@ -82,28 +82,28 @@ public final class GetHsmStatus extends AdminDocumentHandler {
         if (!(numBlobsMoved == -1)) {
             resp.setNumBlobsMoved(numBlobsMoved);
         } else {
-            resp.setNumBlobsMoved(0);
+            resp.setNumBlobsMoved(-1);
         }
 
         long numBytesMoved = zetahsm.getNumBytesMoved();
         if (!(numBytesMoved == -1L)) {
             resp.setNumBytesMoved(numBytesMoved);
         } else {
-            resp.setNumBytesMoved(0L);
+            resp.setNumBytesMoved(-1L);
         }
 
         int numMailboxesMoved = zetahsm.getNumMailboxesMoved();
         if (!(numMailboxesMoved == -1)) {
             resp.setNumMailboxes(numMailboxesMoved);
         } else {
-            resp.setNumMailboxes(0);
+            resp.setNumMailboxes(-1);
         }
 
         int totalMailboxes = zetahsm.getTotalMailboxes();
         if (!(totalMailboxes == -1)) {
             resp.setTotalMailboxes(totalMailboxes);
         } else {
-            resp.setTotalMailboxes(0);
+            resp.setTotalMailboxes(-1);
         }
 
         short destinationVolumeId = zetahsm.getDestinationVolumeId();
