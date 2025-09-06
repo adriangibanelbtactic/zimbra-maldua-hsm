@@ -81,6 +81,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         // Reset state
         com_btactic_hsm_ext.refreshRunning = true;
         com_btactic_hsm_ext._lastRefreshTime = Date.now();
+        com_btactic_hsm_ext._shouldDeactivateMonitor = false;
 
         // Stop previous loop if any
         if (com_btactic_hsm_ext._refreshTimer) {
@@ -90,6 +91,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
         // Create new loop
         com_btactic_hsm_ext._refreshTimer = setInterval(function() {
+
+            // startRefreshLoop: stopping due to deactivate flag.
+            if (com_btactic_hsm_ext._shouldDeactivateMonitor) {
+                clearInterval(com_btactic_hsm_ext._refreshTimer);
+                com_btactic_hsm_ext._refreshTimer = null;
+                com_btactic_hsm_ext.refreshRunning = false;
+                return;
+            }
+
             var now = Date.now();
 
             // Timeout watchdog: stop if no successful update within 5s
@@ -495,15 +505,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     };
 
-    /**
-    * Deactivates the monitor for the HSM status.
-    */
-    com_btactic_hsm_ext.deactivateMonitor = function() {
-        clearInterval(com_btactic_hsm_ext._refreshTimer);
-        com_btactic_hsm_ext._refreshTimer = null;
-        com_btactic_hsm_ext.refreshRunning = false;
-    };
-
     com_btactic_hsm_ext.startHsmSession = function() {
         var controller = ZaApp.getInstance().getCurrentController();
         try {
@@ -557,8 +558,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
             var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
-            console.log("refreshStatus: raw SOAP response =", resp);
-
             var message = "No HSM session was run after restart.";
             var running = false, aborting = false, wasAborted = false;
 
@@ -583,14 +582,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             }
 
             var wasRunning = com_btactic_hsm_ext.hsmRunning;
-            console.log("refreshStatus: wasRunning =", wasRunning, ", running =", running);
 
             var stoppedNow = wasRunning && !running;
             if (stoppedNow) {
-                console.log("refreshStatus: Detected stop. Calling deactivateMonitor()...");
-                com_btactic_hsm_ext.deactivateMonitor();
-            } else {
-                console.log("refreshStatus: No transition detected.");
+                com_btactic_hsm_ext._shouldDeactivateMonitor = true;
             }
 
             // Compare with previous global values
