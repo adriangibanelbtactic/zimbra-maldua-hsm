@@ -332,7 +332,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                 ]
                                             },
                                             {
-                                                type: _ZALEFT_GROUPER_,
+                                                type: _ZARIGHT_GROUPER_,
                                                 colSpan: 1,  // spans across two columns
                                                 colSizes: ["100%"], // split space evenly
                                                 width: "100%",
