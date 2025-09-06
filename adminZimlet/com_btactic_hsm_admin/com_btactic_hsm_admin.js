@@ -629,6 +629,15 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
     };
 
+    com_btactic_hsm_ext.formatBytes = function(bytes) {
+        if (bytes === 0) return "0 B (0 bytes)";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB", "TB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        const humanValue = (bytes / Math.pow(k, i)).toFixed(3); // 3 decimal places
+        return humanValue + " " + sizes[i] + " (" + bytes.toLocaleString() + " bytes)";
+    };
+
     com_btactic_hsm_ext.refreshStatus = function() {
         var controller = ZaApp.getInstance().getCurrentController();
 
@@ -638,7 +647,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             var reqMgrParams = { controller: controller, busyMsg: "Fetching HSM Status..." };
             var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetHsmStatusResponse;
 
-            var message = "No HSM session was run after restart.";
+            var message = null;
             var running = false, aborting = false, wasAborted = false;
 
             if (resp) {
@@ -646,55 +655,101 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 aborting   = (resp.aborting === true) || (resp.aborting === "1") || (resp.aborting === 1);
                 wasAborted = (resp.wasAborted === true) || (resp.wasAborted === "1") || (resp.wasAborted === 1);
 
-                if (running) {
-                    var numBlobs = resp.numBlobsMoved || 0;
-                    var numBytes = resp.numBytesMoved || 0;
-                    var numMbx   = resp.numMailboxes   || 0;
-                    var totalMbx = resp.totalMailboxes || 0;
-                    message = numBlobs + " BLOBS moved. " +
-                              numBytes + " BYTES moved. " +
-                              numMbx + " of " + totalMbx + " mailboxes moved.";
-                } else if (resp.startDate > 0 && resp.endDate > 0) {
-                    var start = new Date(parseInt(resp.startDate, 10));
-                    var end   = new Date(parseInt(resp.endDate, 10));
-                    message = "Latest SM was run from " + start + " to " + end + ".";
+                let parts = [];
+
+                // --- Part 2: Stats first to detect if we have meaningful data ---
+                let numBlobs = (resp.numBlobsMoved !== undefined) ? parseInt(resp.numBlobsMoved, 10) : undefined;
+                let numBytes = (resp.numBytesMoved !== undefined) ? parseInt(resp.numBytesMoved, 10) : undefined;
+                let numMbx   = (resp.numMailboxes !== undefined) ? parseInt(resp.numMailboxes, 10) : undefined;
+                let totalMbx = (resp.totalMailboxes !== undefined) ? parseInt(resp.totalMailboxes, 10) : undefined;
+
+                let stats = [];
+                if (numBlobs !== undefined && numBlobs !== -1) {
+                    stats.push("- " + numBlobs + " blobs moved");
+                }
+                if (numBytes !== undefined && numBytes !== -1) {
+                    stats.push("- " + com_btactic_hsm_ext.formatBytes(numBytes) + " moved");
+                }
+                if (numMbx !== undefined && totalMbx !== undefined &&
+                    numMbx !== -1 && totalMbx !== -1) {
+                    stats.push("- " + numMbx + " of " + totalMbx + " mailboxes moved");
+                }
+
+                // --- Part 1: Status ---
+                if (aborting) {
+                    parts.push("Status: Aborting");
+                } else if (wasAborted) {
+                    parts.push("Status: Aborted");
+                } else if (running) {
+                    parts.push("Status: Running");
+                } else if (stats.length > 0) {
+                    // session finished and we have stats → idle
+                    parts.push("Status: Idle");
+                }
+
+                if (resp.error && resp.error.trim() !== "") {
+                    parts.push("Error: " + resp.error);
+                }
+
+                // Add stats if any
+                if (stats.length > 0) {
+                    parts.push(stats.join("<br>"));
+                }
+
+                // --- Part 3: Start/End times (only if stats exist) ---
+                if (stats.length > 0) {
+                    let times = [];
+                    if (resp.startDate && parseInt(resp.startDate, 10) > 0) {
+                        let start = new Date(parseInt(resp.startDate, 10));
+                        times.push("- Start: " + start);
+                    } else {
+                        times.push("- Start: N/A");
+                    }
+                    if (resp.endDate && parseInt(resp.endDate, 10) > 0) {
+                        let end = new Date(parseInt(resp.endDate, 10));
+                        times.push("- End: " + end);
+                    } else {
+                        times.push("- End: N/A");
+                    }
+                    parts.push(times.join("<br>"));
+                }
+
+                // Assemble message if anything meaningful exists
+                if (parts.length > 0) {
+                    message = parts.join("<br><br>");
                 }
             }
 
+            // default message if nothing meaningful
+            if (!message) {
+                message = "No HSM session was run after restart.";
+            }
+
+            // --- Monitor state handling ---
             var wasRunning = com_btactic_hsm_ext.hsmRunning;
             var stopDetected = false;
 
-            // Case 1: normal transition from running → not running
-            if (wasRunning && !running) {
-                stopDetected = true;
-            }
-
-            // Case 2: monitoring started *after* abort and we see running=false
+            if (wasRunning && !running) stopDetected = true;
             if (com_btactic_hsm_ext._abortMonitoring && !running) {
                 stopDetected = true;
-                com_btactic_hsm_ext._abortMonitoring = false; // clear the flag
+                com_btactic_hsm_ext._abortMonitoring = false;
             }
 
-            // Apply stop if detected
-            if (stopDetected) {
-                com_btactic_hsm_ext.deactivateMonitor();
-            }
+            if (stopDetected) com_btactic_hsm_ext.deactivateMonitor();
 
-            // Compare with previous global values
-            var changed = (com_btactic_hsm_ext.hsmRunning  !== running) ||
+            // --- Update globals ---
+            var changed = (com_btactic_hsm_ext.hsmRunning !== running) ||
                           (com_btactic_hsm_ext.hsmAborting !== aborting) ||
-                          (com_btactic_hsm_ext.hsmAborted  !== wasAborted);
+                          (com_btactic_hsm_ext.hsmAborted !== wasAborted);
 
-            // Update globals
             com_btactic_hsm_ext.hsmRunning  = running;
             com_btactic_hsm_ext.hsmAborting = aborting;
             com_btactic_hsm_ext.hsmAborted  = wasAborted;
 
-            // Update the status widget directly
+            // --- Update status widget ---
             com_btactic_hsm_ext.updateStatusInfo(message);
             com_btactic_hsm_ext._lastRefreshTime = Date.now();
 
-            // Refresh the form if any value changed
             if (changed || stopDetected) {
                 var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
                 if (statusWidget && typeof statusWidget.getForm === "function") {
