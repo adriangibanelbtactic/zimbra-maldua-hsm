@@ -490,6 +490,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                     }
                                 ]
                             }
+                        ]
+                    }
                 ]
             };
 
