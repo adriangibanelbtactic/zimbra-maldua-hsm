@@ -106,6 +106,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 clearInterval(com_btactic_hsm_ext._refreshTimer);
                 com_btactic_hsm_ext._refreshTimer = null;
                 com_btactic_hsm_ext.refreshRunning = false;
+                // Force UI refresh
+                ZaApp.getInstance().getCurrentController()._view._localXForm.refresh();
                 return;
             }
 
