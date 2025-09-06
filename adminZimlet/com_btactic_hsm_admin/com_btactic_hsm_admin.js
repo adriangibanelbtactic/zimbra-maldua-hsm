@@ -107,6 +107,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 clearInterval(com_btactic_hsm_ext._refreshTimer);
                 com_btactic_hsm_ext._refreshTimer = null;
                 com_btactic_hsm_ext.refreshRunning = false;
+                com_btactic_hsm_ext.updateMonitoringStatus();
                 // Force UI refresh
                 ZaApp.getInstance().getCurrentController()._view._localXForm.refresh();
                 return;
@@ -127,6 +128,17 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             // Try to refresh
             com_btactic_hsm_ext.refreshStatus();
         }, 1000);
+    };
+
+    com_btactic_hsm_ext.getMonitoringStatusText = function() {
+        return com_btactic_hsm_ext.refreshRunning ? "Monitoring: ON" : "Monitoring: OFF";
+    };
+
+    com_btactic_hsm_ext.updateMonitoringStatus = function() {
+        var widget = com_btactic_hsm_ext.getWidgetById("monitoringStatus");
+        if (widget) {
+            widget.setContent(com_btactic_hsm_ext.getMonitoringStatusText());
+        }
     };
 
     // Show additional HSM attributes for GlobalConfig
@@ -252,68 +264,72 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 id : "server_zeta_hsm",
                 items: [
                     {label: null, type: _OUTPUT_, value: com_btactic_hsm_admin.zetaPromoWithImage, colSpan:"*", cssStyle:com_btactic_hsm_admin.zetaPromoCss},
-                    {type:_SPACER_, colSpan:"*"},
+                    {
+                        type: _SPACER_,
+                        height: 10
+                    },
                     {type:_ZA_TOP_GROUPER_,
                         colSpan:"*",
+                        colSizes: ["100%"],
                         label:com_btactic_hsm_admin.zetaHSMTab,
                         items:[
+                            // HSM Status block
                             {
-                                type: _GROUP_,
+                                type: _SPACER_,
+                                height: 10
+                            },
+                            {
+                                type: _ZAALLSCREEN_GROUPER_,
                                 width: "100%",
-                                colSpan:"*",
-                                colSizes: ["20%","20%","20%","20%","20%"],
+                                colSpan: 1,
+                                colSizes: ["10%","10%","10%","10%","10%","10%","10%","10%","10%","10%"], // from original ZAALLSCREEN_GROUPER
+                                label: "HSM Status",
                                 items: [
                                     {
-                                        type: _SPACER_,
-                                        height: 10
-                                    },
-                                    // HSM Status Block
-                                    {
-                                        colSpan: 10,
-                                        colSizes: ["10%","10%","10%","10%","10%","10%","10%","10%","10%","10%"],
-                                        type: _ZAALLSCREEN_GROUPER_,
+                                        type: _GROUP_,
+                                        colSpan: 3,  // spans across 3 columns (adjust if your parent uses different layout)
+                                        colSizes: ["33%", "33%", "33%"], // distribute space evenly
                                         width: "100%",
-                                        label: "HSM Status",
                                         items: [
                                             {
                                                 colSpan: 1,
-                                                cssClass: "HsmStatusButton",
-                                                type: _DWT_BUTTON_,
-                                                label: "Monitor ON",
-                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "startRefreshButton",
-                                                onActivate: function() {
-                                                    com_btactic_hsm_ext.activateMonitor();
-                                                    this.getForm().refresh();
-                                                },
-                                                enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmRefreshButton]
-                                            },
-                                            {
-                                                colSpan: 1,
-                                                cssClass: "HsmStatusButton",
-                                                type: _DWT_BUTTON_,
-                                                label: "Monitor OFF",
-                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "stopRefreshButton",
-                                                onActivate: function() {
-                                                    com_btactic_hsm_ext.deactivateMonitor();
-                                                    // No need to refresh the form
-                                                    // deactivateMonitor thanks to _shouldDeactivateMonitor will take care of it
-                                                    // this.getForm().refresh();
-                                                },
-                                                enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
-                                            },
-                                            {
-                                                type: _SPACER_,
-                                                height: 10
-                                            },
-                                            {
-                                                colSpan: 10,
                                                 type: _DWT_ALERT_,
-                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "statusInfo",
-                                                id: "HsmStatusInfo",
-                                                containerCssStyle: "padding-bottom:0px",
-                                                style: DwtAlert.INFO,
-                                                iconVisible: true,
-                                                content: "Click on: '" + "Monitor ON" + "' to see the HSM Status live."
+                                                [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "monitoringStatus",
+                                                style: DwtAlert.WARNING,
+                                                iconVisible: false,
+                                                content: "Monitoring: OFF"
+                                            },
+                                            {
+                                                type: _ZALEFT_GROUPER_,
+                                                colSpan: 2,  // spans across two columns
+                                                colSizes: ["30%", "30%"], // split space evenly
+                                                width: "100%",
+                                                items: [
+                                                    {
+                                                        colSpan: 1,
+                                                        type: _DWT_BUTTON_,
+                                                        cssClass: "HsmStatusButton",
+                                                        label: "Monitor ON",
+                                                        [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "startRefreshButton",
+                                                        onActivate: function() {
+                                                            com_btactic_hsm_ext.activateMonitor();
+                                                            this.getForm().refresh();
+                                                        },
+                                                        enableDisableChecks: [com_btactic_hsm_ext.enableStartHsmRefreshButton]
+                                                    },
+                                                    {
+                                                        colSpan: 1,
+                                                        type: _DWT_BUTTON_,
+                                                        cssClass: "HsmStatusButton",
+                                                        label: "Monitor OFF",
+                                                        [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "stopRefreshButton",
+                                                        onActivate: function() {
+                                                            com_btactic_hsm_ext.deactivateMonitor();
+                                                            // handled internally
+                                                        },
+                                                        enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
+                                                    }
+                                                ]
                                             }
                                         ]
                                     },
@@ -321,7 +337,30 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         type: _SPACER_,
                                         height: 10
                                     },
-                                    // HSM Schedule
+                                    {
+                                        colSpan: 10,
+                                        type: _DWT_ALERT_,
+                                        [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "statusInfo",
+                                        id: "HsmStatusInfo",
+                                        containerCssStyle: "padding-bottom:0px",
+                                        style: DwtAlert.INFO,
+                                        iconVisible: true,
+                                        content: "Click on: '" + "Monitor ON" + "' to see the HSM Status live."
+                                    }
+                                ]
+                            },
+                            {
+                                type: _SPACER_,
+                                height: 10,
+                                colSpan:"*"
+                            },
+                            // HSM Schedule + HSM Controls block
+                            {
+                                type: _GROUP_,
+                                width: "100%",
+                                colSpan: 1,
+                                colSizes: ["20%","20%","20%","20%","20%"],
+                                items: [
                                     {
                                         colSpan: 1,
                                         type: _ZALEFT_GROUPER_,
@@ -334,7 +373,6 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                             }
                                         ]
                                     },
-                                    // HSM Controls
                                     {
                                         colSpan: 1,
                                         type: _ZALEFT_GROUPER_,
@@ -369,44 +407,59 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             },
                             {
                                 type: _SPACER_,
-                                colSpan: "*"
+                                height: 10,
+                                colSpan:"*"
                             },
                             {
-                            ref : "zimbraHsmPolicy",
-                            type : _REPEAT_,
-                            label : com_btactic_hsm_admin.HSMPolicy,
-                            labelLocation : _LEFT_,
-                            align : _LEFT_,
-                            repeatInstance : "",
-                            showAddButton : true,
-                            showRemoveButton : true,
-                            showAddOnNextRow : true,
-                            addButtonLabel : com_btactic_hsm_admin.Add_zimbraHsmPolicy,
-                            removeButtonLabel : com_btactic_hsm_admin.Remove_zimbraHsmPolicy,
-                            removeButtonCSSStyle : "margin-left: 50px",
-                            visibilityChecks : [ ZaItem.hasReadPermission ],
-                            items: [
-                                {
-                                    ref: ".",
-                                    type: _TEXTFIELD_,
-                                    label: null,
-                                    labelLocation: _NONE_,
-                                    toolTipContent : com_btactic_hsm_admin.tt_zimbraHsmPolicy,
-                                    width: "60em",
-                                    visibilityChecks: [ ZaItem.hasReadPermission ]
-                                },
-                                {
-                                    type: _DWT_BUTTON_,
-                                    label: com_btactic_hsm_admin.EditButtonLabel,
-                                    width: "10em",
-                                    onActivate: function () {
-                                      let form = this.getForm();
-                                      let parentItem = this.getParentItem(); // gets the XFormItem
-                                      let currentHSMValue = parentItem.getInstanceValue();
-                                      com_btactic_hsm_ext.launchEditWizard(currentHSMValue, parentItem, this);
+                                type: _ZAALLSCREEN_GROUPER_,
+                                colSpan: "*",
+                                width: "100%",
+                                label: com_btactic_hsm_admin.HSMPolicy,
+                                items: [
+                                    {
+                                        type: _SPACER_,
+                                        height: 10,
+                                        colSpan:"*"
+                                    },
+                                    {
+                                        colSpan: "*",
+                                        ref: "zimbraHsmPolicy",
+                                        type: _REPEAT_,
+                                        label: null,                      // already using group label above
+                                        labelLocation: _NONE_,
+                                        align: _LEFT_,
+                                        repeatInstance: "",
+                                        showAddButton: true,
+                                        showRemoveButton: true,
+                                        showAddOnNextRow: true,
+                                        addButtonLabel: com_btactic_hsm_admin.Add_zimbraHsmPolicy,
+                                        removeButtonLabel: com_btactic_hsm_admin.Remove_zimbraHsmPolicy,
+                                        removeButtonCSSStyle: "margin-left: 50px",
+                                        visibilityChecks: [ ZaItem.hasReadPermission ],
+                                        items: [
+                                            {
+                                                ref: ".",
+                                                type: _TEXTFIELD_,
+                                                label: null,
+                                                labelLocation: _NONE_,
+                                                toolTipContent: com_btactic_hsm_admin.tt_zimbraHsmPolicy,
+                                                width: "60em",
+                                                visibilityChecks: [ ZaItem.hasReadPermission ]
+                                            },
+                                            {
+                                                type: _DWT_BUTTON_,
+                                                label: com_btactic_hsm_admin.EditButtonLabel,
+                                                width: "10em",
+                                                onActivate: function () {
+                                                    let form = this.getForm();
+                                                    let parentItem = this.getParentItem(); // gets the XFormItem
+                                                    let currentHSMValue = parentItem.getInstanceValue();
+                                                    com_btactic_hsm_ext.launchEditWizard(currentHSMValue, parentItem, this);
+                                                }
+                                            }
+                                        ]
                                     }
-                                }
-                            ]
+                                ]
                             },
                             // Embedded help
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationSyntax, colSpan : "*"},
@@ -517,6 +570,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
         // Start the refresh loop
         com_btactic_hsm_ext.startRefreshLoop();
+
+        com_btactic_hsm_ext.updateMonitoringStatus();
 
     };
 
