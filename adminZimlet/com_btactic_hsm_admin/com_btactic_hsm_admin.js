@@ -466,7 +466,32 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationSyntax, colSpan : "*"},
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationTypes, colSpan : "*"},
                             {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationQueries, colSpan : "*"},
-                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"}
+                            {type: _DWT_ALERT_, containerCssStyle: "padding-bottom:0px", style: DwtAlert.INFO, iconVisible: true, content : com_btactic_hsm_admin.HSMExplanationExamples, colSpan : "*"},
+                            // HSM Special block
+                            {
+                                type: _SPACER_,
+                                height: 10
+                            },
+                            {
+                                type: _ZAALLSCREEN_GROUPER_,
+                                width: "100%",
+                                colSpan: 1,
+                                colSizes: ["10%","10%","10%","10%","10%","10%","10%","10%","10%","10%"], // from original ZAALLSCREEN_GROUPER
+                                label: "Special",
+                                items: [
+                                    {
+                                        colSpan: 1,
+                                        type: _DWT_BUTTON_,
+                                        cssClass: "HsmStatusButton",
+                                        label: "Refresh page !",
+                                        [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "refreshPageButton",
+                                        onActivate: function() {
+                                            com_btactic_hsm_ext.clearWidgetCache();
+                                            this.getForm().refresh();
+                                        }
+                                    }
+                                ]
+                            }
                         ]
                     }
                 ]
