@@ -66,6 +66,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_ext.refreshRunning = false;
     com_btactic_hsm_ext._loopId = com_btactic_hsm_ext._loopId || 0;
+    com_btactic_hsm_ext._abortMonitoring = false;
 
     com_btactic_hsm_ext.enableStartHsmRefreshButton = function() {
         // Start should be enabled only if not running
@@ -564,10 +565,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                 // com_btactic_hsm_ext.hsmAborted = true;
             }
 
-            // Monitoring is OFF → refresh status manually so UI updates
-            if (!com_btactic_hsm_ext.refreshRunning) {
-                com_btactic_hsm_ext.refreshStatus();
-            }
+            // mark that we expect a stop soon
+            com_btactic_hsm_ext._abortMonitoring = true;
 
         } catch (e) {
             com_btactic_hsm_ext.hsmAborting = false;
@@ -608,9 +607,21 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             }
 
             var wasRunning = com_btactic_hsm_ext.hsmRunning;
+            var stopDetected = false;
 
-            var stoppedNow = wasRunning && !running;
-            if (stoppedNow) {
+            // Case 1: normal transition from running → not running
+            if (wasRunning && !running) {
+                stopDetected = true;
+            }
+
+            // Case 2: monitoring started *after* abort and we see running=false
+            if (com_btactic_hsm_ext._abortMonitoring && !running) {
+                stopDetected = true;
+                com_btactic_hsm_ext._abortMonitoring = false; // clear the flag
+            }
+
+            // Apply stop if detected
+            if (stopDetected) {
                 com_btactic_hsm_ext.deactivateMonitor();
             }
 
@@ -629,7 +640,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             com_btactic_hsm_ext._lastRefreshTime = Date.now();
 
             // Refresh the form if any value changed
-            if (changed || stoppedNow) {
+            if (changed || stopDetected) {
                 var statusWidget = com_btactic_hsm_ext.getWidgetById("statusInfo");
                 if (statusWidget && typeof statusWidget.getForm === "function") {
                     statusWidget.getForm().refresh();
