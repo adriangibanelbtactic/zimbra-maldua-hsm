@@ -287,8 +287,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                 items: [
                                     {
                                         type: _GROUP_,
-                                        colSpan: 3,  // spans across 3 columns (adjust if your parent uses different layout)
-                                        colSizes: ["33%", "33%", "33%"], // distribute space evenly
+                                        colSpan: 4,
+                                        colSizes: ["25%", "25%", "25%", "25%"], // distribute space evenly
                                         width: "100%",
                                         items: [
                                             {
@@ -301,8 +301,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                             },
                                             {
                                                 type: _ZALEFT_GROUPER_,
-                                                colSpan: 2,  // spans across two columns
-                                                colSizes: ["30%", "30%"], // split space evenly
+                                                colSpan: 3,  // spans across two columns
+                                                colSizes: ["33%", "33%" , "34%"], // split space evenly
                                                 width: "100%",
                                                 items: [
                                                     {
@@ -328,6 +328,16 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                                             // handled internally
                                                         },
                                                         enableDisableChecks: [com_btactic_hsm_ext.enableStopHsmRefreshButton]
+                                                    },
+                                                    {
+                                                        colSpan: 1,
+                                                        type: _DWT_BUTTON_,
+                                                        cssClass: "HsmStatusButton",
+                                                        label: "RefreshPage !",
+                                                        [com_btactic_hsm_ext.ADMIN_ZIMLET_IDENTIFIER]: "refreshPageButton",
+                                                        onActivate: function() {
+                                                            this.getForm().refresh();
+                                                        }
                                                     }
                                                 ]
                                             }
