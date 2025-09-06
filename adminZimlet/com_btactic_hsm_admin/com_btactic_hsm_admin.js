@@ -65,6 +65,7 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     };
 
     com_btactic_hsm_ext.refreshRunning = false;
+    com_btactic_hsm_ext._loopId = com_btactic_hsm_ext._loopId || 0;
 
     com_btactic_hsm_ext.enableStartHsmRefreshButton = function() {
         // Start should be enabled only if not running
@@ -89,8 +90,16 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             com_btactic_hsm_ext._refreshTimer = null;
         }
 
+        var myLoopId = ++com_btactic_hsm_ext._loopId;
+
         // Create new loop
         com_btactic_hsm_ext._refreshTimer = setInterval(function() {
+
+            // Stale loop guard
+            if (myLoopId !== com_btactic_hsm_ext._loopId) {
+              clearInterval(com_btactic_hsm_ext._refreshTimer);
+              return;
+            }
 
             // startRefreshLoop: stopping due to deactivate flag.
             if (com_btactic_hsm_ext._shouldDeactivateMonitor) {
