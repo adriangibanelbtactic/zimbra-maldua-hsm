@@ -142,6 +142,47 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
     };
 
+    com_btactic_hsm_ext.fetchSchedulePolicy = function() {
+        var controller = ZaApp.getInstance().getCurrentController();
+        try {
+            var soapDoc = AjxSoapDoc.create("GetScheduleSMPolicyRequest", ZaZimbraAdmin.URN, null);
+            var params = { soapDoc: soapDoc };
+            var reqMgrParams = { controller: controller, busyMsg: "Fetching Schedule Policy..." };
+            var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.GetScheduleSMPolicyResponse;
+
+            if (resp) {
+                return {
+                    enabled: (resp.smSchedulePolicyEnabled === true ||
+                              resp.smSchedulePolicyEnabled === "1" ||
+                              resp.smSchedulePolicyEnabled === 1),
+                    startHour: (resp.smSchedulePolicyStartTime !== undefined)
+                        ? parseInt(resp.smSchedulePolicyStartTime, 10)
+                        : 0
+                };
+            }
+        } catch (e) {
+            controller._handleException(e);
+        }
+        return { enabled: false, startHour: 0 };
+    };
+
+    /**
+    * Helper to load HSM schedule attributes into ZaServer entries
+    */
+    com_btactic_hsm_ext.loadServerHsmAttributes = function() {
+        if (!ZaApp.getInstance().getCurrentController()._view) {
+            try {
+                var policy = com_btactic_hsm_ext.fetchSchedulePolicy();
+                if (policy) {
+                    this.attrs["zimbraHsmScheduleEnabled"] = policy.enabled ? "TRUE" : "FALSE";
+                    this.attrs["zimbraHsmScheduleStartHour"] = policy.startHour;
+                }
+            } catch (e) {
+                ZaApp.getInstance().getCurrentController()._handleException(e);
+            }
+        }
+    };
+
     // Show additional HSM attributes for GlobalConfig
     if (ZaGlobalConfig && ZaGlobalConfig.myXModel && ZaGlobalConfig.myXModel.items) {
         ZaGlobalConfig.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
@@ -240,9 +281,16 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     // Show additional HSM attributes for Server
     if (ZaServer && ZaServer.myXModel && ZaServer.myXModel.items) {
         ZaServer.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
+        ZaServer.myXModel.items.push({id: "zimbraHsmScheduleEnabled", ref:"attrs/" + "zimbraHsmScheduleEnabled", type:_ENUM_, choices: ZaModel.BOOLEAN_CHOICES});
+        ZaServer.myXModel.items.push({id: "zimbraHsmScheduleStartHour", ref:"attrs/" + "zimbraHsmScheduleStartHour", type:_NUMBER_});
     }
 
     if(ZaTabView.XFormModifiers["ZaServerXFormView"]) {
+
+        if (ZaItem.loadMethods["ZaServer"] && com_btactic_hsm_ext.fetchSchedulePolicy) {
+            ZaItem.loadMethods["ZaServer"].push(com_btactic_hsm_ext.loadServerHsmAttributes);
+        }
+
         com_btactic_hsm_ext.ServerXFormModifier= function (xFormObject,entry) {
 
             var cnt = xFormObject.items.length;
@@ -369,8 +417,33 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
                                         label: "HSM Schedule",
                                         items: [
                                             {
-                                                type: _SPACER_,
-                                                height: 10
+                                                ref: "zimbraHsmScheduleEnabled",
+                                                type: _CHECKBOX_,
+                                                label: "Enable session scheduling",
+                                                trueValue: "TRUE",
+                                                falseValue: "FALSE",
+                                                visibilityChecks: [ ZaItem.hasReadPermission ]
+                                            },
+                                            {
+                                                ref: "zimbraHsmScheduleStartHour",
+                                                type: _SELECT1_,
+                                                label: "Session scheduled for",
+                                                labelLocation: _LEFT_,
+                                                choices: (function() {
+                                                    let hours = [];
+                                                    for (let i = 0; i < 24; i++) {
+                                                        let label = (i < 10 ? "0" + i : i) + ":00";
+                                                        hours.push({ value: i, label: label }); // value is integer, label is HH:00
+                                                    }
+                                                    return hours;
+                                                })(),
+                                                visibilityChecks: [ ZaItem.hasReadPermission ],
+                                                enableDisableChecks: [
+                                                    function() {
+                                                        return this.getInstanceValue("zimbraHsmScheduleEnabled") === "TRUE";
+                                                    }
+                                                ],
+                                                enableDisableChangeEventSources: [ "zimbraHsmScheduleEnabled" ]
                                             }
                                         ]
                                     },
