@@ -174,6 +174,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             try {
                 var policy = com_btactic_hsm_ext.fetchSchedulePolicy();
                 if (policy) {
+                    // Ensure zetaHsmAttrs exists
+                    if (!this.zetaHsmAttrs) {
+                        this.zetaHsmAttrs = {};
+                    }
                     this.zetaHsmAttrs["zimbraHsmScheduleEnabled"] = policy.enabled ? "TRUE" : "FALSE";
                     this.zetaHsmAttrs["zimbraHsmScheduleStartHour"] = policy.startHour;
                 }
