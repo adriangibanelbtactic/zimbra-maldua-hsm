@@ -56,7 +56,7 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
         Name server = req.getServer();
         // TODO: Check if we are getting the expected values
         boolean smSchedulePolicyEnabled = request.getAttributeBool(HsmConstants.A_SM_SCHEDULE_POLICY_ENABLED);
-        String smSchedulePolicyStartTime = request.getAttribute(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME);
+        int smSchedulePolicyStartTime = request.getAttributeInt(HsmConstants.A_SM_SCHEDULE_POLICY_START_TIME);
 
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
@@ -78,16 +78,10 @@ public final class ScheduleSMPolicy extends AdminDocumentHandler {
 
         ScheduleSMPolicyResponse resp = new ScheduleSMPolicyResponse(smSchedulePolicyEnabled);
 
-        // Let's ignore standard method for now and override with string
-        // Integer smSchedulePolicyStartTimeInteger = scheduleSMPolicy.getStartTime();
-        // resp.setSmScheduleStartTime(smSchedulePolicyStartTimeInteger);
-        // return zsc.jaxbToElement(resp);
+        Integer startHour = scheduleSMPolicy.getStartTime();
+        resp.setSmScheduleStartTime(startHour);
 
-        smSchedulePolicyStartTime = scheduleSMPolicy.getStartTimeString();
-        Element scheduleSMPolicyElement = zsc.jaxbToElement(resp);
-        scheduleSMPolicyElement.addAttribute("smSchedulePolicyStartTime", smSchedulePolicyStartTime);
-
-        return scheduleSMPolicyElement;
+        return zsc.jaxbToElement(resp);
     }
 
     @Override
