@@ -289,6 +289,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         ZaServer.myXModel.items.push({id: "zimbraHsmScheduleStartHour", ref:"zetaHsmAttrs/" + "zimbraHsmScheduleStartHour", type:_NUMBER_});
     }
 
+    if (ZaItem.modelExtensions["ZaServer"]) {
+        ZaItem.modelExtensions["ZaServer"].push("zetaHsmAttrs");
+    }
+
     if(ZaTabView.XFormModifiers["ZaServerXFormView"]) {
 
         if (ZaItem.loadMethods["ZaServer"] && com_btactic_hsm_ext.fetchSchedulePolicy) {
