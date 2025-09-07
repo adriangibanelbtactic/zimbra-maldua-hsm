@@ -53,6 +53,26 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     com_btactic_hsm_admin.zetaPromoCss = "font-size:16pt; font-weight: bold;";
 
+    /**
+    * Normalize a value into Zimbra's "TRUE"/"FALSE" strings.
+    * Accepts booleans, numbers, and strings (case-insensitive).
+    */
+    com_btactic_hsm_ext.booleanToString = function(value) {
+        if (typeof value === "string") {
+            var normalized = value.trim().toLowerCase();
+            if (normalized === "true" || normalized === "1") {
+                return "TRUE";
+            }
+            return "FALSE";
+        }
+
+        if (value === true || value === 1) {
+            return "TRUE";
+        }
+
+        return "FALSE";
+    };
+
     com_btactic_hsm_ext.hsmRunning = false;
     com_btactic_hsm_ext.hsmAborting = false;
     com_btactic_hsm_ext.hsmAborted   = false;
@@ -187,6 +207,44 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
         }
     };
 
+    com_btactic_hsm_ext.saveHSMSchedule = function(form) {
+        var controller = ZaApp.getInstance().getCurrentController();
+        try {
+            // 1. Prepare SOAP request
+            var soapDoc = AjxSoapDoc.create("ScheduleSMPolicyRequest", ZaZimbraAdmin.URN, null);
+
+            var enabled = form.zetaHsmAttrs["zimbraHsmScheduleEnabled"];
+            var startHour = form.zetaHsmAttrs["zimbraHsmScheduleStartHour"];
+
+            // Add request params (as text nodes or attributes, depending on server schema)
+            soapDoc.setMethodAttribute("smSchedulePolicyEnabled", enabled);
+            soapDoc.setMethodAttribute("smSchedulePolicyStartTime", startHour);
+
+            var params = { soapDoc: soapDoc };
+            var reqMgrParams = { controller: controller, busyMsg: "Saving HSM Schedule Policy..." };
+
+            // 2. Send request
+            var resp = ZaRequestMgr.invoke(params, reqMgrParams).Body.ScheduleSMPolicyResponse;
+
+            if (resp) {
+                // 3. Update the live server object with the response
+                var serverView = controller._view.getObject();
+
+                if (!serverView.zetaHsmAttrs) {
+                    serverView.zetaHsmAttrs = {};
+                }
+
+                serverView.zetaHsmAttrs["zimbraHsmScheduleEnabled"] = com_btactic_hsm_ext.booleanToString(resp.smSchedulePolicyEnabled);
+                serverView.zetaHsmAttrs["zimbraHsmScheduleStartHour"] = resp.smSchedulePolicyStartTime;
+
+                // 4. Refresh the form UI
+                controller._view._localXForm.refresh();
+            }
+        } catch (e) {
+            controller._handleException(e);
+        }
+    };
+
     // Show additional HSM attributes for GlobalConfig
     if (ZaGlobalConfig && ZaGlobalConfig.myXModel && ZaGlobalConfig.myXModel.items) {
         ZaGlobalConfig.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
@@ -291,6 +349,10 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
 
     if (ZaItem.modelExtensions["ZaServer"]) {
         ZaItem.modelExtensions["ZaServer"].push("zetaHsmAttrs");
+    }
+
+    if (ZaItem.modifyMethods["ZaServer"]) {
+        ZaItem.modifyMethods["ZaServer"].push(com_btactic_hsm_ext.saveHSMSchedule);
     }
 
     if(ZaTabView.XFormModifiers["ZaServerXFormView"]) {
