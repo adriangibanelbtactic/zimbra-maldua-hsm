@@ -174,8 +174,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
             try {
                 var policy = com_btactic_hsm_ext.fetchSchedulePolicy();
                 if (policy) {
-                    this.attrs["zimbraHsmScheduleEnabled"] = policy.enabled ? "TRUE" : "FALSE";
-                    this.attrs["zimbraHsmScheduleStartHour"] = policy.startHour;
+                    this.zetaHsmAttrs["zimbraHsmScheduleEnabled"] = policy.enabled ? "TRUE" : "FALSE";
+                    this.zetaHsmAttrs["zimbraHsmScheduleStartHour"] = policy.startHour;
                 }
             } catch (e) {
                 ZaApp.getInstance().getCurrentController()._handleException(e);
@@ -281,8 +281,8 @@ if(ZaSettings && ZaSettings.EnabledZimlet["com_btactic_hsm_admin"]){
     // Show additional HSM attributes for Server
     if (ZaServer && ZaServer.myXModel && ZaServer.myXModel.items) {
         ZaServer.myXModel.items.push({id: "zimbraHsmPolicy", ref:"attrs/" + "zimbraHsmPolicy", type:_LIST_, listItem:{ type:_STRING_, maxLength: 10240}});
-        ZaServer.myXModel.items.push({id: "zimbraHsmScheduleEnabled", ref:"attrs/" + "zimbraHsmScheduleEnabled", type:_ENUM_, choices: ZaModel.BOOLEAN_CHOICES});
-        ZaServer.myXModel.items.push({id: "zimbraHsmScheduleStartHour", ref:"attrs/" + "zimbraHsmScheduleStartHour", type:_NUMBER_});
+        ZaServer.myXModel.items.push({id: "zimbraHsmScheduleEnabled", ref:"zetaHsmAttrs/" + "zimbraHsmScheduleEnabled", type:_ENUM_, choices: ZaModel.BOOLEAN_CHOICES});
+        ZaServer.myXModel.items.push({id: "zimbraHsmScheduleStartHour", ref:"zetaHsmAttrs/" + "zimbraHsmScheduleStartHour", type:_NUMBER_});
     }
 
     if(ZaTabView.XFormModifiers["ZaServerXFormView"]) {
